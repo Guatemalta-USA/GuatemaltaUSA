@@ -1,0 +1,43 @@
+#page-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 130px auto 50px;
+  grid-template-areas:
+    "message-area"
+    "main"
+    "footer";
+  height: 100vh;
+}
+
+#message-area {
+  grid-area: message-area;
+}
+
+main {
+  grid-area: main;
+}
+
+footer {
+    grid-area: footer;
+}
+
+/* Screens larger than 1044px*/
+@media (min-width: 1045px) {
+  #page-wrapper {
+    justify-items: center;
+  }
+}
+/* Screens between 851px and 1044px */
+@media (min-width: 851px) and (max-width: 1044px) {
+  #page-wrapper {
+    grid-template-rows: 130px auto 50px;
+  }
+
+}
+
+/* Screens smaller than 850 */
+@media (max-width: 850px) {
+  #page-wrapper {
+    grid-template-rows: 150px auto 180px;
+  }
+}
