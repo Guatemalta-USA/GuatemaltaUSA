@@ -1,10 +1,10 @@
 import { navigateTo } from "./navigate.js";
-import { createLink } from "./utils.js";
+import { createLink, makeElement } from "./utils.js";
 
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
     const logo = document.createElement("img");
-    logo.setAttribute("src", "../../images/logo.png");
+    logo.setAttribute("src", "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png");
     logo.setAttribute("alt", "Guatemalta USA");
     headerElement.appendChild(logo);
     const nav = document.createElement("nav");
