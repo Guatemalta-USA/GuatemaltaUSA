@@ -46,7 +46,7 @@ a {
 }
 
 header {
-    height: 120px;
+    height: 225px;
     width: calc(100% - 20px);
     padding: 0 10px;
     background-color: var(--header-background-color);
@@ -58,7 +58,7 @@ header {
 }
 
 header img {
-    height: 100px;
+    height: 225px;
     width: auto;
 }
 
