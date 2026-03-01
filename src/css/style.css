@@ -4,7 +4,10 @@
     :root {
         --body-background-color: #000;
         --body-color: #ccc;
-        --header-background-color: rgba(38,39,42,.8);
+        --header-background-color: #000;
+        --header-color: #fff;
+        --nav-background-color: #00306d;
+        --nav-color: #fff;
         --main-background-color: #2e2e2e;
         --link-color: #302ae6;
         --green-accent: #9fde00;
@@ -14,7 +17,10 @@
     :root {
         --body-background-color: #fff;
         --body-color: #000;
-        --header-background-color: rgba(38,39,42,.8);
+        --header-background-color: #fff;
+        --header-color: #000;
+        --nav-background-color: #00306d;
+        --nav-color: #fff;
         --main-background-color: #fff;
         --link-color: #302ae6;
         --green-accent: #9fde00;
@@ -39,20 +45,14 @@ a {
     color: var(--link-color);
 }
 
-#message-area {
-  margin-top: 100px;
-}
-
 header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     height: 120px;
+    width: calc(100% - 20px);
     padding: 0 10px;
     background-color: var(--header-background-color);
+    color: var(--header-color);
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: 20px;
 }
@@ -63,10 +63,14 @@ header img {
 }
 
 nav {
+  width: 100%;
+  padding: 0 30px;
+  background-color: var(--nav-background-color);
+  color: var(--nav-color);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  gap: 5px;
+  gap: 20px;
   font-size: 20px;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -74,16 +78,21 @@ nav {
 nav a {
   color: #fff;
   cursor: pointer;
+  text-decoration: none;
 }
 
 nav a:hover {
-  color: var(--green-accent);
+  text-decoration: underline;
 }
 
 main {
     background-color: var(--main-background-color);
     padding: 20px;
     border-radius: 20px;
+}
+
+main p {
+  margin: 10px 0;
 }
 
 footer ul {

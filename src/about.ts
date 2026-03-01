@@ -1,4 +1,4 @@
 import { initializeApp } from "./main.js";
 
-initializeApp("Home", "Home").then(() => {
+initializeApp("About", "About").then(() => {
 });

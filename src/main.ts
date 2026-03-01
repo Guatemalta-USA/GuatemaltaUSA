@@ -1,5 +1,5 @@
 import { ALL_APP_PATHS, AppPath, navigateTo } from "./modules/navigate.js";
-import { loadFooter, loadHeader } from "./modules/templates.js";
+import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
 
 export async function initializeApp(partentPage: string, currentPage: string) {
   if (currentPage !== "") {
@@ -15,5 +15,6 @@ export async function initializeApp(partentPage: string, currentPage: string) {
     }
   });
   loadHeader();
+  loadNav();
   loadFooter();
 }

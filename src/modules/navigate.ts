@@ -1,6 +1,7 @@
 export const ALL_APP_PATHS = [
   '/',
-  '/index'
+  '/index',
+  '/about'
 ] as const;
 
 export type AppPath = typeof ALL_APP_PATHS[number];

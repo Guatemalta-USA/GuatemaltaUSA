@@ -1,14 +1,21 @@
 #page-wrapper {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 130px auto 50px;
+  grid-template-rows: 100px 50px 50px auto 50px;
   grid-template-areas:
+    "header"
+    "nav"
     "message-area"
     "main"
     "footer";
   height: 100vh;
 }
-
+header {
+  grid-area: header;
+}
+nav {
+  grid-area: nav;
+}
 #message-area {
   grid-area: message-area;
 }
@@ -30,7 +37,7 @@ footer {
 /* Screens between 851px and 1044px */
 @media (min-width: 851px) and (max-width: 1044px) {
   #page-wrapper {
-    grid-template-rows: 130px auto 50px;
+    grid-template-rows: 100px 50px 50px auto 50px;
   }
 
 }
@@ -38,6 +45,6 @@ footer {
 /* Screens smaller than 850 */
 @media (max-width: 850px) {
   #page-wrapper {
-    grid-template-rows: 150px auto 180px;
+    grid-template-rows: 100px 50px 50px auto 180px;
   }
 }

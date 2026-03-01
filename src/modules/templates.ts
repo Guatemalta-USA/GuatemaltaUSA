@@ -7,11 +7,22 @@ export function loadHeader() {
     logo.setAttribute("src", "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png");
     logo.setAttribute("alt", "Guatemalta USA");
     headerElement.appendChild(logo);
-    const nav = document.createElement("nav");
+    const mission = makeElement("p", "mission", null, null);
+    const italics = makeElement("i", null, null, "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.");
+    mission.appendChild(italics);
+    headerElement.appendChild(mission);
+}
+
+export function loadNav() {
+    const nav = document.querySelector("nav") as HTMLElement;
     const home = createLink("Home", "", false);
     home.addEventListener('click', () => navigateTo('/'));
     nav.appendChild(home);
-    headerElement.appendChild(nav);
+    const about = createLink("About", "", false);
+    about.addEventListener('click', () => navigateTo('/about'))
+    nav.appendChild(about);
+    const donate = createLink("Donate", "#", false);
+    nav.appendChild(donate);
 }
 
 export function loadFooter() {

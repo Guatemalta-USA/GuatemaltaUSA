@@ -27,3 +27,5 @@ Thumbs.db
 
 # Visual Studio Code (or other IDE)
 .vscode/
+
+dist/
