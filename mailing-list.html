@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guatemalta USA</title>
+    <link href="src/css/style.css" rel="stylesheet" />
+    <link href="src/css/grid.css" rel="stylesheet" />
+    <link href="src/css/form.css" rel="stylesheet" />
+    <link rel="icon" href="images/icon-only.png" type="images/x-icon">
+</head>
+
+<body>
+    <div id="page-wrapper">
+        <header></header>
+        <nav></nav>
+        <section class="message-wrapper" id="main-message"></section>
+        <main>
+            <form id="mailing-list-form">
+                <h2>Join our mailing list</h2>
+                <div class="form-row">
+                    <label for="fullName">Full Name:</label>
+                    <input typ="text" id="fullName" name="fullName"/>
+                </div>
+                <div class="form-row">
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email"/>
+                </div>
+                <div class="form-row">
+                    <label for="phone">Phone Number (optional):</label>
+                    <input type="tel" id="phone" name="phone"/>
+                </div>
+                <div class="button-row">
+                    <button type="reset" id="reset">Reset Form</button>
+                    <button type="submit" id="submit">Submit</button>
+                </div>
+            </form>
+        </main>
+        <footer></footer>
+    </div>
+    <script type="module" src="src/mailing-list"></script>
+</body>
+</html>

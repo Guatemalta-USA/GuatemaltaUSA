@@ -1,3 +1,5 @@
+import { signOutUser } from "../firebase/authService.js";
+import { auth } from "../firebase/firebase.js";
 import { navigateTo } from "./navigate.js";
 import { createLink, makeElement } from "./utils.js";
 
@@ -18,11 +20,22 @@ export function loadNav() {
     const home = createLink("Home", "", false);
     home.addEventListener('click', () => navigateTo('/'));
     nav.appendChild(home);
-    const about = createLink("About", "", false);
-    about.addEventListener('click', () => navigateTo('/about'))
-    nav.appendChild(about);
-    const donate = createLink("Donate", "#", false);
-    nav.appendChild(donate);
+    // const about = createLink("About", "", false);
+    // about.addEventListener('click', () => navigateTo('/about'))
+    // nav.appendChild(about);
+    const mailingList = createLink("Mailing List", "", false);
+    mailingList.addEventListener('click', () => navigateTo('/mailing-list'));
+    nav.appendChild(mailingList);
+    // const donate = createLink("Donate", "#", false);
+    // nav.appendChild(donate);
+    const logout = makeElement("a", "logout", "hide", "Log Out");
+    logout.addEventListener('click', () => signOutUser());
+    nav.appendChild(logout);
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            logout.classList.remove("hide");
+        }
+    });
 }
 
 export function loadFooter() {
@@ -34,6 +47,8 @@ export function loadFooter() {
     ul.appendChild(guatemaltaOrgLi);
     const instagram = createLink("Instagram", "https://www.instagram.com/guatemaltausa", true);
     ul.appendChild(instagram);
+    const facebook = createLink("Facebook", "https://www.facebook.com/guatemalta.usa", true);
+    ul.appendChild(facebook);
 
     footerElement.appendChild(ul);
     

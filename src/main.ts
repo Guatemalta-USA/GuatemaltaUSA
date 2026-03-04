@@ -1,5 +1,7 @@
 import { ALL_APP_PATHS, AppPath, navigateTo } from "./modules/navigate.js";
 import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
+import { createMessage } from "./modules/utils.js";
+import { Message } from "./models.js";
 
 export async function initializeApp(partentPage: string, currentPage: string) {
   if (currentPage !== "") {
@@ -17,4 +19,11 @@ export async function initializeApp(partentPage: string, currentPage: string) {
   loadHeader();
   loadNav();
   loadFooter();
+
+  const storedMessageString = sessionStorage.getItem("message");
+  if (storedMessageString) {
+    const storedMessage: Message = JSON.parse(storedMessageString);
+    createMessage(storedMessage['message'], storedMessage['messageContainer'], storedMessage['icon']);
+    sessionStorage.removeItem("message");
+  }
 }

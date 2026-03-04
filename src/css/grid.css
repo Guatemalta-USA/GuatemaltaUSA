@@ -1,7 +1,7 @@
 #page-wrapper {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 200px 50px 50px auto 50px;
+  grid-template-rows: 180px 50px 60px auto 50px;
   grid-template-areas:
     "header"
     "nav"
@@ -16,7 +16,7 @@ header {
 nav {
   grid-area: nav;
 }
-#message-area {
+.message-wrapper {
   grid-area: message-area;
 }
 
@@ -37,7 +37,7 @@ footer {
 /* Screens between 851px and 1044px */
 @media (min-width: 851px) and (max-width: 1044px) {
   #page-wrapper {
-    grid-template-rows: 200px 50px 50px auto 50px;
+    grid-template-rows: 180px 50px 60px auto 50px;
   }
 
 }
@@ -45,6 +45,6 @@ footer {
 /* Screens smaller than 850 */
 @media (max-width: 850px) {
   #page-wrapper {
-    grid-template-rows: 200px 50px 50px auto 180px;
+    grid-template-rows: 180px 50px 60px auto 180px;
   }
 }

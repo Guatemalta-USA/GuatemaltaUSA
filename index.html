@@ -7,6 +7,7 @@
     <title>Guatemalta USA</title>
     <link href="src/css/style.css" rel="stylesheet" />
     <link href="src/css/grid.css" rel="stylesheet" />
+    <link href="src/css/form.css" rel="stylesheet" />
     <link rel="icon" href="images/icon-only.png" type="images/x-icon">
 </head>
 
@@ -14,13 +15,20 @@
     <div id="page-wrapper">
         <header></header>
         <nav></nav>
-        <div id="message-area"></div>
+        <section class="message-wrapper" id="main-message"></section>
         <main>
-            <p>Coming soon</p>
+            <div id="loading">
+            <div class="loader"></div>
+                <h2>Loading...</h2>
+            </div>
+            <section id="content" class="hide">
+                <p>Our mission is to empower impoverished families in Guatemala by delivering the essentials of a dignified life: safe homes, breathable air, clean water, and a path to education for every child.</p>
+            </section>
+            <section id="editor"></section>
+            <section id="actions"></section>
         </main>
         <footer></footer>
     </div>
     <script type="module" src="src/index"></script>
 </body>
-
 </html>

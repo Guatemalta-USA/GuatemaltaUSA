@@ -1,3 +1,4 @@
+import { marked } from "marked";
 import { Message } from "../models";
 
 export function createButton(
@@ -92,4 +93,8 @@ export function makeElement(elementType: string, elementId: string | null, eleme
   }
   if (elementText) newElement.textContent = elementText;
   return newElement;
+}
+
+export async function markdownToHTML(markdown: string) {
+  return marked.parse(markdown);
 }
