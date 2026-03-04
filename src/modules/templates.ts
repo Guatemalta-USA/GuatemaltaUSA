@@ -21,10 +21,10 @@ export function loadNav() {
     home.addEventListener('click', () => navigateTo('/'));
     nav.appendChild(home);
     // const about = createLink("About", "", false);
-    // about.addEventListener('click', () => navigateTo('/about'))
+    // about.addEventListener('click', () => navigateTo('/about.html'))
     // nav.appendChild(about);
     const mailingList = createLink("Mailing List", "", false);
-    mailingList.addEventListener('click', () => navigateTo('/mailing-list'));
+    mailingList.addEventListener('click', () => navigateTo('/mailing-list.html'));
     nav.appendChild(mailingList);
     // const donate = createLink("Donate", "#", false);
     // nav.appendChild(donate);
