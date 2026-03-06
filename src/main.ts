@@ -3,6 +3,7 @@ import { createMessage } from "./modules/utils.js";
 import { Message } from "./models.js";
 
 export async function initializeApp(partentPage: string, currentPage: string) {
+  console.log(partentPage);
   if (currentPage !== "") {
     //Set the page title
     document.title = `${currentPage} - Guatemalta USA`;
