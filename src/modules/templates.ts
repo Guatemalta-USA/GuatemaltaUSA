@@ -1,5 +1,5 @@
 import { navigateTo } from "./navigate.js";
-import { createLink, makeElement } from "./utils.js";
+import { createLink, createSocialLink, makeElement } from "./utils.js";
 import { auth } from "../firebase/firebase.js";
 
 export function loadHeader() {
@@ -40,15 +40,12 @@ export function loadNav() {
 export function loadFooter() {
     const footerElement = document.querySelector("footer") as HTMLElement;
     const ul = document.createElement("ul");
-    const guatemaltaOrgLi = document.createElement("li");
-    const guatemaltaOrg = createLink("Guatemalta.org","https://guatemalta.org/", true )
-    guatemaltaOrgLi.appendChild(guatemaltaOrg);
-    ul.appendChild(guatemaltaOrgLi);
-    const instagram = createLink("Instagram", "https://www.instagram.com/guatemaltausa", true);
-    ul.appendChild(instagram);
-    const facebook = createLink("Facebook", "https://www.facebook.com/guatemalta.usa", true);
-    ul.appendChild(facebook);
-
+    const guatemalta = createSocialLink("guatemalta", 20);
+    if (guatemalta) ul.appendChild(guatemalta);
+    const facebook = createSocialLink("facebook", 20);
+    if (facebook) ul.appendChild(facebook);
+    const instagram = createSocialLink("instagram", 20);
+    if (instagram) ul.appendChild(instagram);
     footerElement.appendChild(ul);
     
 }

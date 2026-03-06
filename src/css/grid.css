@@ -38,6 +38,11 @@ footer {
 @media (min-width: 851px) and (max-width: 1044px) {
   #page-wrapper {
     grid-template-rows: 180px 50px 60px auto 50px;
+    justify-items: center;
+  }
+
+  main {
+    margin: 0 10px;
   }
 
 }

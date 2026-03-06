@@ -1,5 +1,5 @@
 import { initializeApp } from "./main.js";
-import { createButton, makeElement, markdownCheatSheet } from "./modules/utils.js";
+import { createButton, fixDate, makeElement, markdownCheatSheet } from "./modules/utils.js";
 import { auth } from "./firebase/firebase.js";
 import { getUserRole } from "./firebase/authService.js";
 import { getPageContents, updatePageContents } from "./firebase/firebaseService.js";
@@ -78,9 +78,11 @@ async function openEditor() {
 async function loadPageContents() {
     pageContents = await getPageContents("home");
     if (pageContents) {
-        console.log(pageContents);
         const pageContentsHTML = await pageContents.convertToHTML();
         contentSection.innerHTML = pageContentsHTML;
+        const lastUpdatedP = document.createElement("p");
+        lastUpdatedP.textContent = `Last Updated: ${fixDate(pageContents.lastUpdated, "long")}`;
+        contentSection.appendChild(lastUpdatedP); 
     }
 }
 

@@ -19,7 +19,7 @@
     --delete-background: #fc6a03;
     --info-background: #006270;
     --loading: #9fde00;
-    --table-even-row: rgba(0,0,0,0.25);
+    --table-even-row: rgba(0, 0, 0, 0.25);
   }
 }
 @media (prefers-color-scheme: light) {
@@ -41,7 +41,7 @@
     --delete-background: #fc6a03;
     --info-background: #006270;
     --loading: #00306d;
-    --table-even-row: rgba(0,0,0, 0.05);
+    --table-even-row: rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -77,16 +77,18 @@ body {
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--loading);
-  --_m: 
-    conic-gradient(#0000 10%,#000),
-    linear-gradient(#000 0 0) content-box;
+  --_m: conic-gradient(#0000 10%, #000), linear-gradient(#000 0 0) content-box;
   -webkit-mask: var(--_m);
-          mask: var(--_m);
+  mask: var(--_m);
   -webkit-mask-composite: source-out;
-          mask-composite: subtract;
+  mask-composite: subtract;
   animation: l3 1s infinite linear;
 }
-@keyframes l3 {to{transform: rotate(1turn)}}
+@keyframes l3 {
+  to {
+    transform: rotate(1turn);
+  }
+}
 
 .message-wrapper {
   height: 60px;
@@ -162,11 +164,6 @@ header {
   gap: 20px;
 }
 
-header img {
-  height: 180px;
-  width: auto;
-}
-
 nav {
   width: 90vw;
   padding: 0 30px;
@@ -228,6 +225,11 @@ footer ul li {
     font-size: 36px;
   }
 
+  header img {
+    height: auto;
+    width: 465px;
+  }
+
   .card {
     max-width: 900px;
   }
@@ -241,23 +243,26 @@ footer ul li {
 
 /* Screens between 851px and 1044px */
 @media (min-width: 851px) and (max-width: 1044px) {
+
+  header img {
+    height: auto;
+    width: 465px;
+  }
+  
 }
 
 /* Screens smaller than 850 */
 @media (max-width: 850px) {
   header {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     padding: 25px 10px 0 10px;
   }
 
-  #desktop-header-logo {
-    display: none;
-  }
-
-  #mobile-header-logo {
-    display: block;
-    width: 275px;
-    margin-bottom: 10px;
+  header img {
+    height: auto;
+    width: 90vw;
   }
 
   #mobile-nav-toggle {
@@ -276,7 +281,7 @@ footer ul li {
     padding-top: 110px;
     flex-direction: column;
     justify-content: flex-start;
-    background-color: var(--main-background);
+    background-color: var(--main-background-color);
     box-shadow:
       0 3px 6px rgba(0, 0, 0, 0.16),
       0 3px 6px rgba(0, 0, 0, 0.23);
@@ -310,6 +315,10 @@ footer ul li {
     visibility: visible;
   }
 
+  main {
+    margin: 0 10px;
+  }
+
   .backdrop {
     justify-content: flex-start;
     z-index: 3;
@@ -338,5 +347,36 @@ footer ul li {
   footer a:hover,
   footer a:focus {
     background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  font-family: sans-serif;
+  font-weight: 600;
+  color: #1a1a1a; 
+  transition: 0.2s ease;
+}
+
+/* For simple icons like Facebook, the whole thing follows text color */
+.social-link svg path:not(.brand-part) {
+  fill: currentColor;
+}
+
+.brand-part {
+  fill: var(--brand-color);
+}
+
+.social-link:hover {
+  color: var(--brand-color);
+}
+
+/* Dark Mode Logic */
+@media (prefers-color-scheme: dark) {
+  .social-link {
+    color: #FFFFFF; /* Text and "dynamic" parts turn white */
   }
 }

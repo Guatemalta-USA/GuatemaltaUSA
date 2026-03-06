@@ -1,5 +1,6 @@
 import { marked } from "marked";
-import { Message } from "../models";
+import { Message, SOCIAL_DATA } from "../models";
+import { Timestamp } from "firebase/firestore";
 
 export function createButton(
   buttonText: string,
@@ -98,6 +99,29 @@ export function createSimpleTableRow(rowCells: string[], isHTML: boolean) {
   }
 }
 
+export function createSocialLink(platformKey: string, size: number = 24): HTMLAnchorElement | null {
+  const data = SOCIAL_DATA[platformKey.toLowerCase()];
+  if (!data) return null;
+
+  const link = document.createElement('a');
+  link.href = data.url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.classList.add('social-link');
+  
+  // Custom property to tell CSS what the brand color is
+  link.style.setProperty('--brand-color', data.brandColor);
+
+  link.innerHTML = `
+    <svg viewBox="${data.viewBox}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      ${data.content}
+    </svg>
+    <span class="social-text">${data.name}</span>
+  `;
+
+  return link;
+}
+
 export function clearMessages() {
   const messageWrappers = document.getElementsByClassName("message-wrapper");
   for (const messageWrapper of messageWrappers) {
@@ -113,6 +137,39 @@ export function storeMessage(
   clearMessages();
   const messageToStore = new Message(message, messageContainer, icon);
   sessionStorage.setItem("message", JSON.stringify(messageToStore));
+}
+
+export function fixDate(
+  dateString: string | Timestamp,
+  dateFormat: string,
+): string {
+  let dateObj: Date = new Date(0);
+  //If Timestamp, convert it to a date object
+  if (dateString instanceof Timestamp) {
+    dateObj = dateString.toDate();
+  }
+  //If string, create a new date object
+  else if (typeof dateString === "string") {
+    dateObj = new Date(dateString);
+  }
+  //Check if the date object is valid
+  if (isNaN(dateObj.getTime())) {
+    console.error(
+      "fixDate received an invalid date object after parsing:",
+      dateString,
+    );
+    return "Invalid Date";
+  }
+  //Add timezone to fix date off by one error (with help from stackOverflow thread: https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off)
+  let dateTimezoneFixed: Date = new Date(
+    dateObj.getTime() - dateObj.getTimezoneOffset() * -60000,
+  );
+  //Define formatting options
+  const options: Intl.DateTimeFormatOptions =
+    dateFormat === "shortDate"
+      ? { month: "2-digit", day: "2-digit", year: "numeric" }
+      : { month: "long", day: "2-digit", year: "numeric" };
+  return dateTimezoneFixed.toLocaleDateString("en-US", options);
 }
 
 export function makeElement(elementType: string, elementId: string | null, elementClass: string | null, elementText: string | null) {
