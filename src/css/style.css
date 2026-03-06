@@ -9,7 +9,7 @@
     --nav-background-color: #00306d;
     --nav-color: #fff;
     --main-background-color: #2e2e2e;
-    --link-color: #302ae6;
+    --link-color: #9a97f3;
     --green-accent: #9fde00;
     --purple-accent: #00306d;
     --message-text: #fff;
@@ -19,6 +19,7 @@
     --delete-background: #fc6a03;
     --info-background: #006270;
     --loading: #9fde00;
+    --table-even-row: rgba(0,0,0,0.25);
   }
 }
 @media (prefers-color-scheme: light) {
@@ -40,6 +41,7 @@
     --delete-background: #fc6a03;
     --info-background: #006270;
     --loading: #00306d;
+    --table-even-row: rgba(0,0,0, 0.05);
   }
 }
 
@@ -172,7 +174,7 @@ nav {
   background-color: var(--nav-background-color);
   color: var(--nav-color);
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
   gap: 20px;
   font-size: 20px;
@@ -197,6 +199,10 @@ main {
 
 main p {
   margin: 10px 0;
+}
+
+main a {
+  color: var(--link-color);
 }
 
 footer ul {

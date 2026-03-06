@@ -66,3 +66,36 @@ select {
   padding: 5px;
   margin: 5px;
 }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  border-bottom: 1px solid var(--body-color);
+}
+
+td, th {
+  padding: 5px;
+}
+
+tr:nth-child(even) {
+  background-color: var(--table-even-row);
+}
+
+table li {
+  margin-left: 15px;
+}
+
+.left-text {
+  text-align: left;
+}
+
+.right-text {
+  text-align: right;
+}
+
+.center-text {
+  text-align: center;
+}
