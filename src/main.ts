@@ -32,8 +32,10 @@ export async function initializeApp(partentPage: string, currentPage: string) {
     //Display proper icon in nav toggle button
     if (isOpen) {
       mobileNavToggle.innerText = "close";
+      mobileNavToggle.style.color = "#fff";
     } else {
       mobileNavToggle.innerText = "menu";
+      mobileNavToggle.style.color = "var(--main-color)";
     }
   });
 
