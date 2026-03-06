@@ -17,19 +17,28 @@
         <nav></nav>
         <section class="message-wrapper" id="main-message"></section>
         <main>
-            <div id="loading">
-            <div class="loader"></div>
-                <h2>Loading...</h2>
-            </div>
-            <section id="content" class="hide">
-                <p>Mailing list page coming soon.</p>
-                <a id="homeLink">Go Home</a>
-            </section>
-            <section id="editor"></section>
-            <section id="actions"></section>
+            <form id="mailing-list-form">
+                <h2>Join our mailing list</h2>
+                <div class="form-row">
+                    <label for="fullName">Full Name:</label>
+                    <input typ="text" id="fullName" name="fullName"/>
+                </div>
+                <div class="form-row">
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email"/>
+                </div>
+                <div class="form-row">
+                    <label for="phone">Phone Number (optional):</label>
+                    <input type="tel" id="phone" name="phone"/>
+                </div>
+                <div class="button-row">
+                    <button type="reset" id="reset">Reset Form</button>
+                    <button type="submit" id="submit">Submit</button>
+                </div>
+            </form>
         </main>
         <footer></footer>
     </div>
-    <script type="module" src="src/mailinglist"></script>
+    <script type="module" src="src/mailing-list"></script>
 </body>
 </html>
