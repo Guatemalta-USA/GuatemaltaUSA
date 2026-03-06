@@ -1,7 +1,6 @@
-import { signOutUser } from "../firebase/authService.js";
-import { auth } from "../firebase/firebase.js";
 import { navigateTo } from "./navigate.js";
 import { createLink, makeElement } from "./utils.js";
+import { auth } from "../firebase/firebase.js";
 
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
@@ -24,7 +23,7 @@ export function loadNav() {
     // about.addEventListener('click', () => navigateTo('/about'))
     // nav.appendChild(about);
     const mailingList = createLink("Mailing List", "", false);
-    mailingList.addEventListener('click', () => navigateTo('/mailing-list'));
+    mailingList.addEventListener('click', () => navigateTo('/mailinglist'));
     nav.appendChild(mailingList);
     // const donate = createLink("Donate", "#", false);
     // nav.appendChild(donate);
@@ -52,4 +51,8 @@ export function loadFooter() {
 
     footerElement.appendChild(ul);
     
+}
+
+function signOutUser(): any {
+    throw new Error("Function not implemented.");
 }

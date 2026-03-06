@@ -1,4 +1,3 @@
-import { ALL_APP_PATHS, AppPath, navigateTo } from "./modules/navigate.js";
 import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
 import { createMessage } from "./modules/utils.js";
 import { Message } from "./models.js";

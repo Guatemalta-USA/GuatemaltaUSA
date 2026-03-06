@@ -1,31 +1,27 @@
-# ------------------------------------
-# Dependencies and Compiler Artifacts
-# ------------------------------------
-
-# Node.js dependencies
-node_modules/
-
-# TypeScript build info file
-*.tsbuildinfo
-
-# Node.js logs and debug files
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Environment and Credentials
-.env
-.env.development
-.env.production
-
-# ------------------------------------
-# Operating System and IDE Files
-# ------------------------------------
-
-# Windows
-Thumbs.db
-
-# Visual Studio Code (or other IDE)
-.vscode/
-
+node_modules
+dist
 dist/
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.env

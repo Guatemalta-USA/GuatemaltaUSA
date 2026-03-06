@@ -1,48 +1,39 @@
-interface NavOptions {
-  replace?: boolean;
-  params?: Record<string, string | number | boolean> | URLSearchParams;
-  force?: boolean;
-}
-
 export const ALL_APP_PATHS = [
   '/',
+  '/index',
   '/about',
-  '/login',
-  '/mailing-list'
+  '/mailinglist',
 ] as const;
 
 export type AppPath = typeof ALL_APP_PATHS[number];
 
-// Helper to normalize paths for comparison
-const normalize = (p: string) => p.replace(/\/$/, "").replace(".html", "") || "/";
+interface NavOptions {
+  replace?: boolean;
+  params?: Record<string, string | number> | URLSearchParams;
+}
 
 export const navigateTo = (path: AppPath, options: NavOptions = {}): void => {
   const { replace = false, params } = options;
-  
-  // Construct target URL
-  const url = new URL(path, window.location.origin);
-  
-  // 1. THE LOOP KILLER: Compare normalized paths
-  const currentPath = normalize(window.location.pathname);
-  const targetPath = normalize(url.pathname);
+  const baseUrl = "/";
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  const fullPath = `${baseUrl}${cleanPath}`;
+  const url = new URL(fullPath, window.location.origin);
 
-  if (currentPath === targetPath && !url.search) {
-    console.log("Already on this page. Navigation blocked to prevent loop.");
-    return;
-  }
-
-  // 2. Handle Params
   if (params) {
-    const searchParams = params instanceof URLSearchParams 
-      ? params 
-      : new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
-    searchParams.forEach((value, key) => url.searchParams.set(key, value));
+    if (params instanceof URLSearchParams) {
+      params.forEach((value, key) => {
+        url.searchParams.set(key, value);
+      });
+    } else {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.set(key, String(value));
+      });
+    }
   }
 
-  // 3. Execution
   if (replace) {
     window.location.replace(url.href);
   } else {
-    window.location.assign(url.href);
+    window.location.href = url.href;
   }
 };
