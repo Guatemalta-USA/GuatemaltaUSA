@@ -309,6 +309,7 @@ footer ul li {
     flex-direction: column;
     justify-content: flex-start;
     background-color: var(--main-background-color);
+    color: var(--main-text);
     box-shadow:
       0 3px 6px rgba(0, 0, 0, 0.16),
       0 3px 6px rgba(0, 0, 0, 0.23);
@@ -326,6 +327,7 @@ footer ul li {
     width: calc(100% - 20px);
     font-size: 25px;
     padding: 5px 10px;
+    color: var(--main-text);
   }
 
   nav button {
