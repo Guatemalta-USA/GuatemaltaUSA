@@ -10,6 +10,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         about: resolve(__dirname, 'about.html'),
         mailinglist: resolve(__dirname, 'mailinglist.html'),
+        login: resolve(__dirname, 'login.html')
       },
     },
   },
