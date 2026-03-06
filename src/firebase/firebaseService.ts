@@ -1,28 +1,15 @@
 import { PageContents } from "../models";
-import { FirebaseError } from "firebase/app";
 import {
-    addDoc,
     collection,
-    deleteDoc,
     doc,
     DocumentSnapshot,
     getDoc,
-    getDocs,
-    limit,
-    orderBy,
-    updateDoc,
-    query,
-    runTransaction,
-    setDoc,
-    Timestamp,
-    where,
-    QueryConstraint,
+    updateDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 
 //Global Firebase Variables
 declare const __app_id: string;
-const appId: string = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
 
 /* Functions to map Doc to objects*/
 function mapDocToPageContents(docSnap: DocumentSnapshot<any>): PageContents {
