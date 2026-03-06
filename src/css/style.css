@@ -50,6 +50,33 @@
   margin: 0;
 }
 
+.noScroll {
+  overflow: hidden;
+}
+
+/* Screen reader */
+.skip-link {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-link:focus {
+  position: static;
+  left: auto;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  background-color: var(--secondary-accent);
+  color: white;
+  padding: 10px;
+  z-index: 9999;
+  text-decoration: none;
+  border: 3px solid white;
+}
+
 body {
   background-color: var(--body-background-color);
   color: var(--body-color);
