@@ -1,4 +1,4 @@
-main button {
+main button, .action-link {
     border: 0;
     background-color: var(--purple-accent);
     color: #fff;

@@ -416,3 +416,7 @@ footer ul li {
     color: #FFFFFF; /* Text and "dynamic" parts turn white */
   }
 }
+
+main ul {
+  margin-left: 15px;
+}
