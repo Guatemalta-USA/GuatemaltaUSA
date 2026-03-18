@@ -99,4 +99,3 @@ initializeApp("Home", "Home").then(async () => {
     if (loading) loading.remove();
     contentSection.classList.remove("hide");
 });
-//Comment to force new commmit

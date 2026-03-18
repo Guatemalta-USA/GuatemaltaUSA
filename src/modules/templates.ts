@@ -1,6 +1,7 @@
 import { navigateTo } from "./navigate.js";
 import { createLink, createSocialLink, makeElement } from "./utils.js";
 import { auth } from "../firebase/firebase.js";
+import { signOutUser } from "../firebase/authService.js";
 
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
@@ -48,8 +49,4 @@ export function loadFooter() {
     if (instagram) ul.appendChild(instagram);
     footerElement.appendChild(ul);
     
-}
-
-function signOutUser(): any {
-    throw new Error("Function not implemented.");
 }
