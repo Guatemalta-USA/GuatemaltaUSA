@@ -1,4 +1,21 @@
-/* --- THE FIX: Prevents icons from stretching to full height --- */
+/* 1. GLOBAL THEME & TOOLBAR COLORS */
+.ql-snow .ql-stroke, 
+.ql-snow .ql-picker-canvas { stroke: var(--body-color) !important; }
+.ql-snow .ql-fill, 
+.ql-snow .ql-picker-label .ql-fill { fill: var(--body-color) !important; }
+.ql-snow .ql-picker { color: var(--body-color) !important; }
+
+/* 2. TOOLBAR STRUCTURE */
+.ql-toolbar.ql-snow {
+  border: 1px solid var(--body-color) !important;
+  background-color: var(--main-background-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .ql-toolbar.ql-snow svg {
   width: 18px !important;
   height: 18px !important;
@@ -11,104 +28,38 @@
   vertical-align: middle;
 }
 
-.ql-snow .ql-picker-label {
-  display: flex !important;
-  align-items: center;
-}
-/* -------------------------------------------------------------- */
-
-.ql-snow .ql-stroke {
-  stroke: var(--body-color) !important;
-}
-
-.ql-snow .ql-fill,
-.ql-snow .ql-picker-label .ql-fill {
-  fill: var(--body-color) !important;
-}
-
-.ql-snow .ql-picker {
-  color: var(--body-color) !important;
-}
-
-.ql-snow .ql-picker-canvas {
-  stroke: var(--body-color) !important;
-}
-
-/* 2. TOOLBAR CONTAINER */
-.ql-toolbar.ql-snow {
-  border: 1px solid var(--body-color) !important;
-  background-color: var(--main-background-color);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.ql-snow.ql-toolbar button {
-  filter: none !important;
-  border-radius: 2px;
-}
-
-/* 3. ACTIVE/HOVER STATES */
-.ql-snow.ql-toolbar button.ql-active .ql-stroke,
+/* 3. HOVER & ACTIVE STATES */
 .ql-snow.ql-toolbar button:hover .ql-stroke,
+.ql-snow.ql-toolbar button.ql-active .ql-stroke,
 .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
 .ql-snow.ql-toolbar .ql-picker-item:hover {
   stroke: #007bff !important;
   color: #007bff !important;
 }
 
-.ql-snow.ql-toolbar button.ql-active .ql-fill,
-.ql-snow.ql-toolbar button:hover .ql-fill {
+.ql-snow.ql-toolbar button:hover .ql-fill,
+.ql-snow.ql-toolbar button.ql-active .ql-fill {
   fill: #007bff !important;
 }
 
-/* 4. EDITOR BODY & TYPING AREA */
-.ql-container.ql-snow {
+/* 4. EDITOR & DISPLAY CONTAINERS */
+.ql-container.ql-snow,
+#editor-container,
+#edit-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+}
+
+.ql-container.ql-snow {
   border: 1px solid var(--body-color) !important;
   background-color: var(--main-background-color);
   color: var(--body-color);
-  font-family: inherit;
   font-size: 1rem;
+  overflow-y: auto;
 }
 
-/* 5. LISTS */
-
-.ql-editor ol li, 
-.ql-editor ul li {
-    list-style-type: none !important;
-}
-
-.ql-editor li::marker {
-    content: none !important;
-}
-
-.ql-editor .ql-ui {
-    display: inline-block;
-    width: 1.2em;
-    margin-left: -1.2em;
-    text-align: left;
-    white-space: nowrap;
-}
-
-#content-display ol, 
-#content-display ul {
-    list-style-position: outside;
-    padding-left: 1.5rem;
-}
-
-#content-display li[data-list="bullet"] {
-    list-style-type: disc !important;
-}
-
-#content-display li[data-list="ordered"] {
-    list-style-type: decimal !important;
-}
-
-/* 6. CUSTOM ACTION LINK (The Button Format) */
+/* 5. LINKS (Action Buttons & External) */
 .ql-editor a.action-link, 
 #content-display a.action-link {
   background-color: var(--purple-accent) !important;
@@ -124,116 +75,72 @@
 }
 
 .ql-editor a.action-link:hover,
-#content-display a.action-link:hover {
-  filter: brightness(1.1);
-}
+#content-display a.action-link:hover { filter: brightness(1.1); }
 
-.ql-snow.ql-toolbar button.ql-action-link svg {
-    width: 18px;
-    height: 18px;
-}
-
-.ql-snow.ql-toolbar button.ql-action-link:hover .ql-stroke {
-    stroke: var(--link-hover) !important;
-}
-
-.ql-snow.ql-toolbar button.ql-action-link.ql-active .ql-stroke {
-    stroke: var(--link-hover) !important;
-    stroke-width: 2px;
-}
-
-/* 7. TOOLTIPS (Link Popups) */
-.ql-snow .ql-tooltip {
-  background-color: #333 !important;
-  color: #fff !important;
-  border: 1px solid #555 !important;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-}
-
-.ql-snow .ql-tooltip input[type=text] {
-  background: var(--main-background-color);
-  color: var(--body-color);
-  border: 1px solid var(--quill-border);
-  padding: 5px;
-}
-
-#edit-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-#editor-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: auto !important;
-}
-
-.ql-container.ql-snow {
-  flex: 1;
-  overflow-y: auto;
-}
-
-/** Nav links **/
-.ql-snow .ql-picker.ql-nav-link {
-    width: 120px;
-}
-
-.ql-snow .ql-picker.ql-nav-link .ql-picker-label::before {
-    content: 'Internal Link';
-}
-
-.ql-snow .ql-picker.ql-nav-link .ql-picker-label[data-value]::before {
-    content: attr(data-value);
-}
-
-.ql-snow .ql-picker.ql-nav-link .ql-picker-options {
-    background-color: var(--main-background-color);
-    border: 1px solid var(--quill-border);
-}
-
-.ql-snow .ql-nav-link .ql-picker-item {
-    color: var(--body-color);
-    padding: 5px 10px;
-}
-
-.ql-snow .ql-nav-link .ql-picker-item:hover {
-    background-color: var(--purple-accent);
-    color: white !important;
-}
-
-/** External links **/
 .ql-editor a[target="_blank"]::after,
 #content-display a[target="_blank"]::after {
-    content: "\2197";
-    font-size: 0.8em;
-    margin-left: 4px;
-    display: inline-block;
-    vertical-align: super;
-    transition: transform 0.2s ease;
+  content: "\2197";
+  font-size: 0.8em;
+  margin-left: 4px;
+  display: inline-block;
+  vertical-align: super;
+  transition: transform 0.2s ease;
 }
 
 .ql-editor a[target="_blank"]:hover::after,
-#content-display a[target="_blank"]:hover::after {
-    transform: translate(2px, -2px);
+#content-display a[target="_blank"]:hover::after { transform: translate(2px, -2px); }
+
+/* 6. LISTS (Cleaning up Quill's internal list markers) */
+.ql-editor ol li, .ql-editor ul li { list-style-type: none !important; }
+.ql-editor li::marker { content: none !important; }
+
+#content-display ol, #content-display ul { padding-left: 1.5rem; }
+#content-display li[data-list="bullet"] { list-style-type: disc !important; }
+#content-display li[data-list="ordered"] { list-style-type: decimal !important; }
+
+/* 7. IMAGES & RESIZING */
+.ql-editor img { max-width: 100%; transition: outline 0.2s; }
+.ql-editor img.ql-active { outline: 2px solid var(--purple-accent); cursor: pointer; }
+
+.ql-editor img[style*="display: block; margin: auto;"],
+#content-display img[style*="display: block; margin: auto;"] {
+  display: block !important;
+  margin: 0 auto !important;
+  float: none !important;
 }
 
-.ql-editor a.action-link[target="_blank"]::after,
-#content-display a.action-link[target="_blank"]::after {
-    color: #fff;
-    vertical-align: middle;
+.ql-editor img[style*="float: left;"],
+#content-display img[style*="float: left;"] {
+  float: left !important;
+  margin: 0 15px 10px 0 !important;
 }
 
-/** IMAGES **/
-.ql-image-resize-handler {
-    z-index: 1000;
-    position: absolute;
-    cursor: nwse-resize;
+.ql-editor img[style*="float: right;"],
+#content-display img[style*="float: right;"] {
+  float: right !important;
+  margin: 0 0 10px 15px !important;
 }
 
-.ql-editor img.ql-active {
-    outline: 2px solid #a855f7;
-    cursor: pointer;
+/* 8. CUSTOM TOOLBARS & OVERLAYS */
+#custom-image-toolbar {
+  z-index: 10005 !important;
+  pointer-events: auto !important;
+}
+
+div[style*="border: 1px dashed"] { pointer-events: none !important; }
+div[style*="border: 1px dashed"] > div, 
+.ql-image-resize-handler { pointer-events: auto !important; }
+
+/* 9. MISC */
+#content-display::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.ql-snow .ql-tooltip {
+  background-color: #333 !important;
+  color: #fff !important;
+  border-radius: 4px;
+  z-index: 20;
 }
