@@ -1,5 +1,5 @@
 import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
-import { createButton, createMessage } from "./modules/utils.js";
+import { clearMessages, createButton, createMessage } from "./modules/utils.js";
 import { Message } from "./models.js";
 import { TheEditor } from "./modules/editor.js";
 import { getUserRole } from "./firebase/authService.js";
@@ -16,6 +16,7 @@ const cancelButton = document.getElementById('cancel-btn');
 function toggleMode(editor: TheEditor, isEditing: boolean) {
   if (viewSection && adminControls && editSection) {
     if (isEditing) {
+      clearMessages();
       viewSection.classList.add("hide");
       adminControls.classList.add("hide");
       editSection.classList.remove("hide");

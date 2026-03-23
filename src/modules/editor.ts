@@ -10,6 +10,34 @@ if (!Quill.imports['modules/imageResize']) {
     Quill.register('modules/imageResize', ImageResize);
 }
 
+const ImageFormat = Quill.import('formats/image') as new (...args: any[]) => any;
+
+class StyledImage extends ImageFormat {
+    static blotName = 'image';
+    static tagName = 'IMG';
+    static formats(domNode: HTMLElement) {
+        return {
+            style: domNode.getAttribute('style'),
+            width: domNode.getAttribute('width'),
+            height: domNode.getAttribute('height'),
+        };
+    }
+
+    format(name: string, value: string) {
+        if (['style', 'width', 'height'].includes(name)) {
+            if (value) {
+                this.domNode.setAttribute(name, value);
+            } else {
+                this.domNode.removeAttribute(name);
+            }
+        } else {
+            super.format(name, value);
+        }
+    }
+}
+
+Quill.register('formats/image', StyledImage, true);
+
 const Link = Quill.import('formats/link');
 
 class ActionLink extends (Link as any) {
@@ -44,23 +72,7 @@ class StandardLink extends (Link as any) {
         return node.getAttribute('href');
     }
 }
-const ImageFormat = Quill.import('formats/image');
 
-class StyledImage extends (ImageFormat as any) {
-    static formats(domNode: HTMLElement) {
-        return domNode.getAttribute('style');
-    }
-
-    format(name: string, value: string) {
-        if (name === 'style') {
-            this.domNode.setAttribute('style', value);
-        } else {
-            super.format(name, value);
-        }
-    }
-}
-
-Quill.register(StyledImage, true);
 Quill.register(ActionLink);
 Quill.register(StandardLink, true);
 
@@ -263,26 +275,30 @@ export class TheEditor {
             await updatePageContents(this.currentPage, {
                 content: delta.ops
             });
-            const finalImagesInEditor = new Set(this.getImagesFromEditor());
-            const trueDeletions = this.deletedImageURLs.filter(url => !finalImagesInEditor.has(url));
 
-            if (trueDeletions.length > 0) {
-                const deletePromises = trueDeletions.map(url => {
-                    const filename = url.split('/').pop();
-                    return fetch(`https://photo-upload.guatemaltausa.workers.dev?filename=${filename}`, {
-                        method: 'DELETE'
+            try {
+                const finalImagesInEditor = new Set(this.getImagesFromEditor());
+                const trueDeletions = this.deletedImageURLs.filter(url => !finalImagesInEditor.has(url));
+
+                if (trueDeletions.length > 0) {
+                    const deletePromises = trueDeletions.map(url => {
+                        const filename = url.split('/').pop();
+                        return fetch(`https://photo-upload.guatemaltausa.workers.dev?filename=${filename}`, {
+                            method: 'DELETE'
+                        });
                     });
-                });
-                await Promise.all(deletePromises);
-
-                this.deletedImageURLs = [];
+                    await Promise.all(deletePromises);
+                    this.deletedImageURLs = [];
+                }
+            } catch (cleanupErr) {
+                console.error("Content saved, but R2 cleanup failed:", cleanupErr);
             }
 
-            createMessage("Changes saved and storage cleaned!", "main-message", "check_circle");
+            createMessage("Changes saved!", "main-message", "check_circle");
 
         } catch (err) {
-            console.error("Failed to save page content or cleanup storage:", err);
-            createMessage("Error: Save failed.", "main-message", "error");
+            console.error("Critical Save Error:", err);
+            createMessage("Error: Could not save to database.", "main-message", "error");
         }
     }
 
