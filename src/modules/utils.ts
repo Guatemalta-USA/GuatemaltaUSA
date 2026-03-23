@@ -1,4 +1,3 @@
-import { marked } from "marked";
 import { Message, SOCIAL_DATA } from "../models";
 import { Timestamp } from "firebase/firestore";
 
@@ -180,10 +179,6 @@ export function makeElement(elementType: string, elementId: string | null, eleme
   }
   if (elementText) newElement.textContent = elementText;
   return newElement;
-}
-
-export async function markdownToHTML(markdown: string) {
-  return marked.parse(markdown);
 }
 
 export function markdownCheatSheet() {
