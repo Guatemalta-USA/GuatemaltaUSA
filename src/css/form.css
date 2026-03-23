@@ -1,4 +1,4 @@
-main button, .action-link {
+.accent-button, .action-link {
     border: 0;
     background-color: var(--purple-accent);
     color: #fff !important;
@@ -14,7 +14,7 @@ main button, .action-link {
     font-size: 1rem;
 }
 
-main button:hover {
+.accent-button:hover, .action-link:hover {
     background-color: #00459c;
 }
 

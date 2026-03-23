@@ -10,6 +10,7 @@
     --nav-color: #fff;
     --main-background-color: #2e2e2e;
     --link-color: #9a97f3;
+    --link-hover: #b7b4ff;
     --green-accent: #9fde00;
     --purple-accent: #00306d;
     --message-text: #fff;
@@ -33,6 +34,7 @@
     --nav-color: #fff;
     --main-background-color: #fff;
     --link-color: #302ae6;
+    --link-hover: #524cf5;
     --green-accent: #9fde00;
     --purple-accent: #00306d;
     --message-text: #fff;
@@ -233,6 +235,10 @@ main p {
 
 main a {
   color: var(--link-color) !important;
+}
+
+main a:hover {
+  color: var(--link-hover);
 }
 
 footer ul {

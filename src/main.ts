@@ -8,7 +8,7 @@ import { auth } from "./firebase/firebase.js";
 let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
 let nav: HTMLElement;
 
-const editor = new TheEditor('#editor-container');
+const editor = new TheEditor();
 const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
 const adminControls = document.getElementById('admin-controls');
@@ -31,7 +31,7 @@ function toggleMode(isEditing: boolean) {
 }
 
 function showAdminUI() {
-  const editButton = createButton("Edit Page Content", "button", "edit-btn", "");
+  const editButton = createButton("Edit Page Content", "button", "edit-btn", "accent-button");
   editButton.addEventListener('click', async () => {
     toggleMode(true);
   });

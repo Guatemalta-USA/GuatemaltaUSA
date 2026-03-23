@@ -1,3 +1,22 @@
+/* --- THE FIX: Prevents icons from stretching to full height --- */
+.ql-toolbar.ql-snow svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: inline-block !important;
+}
+
+.ql-toolbar.ql-snow .ql-formats {
+  display: inline-flex !important;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.ql-snow .ql-picker-label {
+  display: flex !important;
+  align-items: center;
+}
+/* -------------------------------------------------------------- */
+
 .ql-snow .ql-stroke {
   stroke: var(--body-color) !important;
 }
@@ -25,7 +44,7 @@
 }
 
 .ql-snow.ql-toolbar button {
-  filter: none !important; /* Disables the muddy grey look */
+  filter: none !important;
   border-radius: 2px;
 }
 
@@ -52,25 +71,42 @@
   border: 1px solid var(--body-color) !important;
   background-color: var(--main-background-color);
   color: var(--body-color);
-  font-family: inherit; /* Matches your site font */
+  font-family: inherit;
   font-size: 1rem;
 }
 
-/* 5. LISTS (The fix for disappearing bullets) */
-.ql-editor ul, 
-.ql-editor ol,
-#content-display ul,
-#content-display ol {
-  margin-bottom: 1em;
+/* 5. LISTS */
+
+.ql-editor ol li, 
+.ql-editor ul li {
+    list-style-type: none !important;
 }
 
-.ql-editor li,
-#content-display li {
-  margin-bottom: 0.5em;
+.ql-editor li::marker {
+    content: none !important;
 }
 
-.ql-editor ul, #content-display ul { list-style-type: disc; }
-.ql-editor ol, #content-display ol { list-style-type: decimal; }
+.ql-editor .ql-ui {
+    display: inline-block;
+    width: 1.2em;
+    margin-left: -1.2em;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#content-display ol, 
+#content-display ul {
+    list-style-position: outside;
+    padding-left: 1.5rem;
+}
+
+#content-display li[data-list="bullet"] {
+    list-style-type: disc !important;
+}
+
+#content-display li[data-list="ordered"] {
+    list-style-type: decimal !important;
+}
 
 /* 6. CUSTOM ACTION LINK (The Button Format) */
 .ql-editor a.action-link, 
@@ -92,9 +128,18 @@
   filter: brightness(1.1);
 }
 
-/* Custom icon for your Action Link toolbar button */
-.ql-snow.ql-toolbar button.ql-action-link {
-  width: 32px;
+.ql-snow.ql-toolbar button.ql-action-link svg {
+    width: 18px;
+    height: 18px;
+}
+
+.ql-snow.ql-toolbar button.ql-action-link:hover .ql-stroke {
+    stroke: var(--link-hover) !important;
+}
+
+.ql-snow.ql-toolbar button.ql-action-link.ql-active .ql-stroke {
+    stroke: var(--link-hover) !important;
+    stroke-width: 2px;
 }
 
 /* 7. TOOLTIPS (Link Popups) */
@@ -114,21 +159,69 @@
 }
 
 #edit-section {
-  flex: 1; /* Tells this div to take up all available vertical space in main */
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-/* This targets the actual Quill container */
 #editor-container {
-  flex: 1; /* Makes the editor body stretch to the bottom of the screen */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: auto !important; /* Overrides any fixed heights we set earlier */
+  height: auto !important;
 }
 
-/* Forces the scrollable part of Quill to fill the space */
 .ql-container.ql-snow {
   flex: 1;
   overflow-y: auto;
+}
+
+/** Nav links **/
+.ql-snow .ql-picker.ql-nav-link {
+    width: 120px;
+}
+
+.ql-snow .ql-picker.ql-nav-link .ql-picker-label::before {
+    content: 'Internal Link';
+}
+
+.ql-snow .ql-picker.ql-nav-link .ql-picker-label[data-value]::before {
+    content: attr(data-value);
+}
+
+.ql-snow .ql-picker.ql-nav-link .ql-picker-options {
+    background-color: var(--main-background-color);
+    border: 1px solid var(--quill-border);
+}
+
+.ql-snow .ql-nav-link .ql-picker-item {
+    color: var(--body-color);
+    padding: 5px 10px;
+}
+
+.ql-snow .ql-nav-link .ql-picker-item:hover {
+    background-color: var(--purple-accent);
+    color: white !important;
+}
+
+/** External links **/
+.ql-editor a[target="_blank"]::after,
+#content-display a[target="_blank"]::after {
+    content: "\2197";
+    font-size: 0.8em;
+    margin-left: 4px;
+    display: inline-block;
+    vertical-align: super;
+    transition: transform 0.2s ease;
+}
+
+.ql-editor a[target="_blank"]:hover::after,
+#content-display a[target="_blank"]:hover::after {
+    transform: translate(2px, -2px);
+}
+
+.ql-editor a.action-link[target="_blank"]::after,
+#content-display a.action-link[target="_blank"]::after {
+    color: #fff;
+    vertical-align: middle;
 }
