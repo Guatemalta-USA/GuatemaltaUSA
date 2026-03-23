@@ -45,6 +45,7 @@ export class TheEditor {
                     container: [
                         [{ header: [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                         ['link'],
                         ['action-link'],
                         ['clean']

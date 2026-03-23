@@ -20,6 +20,7 @@
     --info-background: #006270;
     --loading: #9fde00;
     --table-even-row: rgba(0, 0, 0, 0.25);
+    --quill-border: #444444;
   }
 }
 @media (prefers-color-scheme: light) {
@@ -42,6 +43,7 @@
     --info-background: #006270;
     --loading: #00306d;
     --table-even-row: rgba(0, 0, 0, 0.05);
+    --quill-border: #cccccc;
   }
 }
 
@@ -93,9 +95,10 @@ body {
 
 #loading {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 10px;
   align-items: center;
+  height: 100%;
 }
 
 .loader {
@@ -418,8 +421,4 @@ footer ul li {
   .social-link {
     color: #FFFFFF; /* Text and "dynamic" parts turn white */
   }
-}
-
-main ul {
-  margin: 0 0 15px 15px;
 }

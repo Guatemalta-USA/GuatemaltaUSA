@@ -1,76 +1,116 @@
-:root {
-  --quill-icon-color: #444; /* Light mode */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --quill-icon-color: #e0e0e0; /* Dark mode */
-  }
-}
-
 .ql-snow .ql-stroke {
-  stroke: var(--quill-icon-color) !important;
-}
-.ql-snow .ql-fill {
-  fill: var(--quill-icon-color) !important;
-}
-.ql-snow .ql-picker {
-  color: var(--quill-icon-color) !important;
-}
-
-/* Dark Mode Overrides for Quill */
-.ql-snow.ql-toolbar button,
-.ql-snow .ql-toolbar button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: inline-block;
-  height: 24px;
-  padding: 3px 5px;
-  width: 28px;
-  filter: invert(100%) brightness(200%);
-}
-
-.ql-snow .ql-picker {
-  color: var(--body-color) !important; 
-}
-
-.ql-snow.ql-toolbar .ql-stroke {
   stroke: var(--body-color) !important;
 }
 
-.ql-snow.ql-toolbar .ql-fill {
+.ql-snow .ql-fill,
+.ql-snow .ql-picker-label .ql-fill {
   fill: var(--body-color) !important;
 }
 
+.ql-snow .ql-picker {
+  color: var(--body-color) !important;
+}
+
+.ql-snow .ql-picker-canvas {
+  stroke: var(--body-color) !important;
+}
+
+/* 2. TOOLBAR CONTAINER */
+.ql-toolbar.ql-snow {
+  border: 1px solid var(--body-color) !important;
+  background-color: var(--main-background-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.ql-snow.ql-toolbar button {
+  filter: none !important; /* Disables the muddy grey look */
+  border-radius: 2px;
+}
+
+/* 3. ACTIVE/HOVER STATES */
+.ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.ql-snow.ql-toolbar button:hover .ql-stroke,
+.ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+.ql-snow.ql-toolbar .ql-picker-item:hover {
+  stroke: #007bff !important;
+  color: #007bff !important;
+}
+
+.ql-snow.ql-toolbar button.ql-active .ql-fill,
+.ql-snow.ql-toolbar button:hover .ql-fill {
+  fill: #007bff !important;
+}
+
+/* 4. EDITOR BODY & TYPING AREA */
 .ql-container.ql-snow {
-  border: 1px solid #444;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border: 1px solid var(--body-color) !important;
   background-color: var(--main-background-color);
   color: var(--body-color);
+  font-family: inherit; /* Matches your site font */
+  font-size: 1rem;
 }
 
-.ql-snow.ql-toolbar button.ql-active .ql-stroke,
-.ql-snow.ql-toolbar button:hover .ql-stroke {
-  stroke: #007bff !important; /* A bright blue that pops on dark backgrounds */
+/* 5. LISTS (The fix for disappearing bullets) */
+.ql-editor ul, 
+.ql-editor ol,
+#content-display ul,
+#content-display ol {
+  margin-bottom: 1em;
 }
 
+.ql-editor li,
+#content-display li {
+  margin-bottom: 0.5em;
+}
+
+.ql-editor ul, #content-display ul { list-style-type: disc; }
+.ql-editor ol, #content-display ol { list-style-type: decimal; }
+
+/* 6. CUSTOM ACTION LINK (The Button Format) */
+.ql-editor a.action-link, 
+#content-display a.action-link {
+  background-color: var(--purple-accent) !important;
+  color: #ffffff !important;
+  padding: 10px 20px;
+  margin: 5px 0;
+  display: inline-block;
+  text-decoration: none !important;
+  font-weight: 900;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ql-editor a.action-link:hover,
+#content-display a.action-link:hover {
+  filter: brightness(1.1);
+}
+
+/* Custom icon for your Action Link toolbar button */
+.ql-snow.ql-toolbar button.ql-action-link {
+  width: 32px;
+}
+
+/* 7. TOOLTIPS (Link Popups) */
 .ql-snow .ql-tooltip {
   background-color: #333 !important;
-  color: var(--body-color) !important;
+  color: #fff !important;
   border: 1px solid #555 !important;
-  box-shadow: 0px 2px 10px rgba(0,0,0,0.5) !important;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
 .ql-snow .ql-tooltip input[type=text] {
   background: var(--main-background-color);
   color: var(--body-color);
-  border: 1px solid #444;
-}
-
-.ql-snow.ql-toolbar button.ql-action-link {
-    width: 35px;
-    font-size: 14px;
-    color: #fff; /* Assuming your dark mode setup */
+  border: 1px solid var(--quill-border);
+  padding: 5px;
 }
 
 #edit-section {
@@ -91,9 +131,4 @@
 .ql-container.ql-snow {
   flex: 1;
   overflow-y: auto;
-}
-
-#content-display {
-    margin: 0 !important;
-    padding: 0 !important;
 }
