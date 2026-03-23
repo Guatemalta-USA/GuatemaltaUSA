@@ -1,0 +1,99 @@
+:root {
+  --quill-icon-color: #444; /* Light mode */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --quill-icon-color: #e0e0e0; /* Dark mode */
+  }
+}
+
+.ql-snow .ql-stroke {
+  stroke: var(--quill-icon-color) !important;
+}
+.ql-snow .ql-fill {
+  fill: var(--quill-icon-color) !important;
+}
+.ql-snow .ql-picker {
+  color: var(--quill-icon-color) !important;
+}
+
+/* Dark Mode Overrides for Quill */
+.ql-snow.ql-toolbar button,
+.ql-snow .ql-toolbar button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  height: 24px;
+  padding: 3px 5px;
+  width: 28px;
+  filter: invert(100%) brightness(200%);
+}
+
+.ql-snow .ql-picker {
+  color: var(--body-color) !important; 
+}
+
+.ql-snow.ql-toolbar .ql-stroke {
+  stroke: var(--body-color) !important;
+}
+
+.ql-snow.ql-toolbar .ql-fill {
+  fill: var(--body-color) !important;
+}
+
+.ql-container.ql-snow {
+  border: 1px solid #444;
+  background-color: var(--main-background-color);
+  color: var(--body-color);
+}
+
+.ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.ql-snow.ql-toolbar button:hover .ql-stroke {
+  stroke: #007bff !important; /* A bright blue that pops on dark backgrounds */
+}
+
+.ql-snow .ql-tooltip {
+  background-color: #333 !important;
+  color: var(--body-color) !important;
+  border: 1px solid #555 !important;
+  box-shadow: 0px 2px 10px rgba(0,0,0,0.5) !important;
+}
+
+.ql-snow .ql-tooltip input[type=text] {
+  background: var(--main-background-color);
+  color: var(--body-color);
+  border: 1px solid #444;
+}
+
+.ql-snow.ql-toolbar button.ql-action-link {
+    width: 35px;
+    font-size: 14px;
+    color: #fff; /* Assuming your dark mode setup */
+}
+
+#edit-section {
+  flex: 1; /* Tells this div to take up all available vertical space in main */
+  display: flex;
+  flex-direction: column;
+}
+
+/* This targets the actual Quill container */
+#editor-container {
+  flex: 1; /* Makes the editor body stretch to the bottom of the screen */
+  display: flex;
+  flex-direction: column;
+  height: auto !important; /* Overrides any fixed heights we set earlier */
+}
+
+/* Forces the scrollable part of Quill to fill the space */
+.ql-container.ql-snow {
+  flex: 1;
+  overflow-y: auto;
+}
+
+#content-display {
+    margin: 0 !important;
+    padding: 0 !important;
+}

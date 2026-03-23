@@ -1,14 +1,14 @@
 main button, .action-link {
     border: 0;
     background-color: var(--purple-accent);
-    color: #fff;
+    color: #fff !important;
     cursor: pointer;
     margin: 5px;
     border: 0;
     padding: 10px;
     font-family: Arial, Helvetica, sans-serif;
     font-weight: 900;
-    text-decoration: none;
+    text-decoration: none !important;
     display: inline-block;
     text-align: center;
     font-size: 1rem;

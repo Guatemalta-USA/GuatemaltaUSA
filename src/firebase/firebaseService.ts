@@ -1,54 +1,49 @@
 import { PageContents } from "../models";
 import {
-    collection,
     doc,
-    DocumentSnapshot,
     getDoc,
-    updateDoc
+    serverTimestamp,
+    setDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 
 //Global Firebase Variables
 declare const __app_id: string;
 
-/* Functions to map Doc to objects*/
-function mapDocToPageContents(docSnap: DocumentSnapshot<any>): PageContents {
-    const data = docSnap.data();
-
-    if (!data) {
-        throw new Error("No data found in document");
+export async function addPage(pageData: PageContents): Promise<void> {
+    try {
+        const docRef = doc(db, "pages", pageData.pageName);
+        await setDoc(docRef, pageData);
+        console.log(`Page "${pageData.pageName}" created successfully.`);
+    } catch (error) {
+        console.error("Error adding page:", error);
+        throw new Error("Failed to create the page.");
     }
-    return new PageContents(
-        docSnap.id,
-        data.markdown,
-        data.lastUpdated
-    );
 }
 
 export async function getPageContents(pageName: string): Promise<PageContents | null> {
     try {
-        const docRef = doc(collection(db, "pages"), pageName);
+        const docRef = doc(db, "pages", pageName);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return mapDocToPageContents(docSnap)
+            return docSnap.data() as PageContents;
         } else {
-            console.warn(`${pageName} not found!`);
+            console.warn(`Page "${pageName}" not found!`);
             return null;
         }
     } catch (error) {
         console.error("Error fetching page:", error);
-        throw new Error("Error loading page contents. Please try reloading the page");
+        throw new Error("Could not load page contents.");
     }
 }
 
-export async function updatePageContents(pageName: string, updatedContents: PageContents) {
-    try {
-        const docRef = doc(collection(db, "pages"), pageName);
-    const { pageName: _, ...updateData } = updatedContents;
-    await updateDoc(docRef, updateData as any); 
-    } catch (error) {
-        console.warn("Error updating page contents:", error);
-        throw new Error("Error updating page contents. Please reload the page and try again.");
-    }
+export async function updatePageContents(pageName: string, updates: Partial<PageContents>): Promise<void> {
+    const docRef = doc(db, "pages", pageName);
+    
+    await setDoc(docRef, { 
+        ...updates, 
+        pageName: pageName,
+        lastUpdated: serverTimestamp() 
+    }, { merge: true });
 }

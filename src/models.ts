@@ -16,24 +16,41 @@ export class Message {
     }
 }
 
+// export class PageContents {
+//     public pageName: string;
+//     public markdown: string;
+//     public lastUpdated: Timestamp; 
+//     constructor(
+//         pageName: string,
+//         markdown: string,
+//         lastUpdated: Timestamp,
+//     ) {
+//         this.pageName = pageName;
+//         this.markdown = markdown;
+//         this.lastUpdated = lastUpdated;
+//     }
+
+//     async convertToHTML() {
+//         return await marked.parse(this.markdown)
+//     }
+// }
+
 export class PageContents {
     public pageName: string;
-    public markdown: string;
     public lastUpdated: Timestamp; 
+    public content: any;
     constructor(
         pageName: string,
-        markdown: string,
         lastUpdated: Timestamp,
+        content: any
     ) {
         this.pageName = pageName;
-        this.markdown = markdown;
         this.lastUpdated = lastUpdated;
+        this.content = content;
     }
 
-    async convertToHTML() {
-        return await marked.parse(this.markdown)
-    }
 }
+
 
 interface SocialPlatform {
   name: string;

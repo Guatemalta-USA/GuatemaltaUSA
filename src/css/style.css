@@ -219,14 +219,17 @@ main {
   background-color: var(--main-background-color);
   padding: 20px;
   border-radius: 20px;
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
 }
 
 main p {
-  margin: 10px 0;
+  margin: 10px 0 !important;
 }
 
 main a {
-  color: var(--link-color);
+  color: var(--link-color) !important;
 }
 
 footer ul {
