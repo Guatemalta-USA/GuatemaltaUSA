@@ -3,7 +3,7 @@ import { Delta } from 'quill';
 import 'quill/dist/quill.snow.css';
 import { getPageContents, updatePageContents } from '../firebase/firebaseService';
 
-const Link = Quill.import('formats/link');
+const Link = Quill.import('formats/link') as any;
 
 class ActionLink extends (Link as any) {
     static blotName = 'actionLink';

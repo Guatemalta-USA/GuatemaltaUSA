@@ -1,5 +1,4 @@
 import { Timestamp } from "firebase/firestore";
-import { marked } from "marked";
 
 export class Message {
     public message: string;

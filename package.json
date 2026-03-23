@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "firebase": "^12.10.0",
-    "marked": "^17.0.4",
     "quill": "^2.0.3"
   }
 }
