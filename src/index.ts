@@ -4,7 +4,7 @@ const loading = document.getElementById("loading");
 const viewSection = document.getElementById('content-display') as HTMLElement;
 
 
-initializeApp("Home", "Home", "Home_page").then(async () => {
+initializeApp("Home", "Home", true).then(async () => {
     if (loading) loading.remove();
     viewSection.classList.remove("hide");
 });

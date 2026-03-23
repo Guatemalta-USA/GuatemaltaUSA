@@ -8,13 +8,12 @@ import { auth } from "./firebase/firebase.js";
 let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
 let nav: HTMLElement;
 
-const editor = new TheEditor();
 const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
 const adminControls = document.getElementById('admin-controls');
 const cancelButton = document.getElementById('cancel-btn');
 
-function toggleMode(isEditing: boolean) {
+function toggleMode(editor: TheEditor, isEditing: boolean) {
   if (viewSection && adminControls && editSection) {
     if (isEditing) {
       viewSection.classList.add("hide");
@@ -27,13 +26,12 @@ function toggleMode(isEditing: boolean) {
       viewSection.innerHTML = editor.getHTML();
     }
   }
-
 }
 
-function showAdminUI() {
+function showAdminUI(editor: TheEditor) {
   const editButton = createButton("Edit Page Content", "button", "edit-btn", "accent-button");
   editButton.addEventListener('click', async () => {
-    toggleMode(true);
+    toggleMode(editor, true);
   });
   if (adminControls) {
     adminControls.appendChild(editButton);
@@ -59,7 +57,7 @@ function showLightbox(url: string) {
     };
 }
 
-export async function initializeApp(partentPage: string, currentPage: string, editor_page_name?: string) {
+export async function initializeApp(partentPage: string, currentPage: string, includeEditor: boolean) {
   console.log(partentPage);
   if (currentPage !== "") {
     //Set the page title
@@ -97,9 +95,10 @@ export async function initializeApp(partentPage: string, currentPage: string, ed
     sessionStorage.removeItem("message");
   }
 
-  if (editor_page_name) {
+  if (includeEditor) {
+    const editor = new TheEditor();
     if (viewSection && cancelButton) {
-      await editor.load(editor_page_name);
+      await editor.load(currentPage);
       viewSection.innerHTML = editor.getHTML();
       viewSection.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
@@ -113,12 +112,12 @@ export async function initializeApp(partentPage: string, currentPage: string, ed
         if (user) {
           const userRole = await getUserRole(user.uid);
           if (userRole === "admin") {
-            showAdminUI();
+            showAdminUI(editor);
 
             document.getElementById('save-btn')?.addEventListener('click', async () => {
               try {
                 await editor.save();
-                toggleMode(false);
+                toggleMode(editor, false);
               } catch (err) {
                 console.error("Save failed", err);
               }
@@ -131,8 +130,8 @@ export async function initializeApp(partentPage: string, currentPage: string, ed
         try {
           console.log("canceling");
           cancelButton.innerText = "Reverting...";
-          await editor.load(editor_page_name);
-          toggleMode(false);
+          await editor.load(currentPage);
+          toggleMode(editor, false);
         } catch (error) {
           console.error("Failed to revert changes:", error);
           alert("Error resetting editor.");
@@ -141,7 +140,5 @@ export async function initializeApp(partentPage: string, currentPage: string, ed
         }
       });
     }
-
-
   }
 }
