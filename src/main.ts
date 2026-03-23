@@ -71,6 +71,7 @@ export async function initializeApp(partentPage: string, currentPage: string, ed
     }
   });
 
+  // Check if there are any stored messages to display
   const storedMessageString = sessionStorage.getItem("message");
   if (storedMessageString) {
     const storedMessage: Message = JSON.parse(storedMessageString);
