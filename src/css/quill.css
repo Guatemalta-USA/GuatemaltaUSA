@@ -225,3 +225,15 @@
     color: #fff;
     vertical-align: middle;
 }
+
+/** IMAGES **/
+.ql-image-resize-handler {
+    z-index: 1000;
+    position: absolute;
+    cursor: nwse-resize;
+}
+
+.ql-editor img.ql-active {
+    outline: 2px solid #a855f7;
+    cursor: pointer;
+}

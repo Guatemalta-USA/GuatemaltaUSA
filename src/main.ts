@@ -41,6 +41,24 @@ function showAdminUI() {
   }
 }
 
+function showLightbox(url: string) {
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    const img = document.createElement('img');
+    img.src = url;
+    img.className = 'lightbox-image';
+    const hint = document.createElement('span');
+    hint.textContent = 'Click anywhere to close';
+    hint.className = 'lightbox-hint';
+
+    overlay.append(img, hint);
+    document.body.appendChild(overlay);
+    overlay.onclick = () => {
+        overlay.classList.add('fadeOut');
+        setTimeout(() => overlay.remove(), 200);
+    };
+}
+
 export async function initializeApp(partentPage: string, currentPage: string, editor_page_name?: string) {
   console.log(partentPage);
   if (currentPage !== "") {
@@ -83,6 +101,14 @@ export async function initializeApp(partentPage: string, currentPage: string, ed
     if (viewSection && cancelButton) {
       await editor.load(editor_page_name);
       viewSection.innerHTML = editor.getHTML();
+      viewSection.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'IMG') {
+          const imgSrc = (target as HTMLImageElement).src;
+          showLightbox(imgSrc);
+        }
+      });
+
       auth.onAuthStateChanged(async (user) => {
         if (user) {
           const userRole = await getUserRole(user.uid);
