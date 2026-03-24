@@ -144,3 +144,38 @@ div[style*="border: 1px dashed"] > div,
   border-radius: 4px;
   z-index: 20;
 }
+
+/* Mobile Optimization for Aligned Images */
+@media (max-width: 600px) {
+    /* Target images with any alignment style in both editor and view */
+    .ql-editor img[style*="float"],
+    #content-display img[style*="float"],
+    .ql-editor img[style*="display: block"],
+    #content-display img[style*="display: block"] {
+        
+        /* 1. Reset the float and display */
+        float: none !important;
+        display: block !important;
+        
+        /* 2. Make it fill the screen width */
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important; /* Prevents stretching */
+        
+        /* 3. Reset margins to center the image and add space below */
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Optional: Ensure the text doesn't hug the image edges if any float remains */
+    .ql-editor, #content-display {
+        word-break: break-word;
+    }
+}
+
+.ql-editor::after {
+    content: "";
+    clear: both;
+    display: table;
+}
