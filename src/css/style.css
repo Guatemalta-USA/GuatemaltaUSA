@@ -259,9 +259,17 @@ main a:hover {
 
 footer {
   flex-shrink: 0;
-  background-color: var(--header-background-color);
+  background-color: var(--purple-accent);
   padding: 20px 0;
   width: 100%;
+}
+
+footer ul {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
 }
 
 /* =========================================
@@ -535,14 +543,20 @@ textarea {
   text-decoration: none;
   font-family: sans-serif;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #fff; 
   transition: 0.2s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  .social-link {
-    color: #ffffff;
-  }
+.social-link svg path:not(.brand-part) {
+  fill: currentColor;
+}
+
+.brand-part {
+  fill: var(--brand-color);
+}
+
+.social-link:hover {
+  color: var(--brand-color);
 }
 
 /* =========================================
