@@ -1,9 +1,13 @@
-import { PageContents } from "../models";
+import { PageContents, type Profile } from "../models";
 import {
+    collection,
+    deleteDoc,
     doc,
     getDoc,
+    getDocs,
     serverTimestamp,
-    setDoc
+    setDoc,
+    updateDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -46,4 +50,46 @@ export async function updatePageContents(pageName: string, updates: Partial<Page
         pageName: pageName,
         lastUpdated: serverTimestamp() 
     }, { merge: true });
+}
+
+export async function addProfile(data: Profile) {
+    try {
+        const docRef = doc(db, "profiles", data.name);
+        await setDoc(docRef, data);
+    } catch (error) {
+        console.error("Error adding profile: ", error);
+        throw new Error("Failed to add profile");
+    }
+}
+
+export async function getAllProfiles(): Promise<Profile[]> {
+  try {
+    const querySnapshot = await getDocs(collection(db, "profiles"));
+    const profiles: Profile[] = querySnapshot.docs.map(doc => doc.data() as Profile);
+    
+    return profiles;
+  } catch (error) {
+    console.error("Error fetching all profiles: ", error);
+    throw new Error("Failed to fetch profiles");
+  }
+}
+
+export async function updateProfile(name: string, updates: Partial<Profile>) {
+  try {
+    const docRef = doc(db, "profiles", name);
+    await updateDoc(docRef, updates);
+  } catch (error) {
+    console.error("Error updating profile: ", error);
+    throw new Error("Failed to update profile");
+  }
+}
+
+export async function deleteProfile(name: string) {
+  try {
+    const docRef = doc(db, "profiles", name);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error("Error deleting profile: ", error);
+    throw new Error("Failed to delete profile");
+  }
 }

@@ -1,4 +1,4 @@
-import { Message, SOCIAL_DATA } from "../models";
+import { Message, SOCIAL_DATA, type KeyValue } from "../models";
 import { Timestamp } from "firebase/firestore";
 
 export function createButton(
@@ -179,4 +179,12 @@ export function makeElement(elementType: string, elementId: string | null, eleme
   }
   if (elementText) newElement.textContent = elementText;
   return newElement;
+}
+
+export function makePBLock(pParts: KeyValue[]) {
+  return pParts.reduce((acc: HTMLElement, currentPart: KeyValue) => {
+    const nextPart = makeElement(currentPart[0], null, null, currentPart[1]);
+    acc.appendChild(nextPart);
+    return acc;
+  }, document.createElement("p"));
 }

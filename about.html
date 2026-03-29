@@ -38,8 +38,9 @@
         <header></header>
         <nav></nav>
         <section class="message-wrapper" id="main-message"></section>
-        <main id="view-content">
-            <div id="loading">
+        <main id="maincontent">
+            <div class="container">
+                <div id="loading">
                 <div class="loader"></div>
                 <h2>Loading...</h2>
             </div>
@@ -48,6 +49,7 @@
                 </div>
             </div>
             <div id="admin-controls" class="hide"></div>
+            
             <div id="edit-section" class="hide">
                 <div id="editor-container" style="height: 300px;"></div>
                 <div class="actions">
@@ -55,9 +57,32 @@
                     <button id="save-btn" class="accent-button">Save & Close</button>
                 </div>
             </div>
+            </div>
+            <div id="profiles-section"></div>
         </main>
         <footer></footer>
     </div>
+    <div id="modal-root" class="hide">
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <h2>Add Team Member</h2>
+      <form id="add-profile-form">
+        <input type="text" id="p-name" placeholder="First Name" />
+        <input type="text" id="p-position" placeholder="Position" />
+        <input type="email" id="p-email" placeholder="Email" />
+        <textarea id="p-about" placeholder="About bio..."></textarea>
+        
+        <label for="p-image">Profile Photo:</label>
+        <input type="file" id="p-image" accept="image/*" />
+
+        <div class="button-row">
+          <button type="button" id="close-modal" class="accent-button">Cancel</button>
+          <button type="submit" id="save-profile" class="accent-button">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
     <script type="module" src="src/about"></script>
 </body>
 

@@ -87,3 +87,13 @@ export const SOCIAL_DATA: Record<string, SocialPlatform> = {
     brandColor: "#E1306C"
   }
 };
+
+export interface Profile {
+  name: string;
+  photoURL: string;
+  position: string;
+  about: string;
+  email: string;
+}
+
+export type KeyValue = [string, string];

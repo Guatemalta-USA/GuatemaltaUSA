@@ -5,9 +5,10 @@ import { signOutUser } from "../firebase/authService.js";
 
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
-    const logo = document.createElement("img");
-    logo.setAttribute("src", "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png");
-    logo.setAttribute("alt", "Guatemalta USA");
+    const logo: HTMLImageElement = document.createElement("img");
+    logo.src = "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png";
+    logo.alt = "Guatemalta USA";
+    logo.classList.add("logo");
     headerElement.appendChild(logo);
     const mission = makeElement("p", "mission", null, null);
     const italics = makeElement("i", null, null, "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.");
@@ -15,19 +16,20 @@ export function loadHeader() {
     headerElement.appendChild(mission);
 }
 
-export function loadNav() {
+export function loadNav(activeNavLink: string) {
     const nav = document.querySelector("nav") as HTMLElement;
     const home = createLink("Home", "", false);
     home.addEventListener('click', () => navigateTo('/'));
+    if (activeNavLink == "Home") home.setAttribute("aria-current", "page");
     nav.appendChild(home);
     // const about = createLink("About", "", false);
-    // about.addEventListener('click', () => navigateTo('/about'))
+    // about.addEventListener('click', () => navigateTo('/about'));
+    // if (activeNavLink == "About") about.setAttribute("aria-current", "page");
     // nav.appendChild(about);
     const mailingList = createLink("Mailing List", "", false);
     mailingList.addEventListener('click', () => navigateTo('/mailinglist'));
+    if (activeNavLink == "Mailing List") mailingList.setAttribute("aria-current", "page");
     nav.appendChild(mailingList);
-    // const donate = createLink("Donate", "#", false);
-    // nav.appendChild(donate);
     const logout = makeElement("a", "logout", "hide", "Log Out");
     logout.addEventListener('click', () => signOutUser());
     nav.appendChild(logout);

@@ -30,7 +30,7 @@ function toggleMode(editor: TheEditor, isEditing: boolean) {
 }
 
 function showAdminUI(editor: TheEditor) {
-  const editButton = createButton("Edit Page Content", "button", "edit-btn", "accent-button");
+  const editButton = createButton("Edit Page Content", "button", "edit-btn", "accent-button", "edit");
   editButton.addEventListener('click', async () => {
     toggleMode(editor, true);
   });
@@ -73,7 +73,7 @@ export async function initializeApp(partentPage: string, currentPage: string, in
     }
   });
   loadHeader();
-  loadNav();
+  loadNav(partentPage);
   loadFooter();
   nav = document.querySelector("nav") as HTMLElement;
   mobileNavToggle.addEventListener("click", () => {

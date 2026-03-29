@@ -1,5 +1,9 @@
 @import "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,1,0";
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Slab&family=Roboto:wght@400;900&display=swap");
 
+/* =========================================
+   1. COLOR VARIABLES & THEMES
+   ========================================= */
 @media (prefers-color-scheme: dark) {
   :root {
     --body-background-color: #000;
@@ -8,7 +12,9 @@
     --header-color: #fff;
     --nav-background-color: #00306d;
     --nav-color: #fff;
-    --main-background-color: #2e2e2e;
+    /* --main-background-color: #2e2e2e; */
+    --main-background-color: #000;
+    --profile-card-background: #2e2e2e;
     --link-color: #9a97f3;
     --link-hover: #b7b4ff;
     --green-accent: #9fde00;
@@ -24,6 +30,7 @@
     --quill-border: #444444;
   }
 }
+
 @media (prefers-color-scheme: light) {
   :root {
     --body-background-color: #fff;
@@ -33,6 +40,7 @@
     --nav-background-color: #00306d;
     --nav-color: #fff;
     --main-background-color: #fff;
+    --profile-card-background: #fff;
     --link-color: #302ae6;
     --link-hover: #524cf5;
     --green-accent: #9fde00;
@@ -49,13 +57,49 @@
   }
 }
 
+/* =========================================
+   2. GLOBAL RESET & CORE STYLES
+   ========================================= */
 * {
   padding: 0;
   margin: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--body-background-color);
+  color: var(--body-color);
+  font-family: "Roboto Slab", serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  overflow-x: hidden;
 }
 
 .noScroll {
   overflow: hidden;
+}
+
+.hide {
+  display: none !important;
+}
+
+.material-symbols-outlined {
+  vertical-align: middle;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+a {
+  color: var(--link-color);
 }
 
 /* Screen reader */
@@ -73,7 +117,7 @@
   width: auto;
   height: auto;
   overflow: visible;
-  background-color: var(--secondary-accent);
+  background-color: var(--purple-accent);
   color: white;
   padding: 10px;
   z-index: 9999;
@@ -81,20 +125,247 @@
   border: 3px solid white;
 }
 
-body {
-  background-color: var(--body-background-color);
+#page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* =========================================
+   3. LAYOUT UTILITIES
+   ========================================= */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+}
+
+header {
+  flex-shrink: 0;
+  height: 180px;
+  width: 100%;
+  padding: 0 20px;
+  background-color: var(--header-background-color);
+  color: var(--header-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header .logo {
+  height: 110px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+nav {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 10px;
+  background-color: var(--nav-background-color);
+  color: var(--nav-color);
+  padding: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-size: 1.1rem;
+  padding: 15px 20px;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+
+nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-bottom: 3px solid var(--green-accent);
+  color: #fff;
+  text-decoration: none;
+}
+
+[aria-current]:not([aria-current="false"]) {
+  border-bottom: 3px solid var(--green-accent);
+  font-weight: 900;
+}
+
+main {
+  background-color: var(--main-background-color);
+  padding: 20px 0;
+  flex: 1 0 auto;
+  background-color: var(--main-background-color);
+  padding: 20px 0;
+}
+
+main p {
+  margin: 10px 0 !important;
+}
+
+main a:hover {
+  color: var(--link-hover);
+}
+
+.purple-background {
+  background-color: var(--purple-accent);
+  background:
+    linear-gradient(30deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
+    linear-gradient(150deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
+    linear-gradient(30deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
+    linear-gradient(150deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
+    linear-gradient(60deg, #244a85 25%, transparent 25.5%, transparent 75%, #244a85 75%, #244a85),
+    linear-gradient(60deg, #244a85 25%, transparent 25.5%, transparent 75%, #244a85 75%, #244a85);
+  background-size: 80px 140px;
+  background-position:
+    0 0,
+    0 0,
+    40px 70px,
+    40px 70px,
+    0 0,
+    40px 70px;
+  background-color: var(--purple-accent);
+  border-top: 5px solid var(--green-accent);
+  border-bottom: 5px solid var(--green-accent);
+  padding: 60px 0;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  color: #fff;
+}
+
+.purple-background .accent-button {
+  background-color: white;
+  color: black !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.purple-background .accent-button:hover {
+  background-color: white;
+  transform: translateY(-2px);
+}
+
+footer {
+  flex-shrink: 0;
+  background-color: var(--header-background-color);
+  padding: 20px 0;
+  width: 100%;
+}
+
+/* =========================================
+   4. PROFILE SECTION
+   ========================================= */
+
+.profile-card {
+  margin: 10px 0;
+  display: flex;
+  align-items: center !important;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--profile-card-background);
   color: var(--body-color);
+  border-radius: 12px;
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.material-symbols-outlined {
-  vertical-align: middle;
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 400,
-    "GRAD" 0,
-    "opsz" 24;
+.profile-image-wrapper {
+  flex: 0 0 180px;
 }
 
+.profile-card img {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-info {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-info h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.profile-position {
+  font-weight: 600;
+  color: var(--link-color);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.profile-email {
+  font-size: 0.9rem;
+  color: var(--body-color);
+  opacity: 0.8;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+/* =========================================
+   5. MOBILE NAV TOGGLE
+   ========================================= */
+#mobile-nav-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--header-color);
+  font-size: 36px;
+  cursor: pointer;
+  padding: 10px;
+  transition: transform 0.2s ease;
+  z-index: 1001;
+  cursor: pointer;
+}
+
+#mobile-nav-toggle:hover {
+  opacity: 0.8;
+}
+
+#mobile-nav-toggle:active {
+  transform: scale(0.9);
+}
+
+@media (max-width: 850px) {
+  #mobile-nav-toggle {
+    display: block;
+    position: absolute;
+    right: 20px;
+    top: 65px;
+  }
+
+  nav.open + #mobile-nav-toggle {
+    color: var(--nav-color);
+  }
+}
+
+/* =========================================
+   6. LOADING & MESSAGES
+   ========================================= */
 #loading {
   display: flex;
   justify-content: center;
@@ -116,6 +387,7 @@ body {
   mask-composite: subtract;
   animation: l3 1s infinite linear;
 }
+
 @keyframes l3 {
   to {
     transform: rotate(1turn);
@@ -141,9 +413,6 @@ body {
   gap: 5px;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: 700;
-  animation-duration: 0.2s;
-  animation-name: fade-in;
-  animation-timing-function: ease-in;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.12),
     0 1px 2px rgba(0, 0, 0, 0.24);
@@ -162,242 +431,100 @@ body {
   background-color: var(--success-background);
   color: var(--message-text);
 }
-
 .error {
   background-color: var(--error-background);
   color: var(--message-text);
 }
-
 .warn {
   background-color: var(--delete-background);
   color: var(--message-text);
 }
-
 .info {
   background-color: var(--info-background);
   color: var(--message-text);
 }
 
-.hide {
-  display: none !important;
-}
-
-a {
-  color: var(--link-color);
-}
-
-header {
-  height: 180px;
-  width: calc(100% - 20px);
-  padding: 0 10px;
-  background-color: var(--header-background-color);
-  color: var(--header-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
-nav {
-  width: 90vw;
-  padding: 0 30px;
-  border-radius: 20px;
-  background-color: var(--nav-background-color);
-  color: var(--nav-color);
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 20px;
-  font-size: 20px;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-nav a {
-  color: #fff;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-nav a:hover {
-  text-decoration: underline;
-}
-
-main {
-  background-color: var(--main-background-color);
-  padding: 20px;
-  border-radius: 20px;
-  grid-area: main;
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-}
-
-main p {
-  margin: 10px 0 !important;
-}
-
-main a {
-  color: var(--link-color) !important;
-}
-
-main a:hover {
-  color: var(--link-hover);
-}
-
-footer ul {
-  display: flex;
+/* =========================================
+   7. MODALS & FORMS
+   ========================================= */
+#modal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
   justify-content: center;
   align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: var(--main-background-color);
+  padding: 24px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input,
+textarea {
+  padding: 10px;
+  border: 1px solid var(--quill-border);
+  background: var(--body-background-color);
+  color: var(--body-color);
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
   gap: 10px;
 }
 
-footer ul li {
-  list-style: none;
+/* =========================================
+   8. LIGHTBOX & SOCIALS
+   ========================================= */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: zoom-out;
+  animation: fadeIn 0.3s ease;
 }
 
-/* Media breakpoints */
-/*Screens 1045 and larger*/
-@media (min-width: 1045px) {
-  main {
-    width: 100%;
-    max-width: 900px;
-  }
-
-  #mobile-nav-toggle {
-    display: none;
-  }
-
-  h2 {
-    font-size: 36px;
-  }
-
-  header img {
-    height: auto;
-    width: 465px;
-  }
-
-  .card {
-    max-width: 900px;
-  }
-
-  footer {
-    width: 100vw;
-    flex-direction: row;
-    justify-content: space-around;
-  }
+.lightbox-image {
+  max-width: 95%;
+  max-height: 85%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
 }
 
-/* Screens between 851px and 1044px */
-@media (min-width: 851px) and (max-width: 1044px) {
-
-  header img {
-    height: auto;
-    width: 465px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-
-  #mobile-nav-toggle {
-    display: none;
-  }
-  
-}
-
-/* Screens smaller than 850 */
-@media (max-width: 850px) {
-  header {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 25px 10px 0 10px;
-  }
-
-  header img {
-    height: auto;
-    width: 90vw;
-  }
-
-  #mobile-nav-toggle {
-    display: block;
-    position: absolute;
-    right: 20px;
-    top: 25px;
-    font-size: 50px;
-    background-color: transparent;
-    border: 0;
-    color: var(--main-text);
-    z-index: 2;
-  }
-
-  nav {
-    padding-top: 110px;
-    flex-direction: column;
-    justify-content: flex-start;
-    background-color: var(--purple-accent);
-    border-radius: 0;
-    box-shadow:
-      0 3px 6px rgba(0, 0, 0, 0.16),
-      0 3px 6px rgba(0, 0, 0, 0.23);
-    width: 80%;
-    height: 100vh;
-    max-width: 0;
-    visibility: hidden;
-    width: 80%;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  nav a,
-  nav button {
-    width: calc(100% - 20px);
-    font-size: 25px;
-    padding: 5px 10px;
-  }
-
-  nav button {
-    margin: 10px 0;
-  }
-
-  nav.open {
-    display: flex;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    max-width: 1000px;
-    visibility: visible;
-  }
-
-  main {
-    margin: 0 10px;
-  }
-
-  .backdrop {
-    justify-content: flex-start;
-    z-index: 3;
-  }
-
-  .modal {
-    margin-top: 10px;
-    width: calc(85vw);
-  }
-
-  .card {
-    width: 85%;
-  }
-
-  footer {
-    padding: 20px 10px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  footer a {
-    transition: background-color 0.2s ease;
-  }
-
-  footer a:hover,
-  footer a:focus {
-    background-color: rgba(255, 255, 255, 0.1);
+  to {
+    opacity: 1;
   }
 }
 
@@ -408,80 +535,70 @@ footer ul li {
   text-decoration: none;
   font-family: sans-serif;
   font-weight: 600;
-  color: #1a1a1a; 
+  color: #1a1a1a;
   transition: 0.2s ease;
 }
 
-/* For simple icons like Facebook, the whole thing follows text color */
-.social-link svg path:not(.brand-part) {
-  fill: currentColor;
-}
-
-.brand-part {
-  fill: var(--brand-color);
-}
-
-.social-link:hover {
-  color: var(--brand-color);
-}
-
-/* Dark Mode Logic */
 @media (prefers-color-scheme: dark) {
   .social-link {
-    color: #FFFFFF; /* Text and "dynamic" parts turn white */
+    color: #ffffff;
   }
 }
 
-/* Image lightbox */
-/* The content display images should look clickable */
-#content-display img {
-    cursor: zoom-in;
-    transition: transform 0.2s ease;
+/* =========================================
+   9. RESPONSIVE QUERIES
+   ========================================= */
+
+@media (min-width: 851px) {
+  .flex-reverse {
+    flex-direction: row-reverse;
+  }
+
+  .profile-card img {
+    border-radius: 180px;
+  }
 }
 
-#content-display img:hover {
-    transform: scale(1.01);
-}
-
-/* The Lightbox Design */
-.lightbox-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.9);
+@media (max-width: 850px) {
+  header {
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    z-index: 9999;
-    cursor: zoom-out;
-    animation: fadeIn 0.3s ease;
-}
+    padding: 25px 10px 0 10px;
+    height: auto;
+  }
 
-.lightbox-image {
-    max-width: 95%;
-    max-height: 85%;
-    object-fit: contain;
-    border-radius: 4px;
-    box-shadow: 0 10px 50px rgba(0,0,0,0.5);
-}
+  header img {
+    width: 90vw;
+  }
 
-.lightbox-hint {
-    color: #ccc;
-    margin-top: 20px;
-    font-family: sans-serif;
-    font-size: 0.9rem;
-}
+  nav {
+    padding-top: 110px;
+    flex-direction: column;
+    background-color: var(--purple-accent);
+    width: 80%;
+    height: 100vh;
+    max-width: 0;
+    visibility: hidden;
+    overflow: hidden;
+  }
 
-/* Smooth Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+  nav.open {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    max-width: 1000px;
+    visibility: visible;
+  }
 
-.fadeOut {
-    opacity: 0;
-    transition: opacity 0.2s ease;
+  .profile-card {
+    flex-direction: column;
+  }
+
+  .profile-image-wrapper,
+  .profile-card img {
+    width: 100%;
+    height: 250px;
+  }
 }
