@@ -5,6 +5,8 @@ import {
     doc,
     getDoc,
     getDocs,
+    orderBy,
+    query,
     serverTimestamp,
     setDoc,
     updateDoc
@@ -64,9 +66,13 @@ export async function addProfile(data: Profile) {
 
 export async function getAllProfiles(): Promise<Profile[]> {
   try {
-    const querySnapshot = await getDocs(collection(db, "profiles"));
-    const profiles: Profile[] = querySnapshot.docs.map(doc => doc.data() as Profile);
-    
+    const profilesQuery = query(collection(db, "profiles"), orderBy("name", "asc"));
+    const querySnapshot = await getDocs(profilesQuery);
+
+    const profiles: Profile[] = querySnapshot.docs.map(doc => ({
+      ...doc.data()
+    } as Profile));
+
     return profiles;
   } catch (error) {
     console.error("Error fetching all profiles: ", error);
