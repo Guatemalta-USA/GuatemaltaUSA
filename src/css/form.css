@@ -133,7 +133,3 @@ table li {
 .edit-btn:hover, .delete-btn:hover {
   filter: brightness(1.2);
 }
-
-.flex-reverse {
-  flex-direction: row-reverse;
-}

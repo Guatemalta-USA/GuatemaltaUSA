@@ -301,8 +301,7 @@ footer ul {
 .profile-card img {
   width: 180px;
   height: 180px;
-  object-fit: cover;
-  display: block;
+  border-radius: 180px;
 }
 
 .profile-info {
@@ -563,13 +562,15 @@ textarea {
    9. RESPONSIVE QUERIES
    ========================================= */
 
-@media (min-width: 851px) {
+@media (min-width: 701px) {
   .flex-reverse {
     flex-direction: row-reverse;
   }
+}
 
-  .profile-card img {
-    border-radius: 180px;
+@media (max-width: 700px) {
+  .profile-card {
+    flex-direction: column;
   }
 }
 
@@ -604,15 +605,5 @@ textarea {
     right: 0;
     max-width: 1000px;
     visibility: visible;
-  }
-
-  .profile-card {
-    flex-direction: column;
-  }
-
-  .profile-image-wrapper,
-  .profile-card img {
-    width: 100%;
-    height: 250px;
   }
 }
