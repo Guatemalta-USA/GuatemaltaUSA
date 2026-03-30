@@ -1,7 +1,38 @@
-import { navigateTo } from "./navigate.js";
+import { navigateTo, type AppPath } from "./navigate.js";
 import { createLink, createSocialLink, makeElement } from "./utils.js";
 import { auth } from "../firebase/firebase.js";
 import { signOutUser } from "../firebase/authService.js";
+
+type NavItem = {
+    label: string;
+    path: AppPath;
+};
+
+const NAV_ITEMS: NavItem[] = [
+    { label: "Home", path: "/" },
+    { label: "Mailing List", path: "/mailinglist" }
+];
+
+//{ label: "About", path: "/about" },
+
+export function loadNav(activeNavLink: string) {
+    const nav = document.querySelector("nav") as HTMLElement;
+    nav.innerHTML = "";
+    NAV_ITEMS.forEach(({ label, path }) => {
+        const link = createLink(label, "", false);
+        link.addEventListener('click', () => navigateTo(path));
+        if (activeNavLink === label) {
+            link.setAttribute("aria-current", "page");
+        }
+        nav.appendChild(link);
+    });
+    const logout = makeElement("a", "logout", "hide", "Log Out");
+    logout.addEventListener('click', () => signOutUser());
+    nav.appendChild(logout);
+    auth.onAuthStateChanged((user) => {
+        user ? logout.classList.remove("hide") : logout.classList.add("hide");
+    });
+}
 
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
@@ -14,30 +45,6 @@ export function loadHeader() {
     const italics = makeElement("i", null, null, "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.");
     mission.appendChild(italics);
     headerElement.appendChild(mission);
-}
-
-export function loadNav(activeNavLink: string) {
-    const nav = document.querySelector("nav") as HTMLElement;
-    const home = createLink("Home", "", false);
-    home.addEventListener('click', () => navigateTo('/'));
-    if (activeNavLink == "Home") home.setAttribute("aria-current", "page");
-    nav.appendChild(home);
-    // const about = createLink("About", "", false);
-    // about.addEventListener('click', () => navigateTo('/about'));
-    // if (activeNavLink == "About") about.setAttribute("aria-current", "page");
-    // nav.appendChild(about);
-    const mailingList = createLink("Mailing List", "", false);
-    mailingList.addEventListener('click', () => navigateTo('/mailinglist'));
-    if (activeNavLink == "Mailing List") mailingList.setAttribute("aria-current", "page");
-    nav.appendChild(mailingList);
-    const logout = makeElement("a", "logout", "hide", "Log Out");
-    logout.addEventListener('click', () => signOutUser());
-    nav.appendChild(logout);
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            logout.classList.remove("hide");
-        }
-    });
 }
 
 export function loadFooter() {
