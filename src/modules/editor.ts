@@ -73,6 +73,28 @@ class StandardLink extends (Link as any) {
     }
 }
 
+const VideoFormat = Quill.import('formats/video') as any;
+
+class YouTubeVideo extends VideoFormat {
+    static create(value: string) {
+        const node = super.create(value);
+        const url = this.sanitize(value);
+        node.setAttribute('src', url);
+        node.setAttribute('frameborder', '0');
+        node.setAttribute('allowfullscreen', 'true');
+        node.setAttribute('style', 'width: 100%; aspect-ratio: 16/9;');
+        return node;
+    }
+
+    static sanitize(url: string) {
+        const youtubeMatch = url.match(/^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/);
+        if (youtubeMatch) {
+            return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+        }
+        return url;
+    }
+}
+Quill.register(YouTubeVideo, true);
 Quill.register(ActionLink);
 Quill.register(StandardLink, true);
 
@@ -96,8 +118,8 @@ export class TheEditor {
                         [{ header: [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        ['link', 'action-link', { 'nav-link': ALL_APP_PATHS }],
-                        ['image'],
+                        ['link', { 'nav-link': ALL_APP_PATHS }, 'action-link'],
+                        ['image', 'video'],
                         ['clean']
                     ],
                     handlers: {
@@ -129,6 +151,15 @@ export class TheEditor {
                                 backgroundColor: '#a855f7',
                                 border: 'none',
                                 color: 'white'
+                            }
+                        },
+                        'video': () => {
+                            const url = prompt('Enter YouTube URL:');
+                            if (url) {
+                                const range = this.quill.getSelection();
+                                if (range) {
+                                    this.quill.insertEmbed(range.index, 'video', url, Quill.sources.USER);
+                                }
                             }
                         }
                     }

@@ -179,3 +179,15 @@ div[style*="border: 1px dashed"] > div,
     clear: both;
     display: table;
 }
+
+.ql-video {
+    display: block;
+    max-width: 100%;
+    margin: 10px 0;
+}
+
+iframe.ql-video {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: auto;
+}
