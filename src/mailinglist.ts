@@ -61,7 +61,7 @@ async function submitData(form: HTMLFormElement) {
 }
 
 
-initializeApp("Mailing List", "Mailing List", false).then(async () => {
+initializeApp("Mailing List", "Mailing List").then(async () => {
     mailingForm.addEventListener('submit', (e) => {
         e.preventDefault();
         submitData(mailingForm);

@@ -43,6 +43,18 @@
 }
 
 /* 4. EDITOR & DISPLAY CONTAINERS */
+.ql-editor {
+    font-size: inherit !important; 
+    font-family: inherit !important;
+    line-height: 1.6;
+    padding: 0;
+}
+
+.ql-editor p {
+    font-size: 1rem; /* Adjust this to match your page's <p> tag size */
+    margin-bottom: 1.2em;
+}
+
 .ql-container.ql-snow,
 #editor-container,
 #edit-section {
@@ -62,7 +74,7 @@
 /* 5. LINKS (Action Buttons & External) */
 .ql-editor a.action-link, 
 #content-display a.action-link {
-  background-color: var(--purple-accent) !important;
+  background-color: var(--blue-accent) !important;
   color: #ffffff !important;
   padding: 10px 20px;
   margin: 5px 0;
@@ -100,7 +112,7 @@
 
 /* 7. IMAGES & RESIZING */
 .ql-editor img { max-width: 100%; transition: outline 0.2s; }
-.ql-editor img.ql-active { outline: 2px solid var(--purple-accent); cursor: pointer; }
+.ql-editor img.ql-active { outline: 2px solid var(--blue-accent); cursor: pointer; }
 
 .ql-editor img[style*="display: block; margin: auto;"],
 #content-display img[style*="display: block; margin: auto;"] {
@@ -147,28 +159,20 @@ div[style*="border: 1px dashed"] > div,
 
 /* Mobile Optimization for Aligned Images */
 @media (max-width: 600px) {
-    /* Target images with any alignment style in both editor and view */
     .ql-editor img[style*="float"],
     #content-display img[style*="float"],
     .ql-editor img[style*="display: block"],
     #content-display img[style*="display: block"] {
-        
-        /* 1. Reset the float and display */
         float: none !important;
         display: block !important;
-        
-        /* 2. Make it fill the screen width */
         width: 100% !important;
         max-width: 100% !important;
-        height: auto !important; /* Prevents stretching */
-        
-        /* 3. Reset margins to center the image and add space below */
+        height: auto !important;
         margin-left: auto !important;
         margin-right: auto !important;
         margin-bottom: 20px !important;
     }
 
-    /* Optional: Ensure the text doesn't hug the image edges if any float remains */
     .ql-editor, #content-display {
         word-break: break-word;
     }
@@ -190,4 +194,31 @@ iframe.ql-video {
     aspect-ratio: 16 / 9;
     width: 100%;
     height: auto;
+}
+
+.post-link {
+  cursor: pointer;
+}
+
+#editor-container .ql-editor {
+    min-height: 200px;
+    height: auto !important;
+    overflow-y: visible !important;
+}
+
+#editor-container {
+    height: auto !important;
+    border-bottom: 1px solid #ccc;
+}
+
+#project-details {
+  margin-bottom: 10px;
+}
+#post-title-input, #project-title-input {
+  width: 100%;
+  font-size: 25px;
+}
+
+#author-input {
+  font-size: 20px;
 }

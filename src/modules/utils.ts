@@ -82,12 +82,12 @@ export function createTableHeader(tableHeadings: string[], textAlign: string) {
 export function createSimpleTableRow(rowCells: string[], isHTML: boolean) {
   if (isHTML) {
     const tableRow = rowCells.reduce((acc: HTMLElement, currentCell: string) => {
-    const newCell = document.createElement("td");
-    newCell.innerHTML = currentCell;
-    acc.appendChild(newCell);
-    return acc;
-  }, document.createElement("tr"));
-  return tableRow;
+      const newCell = document.createElement("td");
+      newCell.innerHTML = currentCell;
+      acc.appendChild(newCell);
+      return acc;
+    }, document.createElement("tr"));
+    return tableRow;
   } else {
     const tableRow = rowCells.reduce((acc: HTMLElement, currentCell: string) => {
       const newCell = makeElement("td", null, null, currentCell);
@@ -107,7 +107,7 @@ export function createSocialLink(platformKey: string, size: number = 24): HTMLAn
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   link.classList.add('social-link');
-  
+
   // Custom property to tell CSS what the brand color is
   link.style.setProperty('--brand-color', data.brandColor);
 
@@ -187,4 +187,42 @@ export function makePBLock(pParts: KeyValue[]) {
     acc.appendChild(nextPart);
     return acc;
   }, document.createElement("p"));
+}
+
+export function showLightbox(url: string) {
+  const overlay = document.createElement('div');
+  overlay.className = 'lightbox-overlay';
+  const img = document.createElement('img');
+  img.src = url;
+  img.className = 'lightbox-image';
+  const hint = document.createElement('span');
+  hint.textContent = 'Click anywhere to close';
+  hint.className = 'lightbox-hint';
+
+  const gallery = document.getElementById("gallery-container");
+  if (gallery) {
+    gallery.style.animationPlayState = 'paused';
+  }
+
+  overlay.append(img, hint);
+  document.body.appendChild(overlay);
+  overlay.onclick = () => {
+    overlay.classList.add('fadeOut');
+    setTimeout(() => overlay.remove(), 200);
+    if (gallery) {
+      gallery.style.animationPlayState = 'running';
+    }
+  };
+
+  const handleEsc = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      overlay.classList.add('fadeOut');
+      setTimeout(() => overlay.remove(), 200);
+      if (gallery) {
+        gallery.style.animationPlayState = 'running';
+      }
+
+    }
+  };
+  window.addEventListener("keydown", handleEsc);
 }

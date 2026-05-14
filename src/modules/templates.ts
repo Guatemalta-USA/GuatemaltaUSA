@@ -7,30 +7,35 @@ type NavItem = {
     label: string;
     path: AppPath;
 };
-
+//{ label: "About Us", path: "/about" },
 const NAV_ITEMS: NavItem[] = [
     { label: "Home", path: "/" },
-    { label: "Mailing List", path: "/mailinglist" }
-];
-
-//{ label: "About", path: "/about" },
+    { label: "Impact", path: "/impact/currentprojects" }, 
+    { label: "Blog", path: "/blog" },
+    { label: "Mailing List", path: "/mailinglist" },
+] as const;
 
 export function loadNav(activeNavLink: string) {
     const nav = document.querySelector("nav") as HTMLElement;
-    nav.innerHTML = "";
-    NAV_ITEMS.forEach(({ label, path }) => {
-        const link = createLink(label, "", false);
-        link.addEventListener('click', () => navigateTo(path));
-        if (activeNavLink === label) {
-            link.setAttribute("aria-current", "page");
+    if (!nav) return;
+    auth.onAuthStateChanged(async (user) => {
+        nav.innerHTML = "";
+        NAV_ITEMS.forEach(({ label, path }) => {
+            const link = createLink(label, "", false);
+            link.addEventListener('click', () => navigateTo(path as any));
+            if (activeNavLink === label) {
+                link.setAttribute("aria-current", "page");
+            }
+            nav.appendChild(link);
+        });
+        if (user) {
+            const logout = makeElement("a", "logout", "", "Log Out");
+            logout.addEventListener('click', (e) => {
+                e.preventDefault();
+                signOutUser();
+            });
+            nav.appendChild(logout);
         }
-        nav.appendChild(link);
-    });
-    const logout = makeElement("a", "logout", "hide", "Log Out");
-    logout.addEventListener('click', () => signOutUser());
-    nav.appendChild(logout);
-    auth.onAuthStateChanged((user) => {
-        user ? logout.classList.remove("hide") : logout.classList.add("hide");
     });
 }
 
@@ -57,5 +62,5 @@ export function loadFooter() {
     const instagram = createSocialLink("instagram", 20);
     if (instagram) ul.appendChild(instagram);
     footerElement.appendChild(ul);
-    
+
 }

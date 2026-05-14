@@ -1,21 +1,32 @@
-.accent-button, .action-link {
-    border: 0;
-    background-color: var(--purple-accent);
-    color: #fff !important;
-    cursor: pointer;
-    margin: 5px;
-    border: 0;
-    padding: 10px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: 900;
-    text-decoration: none !important;
-    display: inline-block;
-    text-align: center;
-    font-size: 1rem;
+.accent-button,
+.action-link,
+.icon-button {
+  border: 0;
+  background-color: var(--blue-accent);
+  color: #fff !important;
+  cursor: pointer;
+  margin: 5px;
+  border: 0;
+  padding: 10px;
+  font-weight: 900;
+  text-decoration: none !important;
+  display: inline-block;
+  text-align: center;
 }
 
-.accent-button:hover, .action-link:hover {
-    background-color: #00459c;
+.accent-button,
+.action-link {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+}
+
+.icon-button {
+  font-size: 30px;
+}
+
+.accent-button:hover,
+.action-link:hover {
+  background-color: #00459c;
 }
 
 .form-row {
@@ -26,7 +37,7 @@
   margin: 5px 0;
 }
 
-.form-row input[type=text] {
+.form-row input[type="text"] {
   flex-grow: 1;
 }
 
@@ -47,15 +58,15 @@
 }
 
 textarea {
-    width: 100%;
-    min-height: 300px;
-    field-sizing: content;
-    box-sizing: border-box;
-    overflow-y: auto;
-    border: 1px solid var(--body-color);
-    background-color: var(--main-background-color);
-    color: var(--body-color);
-    font-size: 15px;
+  width: 100%;
+  min-height: 300px;
+  field-sizing: content;
+  box-sizing: border-box;
+  overflow-y: auto;
+  border: 1px solid var(--body-color);
+  background-color: var(--main-background-color);
+  color: var(--body-color);
+  font-size: 15px;
 }
 
 input,
@@ -76,7 +87,8 @@ th {
   border-bottom: 1px solid var(--body-color);
 }
 
-td, th {
+td,
+th {
   padding: 5px;
 }
 
@@ -109,7 +121,8 @@ table li {
   padding-top: 15px;
 }
 
-.edit-btn, .delete-btn {
+.edit-btn,
+.delete-btn {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -130,6 +143,54 @@ table li {
   color: white;
 }
 
-.edit-btn:hover, .delete-btn:hover {
+.edit-btn:hover,
+.delete-btn:hover {
   filter: brightness(1.2);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3; /* Firebase Blue */
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
 }

@@ -1,6 +1,6 @@
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
-import { addProfile, deleteProfile, getAllProfiles, updateProfile } from "./firebase/firebaseService";
+import { addProfile, deleteProfile, getAllProfiles, getProfilesByCountry, updateProfile } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import type { Profile } from "./models";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService";
@@ -15,6 +15,7 @@ const addProfileForm = document.getElementById('add-profile-form') as HTMLFormEl
 const cancelButton = document.getElementById("close-modal");
 let editingProfileId: string | null = null;
 let isAdmin = false;
+const countries: string[] = ["usa", "guatemala"];
 
 
 async function handleSubmit() {
@@ -41,17 +42,18 @@ async function handleSubmit() {
         } else if (editingProfileId && existingProfile) {
             photoURL = existingProfile.photoURL;
         }
-
+        const selectElement = document.getElementById("country") as HTMLSelectElement;
         const profileData: Profile = {
             name: (document.getElementById('p-name') as HTMLInputElement).value,
             position: (document.getElementById('p-position') as HTMLInputElement).value,
             email: (document.getElementById('p-email') as HTMLInputElement).value,
             about: (document.getElementById('p-about') as HTMLTextAreaElement).value,
+            country: selectElement.value,
             photoURL: photoURL
         };
 
         if (editingProfileId) {
-            await updateProfile(editingProfileId, profileData); 
+            await updateProfile(editingProfileId, profileData);
             createMessage("Profile updated!", "main-message", "edit");
         } else {
             if (!file) {
@@ -68,9 +70,9 @@ async function handleSubmit() {
         modalRoot.style.display = 'none';
         addProfileForm.reset();
         editingProfileId = null;
-        
+
         await loadProfiles();
-        
+
     } catch (error) {
         console.error("Error in handleSubmit:", error);
         createMessage("An error occurred while saving the profile.", "main-message", "error");
@@ -81,85 +83,97 @@ async function handleSubmit() {
 }
 
 async function loadProfiles() {
-    let profiles: Profile[] = await getAllProfiles();
     profilesSection.innerHTML = "";
-    
-    if (profiles.length !== 0) {
-        profilesSection.classList.add("purple-background");
-        const profilesContainer = makeElement("div", null, "container", null);
-        const profileHeading = makeElement("h2", "", "", "Our Team");
-        profilesContainer.appendChild(profileHeading);
+    countries.forEach(async (country: string) => {
+        let profilesForCountry: Profile[] = await getProfilesByCountry(country);
+        if (profilesForCountry.length !== 0) {
+            profilesSection.classList.add("purple-background");
 
-        const profilesDiv = profiles.reduce((acc: HTMLElement, currentProfile: Profile, index) => {
-            const profileArticle = makeElement("article", null, "profile-card", null);
-            if (index % 2 !== 0) profileArticle.classList.add("flex-reverse");
-            
-            const profilePicture = document.createElement("img");
-            profilePicture.src = currentProfile.photoURL;
-            profileArticle.appendChild(profilePicture);
+            const profilesContainer = makeElement("div", null, "container", null);
 
-            const detailsContainer = makeElement("div", null, "profile-info", null);
-            const profileName = makeElement("h3", null, null, currentProfile.name);
-            detailsContainer.appendChild(profileName);
-
-            const about = makePBLock([
-                ["b", currentProfile.position],
-                ["br", ""],
-                ["span", currentProfile.about]
-            ]);
-            detailsContainer.appendChild(about);
-            if (isAdmin) {
-                const actionsDiv = makeElement("div", null, "profile-actions", null);
-                
-                const editBtn = createButton("Edit", "button", `edit-${index}`, "edit-btn", "edit");
-                editBtn.onclick = () => handleEdit(currentProfile);
-                
-                const deleteBtn = createButton("Delete", "button", `del-${index}`, "delete-btn", "delete");
-                deleteBtn.onclick = async () => {
-                    if(confirm(`Are you sure you want to delete ${currentProfile.name}? This will also remove their photo.`)) {
-                        try {
-                            if (currentProfile.photoURL) {
-                                await deleteImage(currentProfile.photoURL);
-                            }
-                            await deleteProfile(currentProfile.name);
-                            await loadProfiles();
-                            createMessage("Profile and image deleted successfully.", "main-message", "delete");
-                        } catch (err) {
-                            console.error("Delete failed:", err);
-                            createMessage("Failed to fully delete the profile. Please try reloading the page", "main-message", "error");
-                        }
-                    }
-                };
-
-                actionsDiv.appendChild(editBtn);
-                actionsDiv.appendChild(deleteBtn);
-                detailsContainer.appendChild(actionsDiv);
+            const titleText = country.charAt(0).toUpperCase() + country.slice(1);
+            if (country === "usa") {
+                const countryH2 = makeElement("h2", "", "", `Our USA Team`);
+                profilesContainer.appendChild(countryH2);
+            } else {
+                const countryH2 = makeElement("h2", "", "", `Our ${titleText} Team`);
+                profilesContainer.appendChild(countryH2);
             }
 
-            profileArticle.appendChild(detailsContainer);
-            acc.appendChild(profileArticle);
-            return acc;
-        }, document.createElement("div"));
 
-        profilesDiv.setAttribute("id", "team-grid");
-        profilesContainer.appendChild(profilesDiv);
-        profilesSection.appendChild(profilesContainer);
-    }
+            const profilesDiv = profilesForCountry.reduce((acc: HTMLElement, currentProfile: Profile, index) => {
+                const profileArticle = makeElement("article", null, "profile-card", null);
+                if (index % 2 !== 0) profileArticle.classList.add("flex-reverse");
+                const imgContainer = makeElement("div", null, "image-container", null);
+                const profilePicture = document.createElement("img");
+                profilePicture.src = currentProfile.photoURL;
+                imgContainer.appendChild(profilePicture);
+                profileArticle.appendChild(imgContainer);
+
+                const detailsContainer = makeElement("div", null, "profile-info", null);
+                const profileName = makeElement("h3", null, null, currentProfile.name);
+                detailsContainer.appendChild(profileName);
+
+                const about = makePBLock([
+                    ["b", currentProfile.position],
+                    ["br", ""],
+                    ["span", currentProfile.about]
+                ]);
+                detailsContainer.appendChild(about);
+                if (isAdmin) {
+                    const actionsDiv = makeElement("div", null, "profile-actions", null);
+
+                    const editBtn = createButton("Edit", "button", `edit-${index}`, "edit-btn", "edit");
+                    editBtn.onclick = () => handleEdit(currentProfile);
+
+                    const deleteBtn = createButton("Delete", "button", `del-${index}`, "delete-btn", "delete");
+                    deleteBtn.onclick = async () => {
+                        if (confirm(`Are you sure you want to delete ${currentProfile.name}? This will also remove their photo.`)) {
+                            try {
+                                if (currentProfile.photoURL) {
+                                    await deleteImage(currentProfile.photoURL);
+                                }
+                                await deleteProfile(currentProfile.name);
+                                await loadProfiles();
+                                createMessage("Profile and image deleted successfully.", "main-message", "delete");
+                            } catch (err) {
+                                console.error("Delete failed:", err);
+                                createMessage("Failed to fully delete the profile. Please try reloading the page", "main-message", "error");
+                            }
+                        }
+                    };
+
+                    actionsDiv.appendChild(editBtn);
+                    actionsDiv.appendChild(deleteBtn);
+                    detailsContainer.appendChild(actionsDiv);
+                }
+
+                profileArticle.appendChild(detailsContainer);
+                acc.appendChild(profileArticle);
+                return acc;
+            }, document.createElement("div"));
+
+            profilesDiv.setAttribute("id", "team-grid");
+            profilesContainer.appendChild(profilesDiv);
+            profilesSection.appendChild(profilesContainer);
+        }
+    });
 }
 
 function handleEdit(profile: Profile) {
-    editingProfileId = profile.name || null; 
+    editingProfileId = profile.name || null;
     const nameInput = document.getElementById('p-name') as HTMLInputElement;
     nameInput.value = profile.name;
     (document.getElementById('p-position') as HTMLInputElement).value = profile.position;
     (document.getElementById('p-email') as HTMLInputElement).value = profile.email;
     (document.getElementById('p-about') as HTMLTextAreaElement).value = profile.about;
+    (document.getElementById("country") as HTMLSelectElement).value = profile.country;
     nameInput.readOnly = true;
     nameInput.style.backgroundColor = "var(--table-even-row)";
     nameInput.style.cursor = "not-allowed";
     const submitBtn = document.getElementById('save-profile') as HTMLButtonElement;
     const modalTitle = modalRoot.querySelector('h2');
-    
+
     if (modalTitle) modalTitle.innerText = `Editing: ${profile.name}`;
     submitBtn.innerText = "Update Profile";
 
@@ -167,32 +181,31 @@ function handleEdit(profile: Profile) {
     modalRoot.style.display = 'flex';
 }
 
-initializeApp("About", "About", true).then(async () => {
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            const role = await getUserRole(user.uid);
-            isAdmin = (role === "admin");
-            
-            if (isAdmin) {
-                const addBtn = createButton("Add new member", "button", "addNew", "accent-button", "add");
-                addBtn.onclick = () => {
-                    modalRoot.classList.remove("hide");
-                    modalRoot.style.display = 'flex';
-                };
-                adminControls.appendChild(addBtn);
-            }
+await initializeApp('About Us', 'About Us', { type: 'page', pageName: 'About' });
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        const role = await getUserRole(user.uid);
+        isAdmin = (role === "admin");
+
+        if (isAdmin) {
+            const addBtn = createButton("Add new member", "button", "addNew", "accent-button", "add");
+            addBtn.onclick = () => {
+                modalRoot.classList.remove("hide");
+                modalRoot.style.display = 'flex';
+            };
+            adminControls.appendChild(addBtn);
         }
-        await loadProfiles();
-        addProfileForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleSubmit();
-        })
-        if (loading) loading.remove();
-        viewSection.classList.remove("hide");
-    });
-    cancelButton?.addEventListener('click', () => {
-        modalRoot.classList.add("hide");
-        modalRoot.style.display = 'none';
-        addProfileForm.reset();
-    });
+    }
+    await loadProfiles();
+    addProfileForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleSubmit();
+    })
+    if (loading) loading.remove();
+    viewSection.classList.remove("hide");
+});
+cancelButton?.addEventListener('click', () => {
+    modalRoot.classList.add("hide");
+    modalRoot.style.display = 'none';
+    addProfileForm.reset();
 });

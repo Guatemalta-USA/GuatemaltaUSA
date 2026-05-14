@@ -1,12 +1,13 @@
 import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
-import { clearMessages, createButton, createMessage } from "./modules/utils.js";
-import { Message } from "./models.js";
+import { clearMessages, createButton, createMessage, showLightbox } from "./modules/utils.js";
+import { Post, Project } from "./models.js";
 import { TheEditor } from "./modules/editor.js";
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
+import { Timestamp } from 'firebase/firestore';
+import { getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
 
 let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
-let nav: HTMLElement;
 
 const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
@@ -40,31 +41,23 @@ function showAdminUI(editor: TheEditor) {
   }
 }
 
-function showLightbox(url: string) {
-    const overlay = document.createElement('div');
-    overlay.className = 'lightbox-overlay';
-    const img = document.createElement('img');
-    img.src = url;
-    img.className = 'lightbox-image';
-    const hint = document.createElement('span');
-    hint.textContent = 'Click anywhere to close';
-    hint.className = 'lightbox-hint';
+type EditorMode =
+  | { type: 'page'; pageName: string }
+  | { type: 'post'; postId?: string }
+  | { type: 'project'; projectId?: string }
+  | null;
 
-    overlay.append(img, hint);
-    document.body.appendChild(overlay);
-    overlay.onclick = () => {
-        overlay.classList.add('fadeOut');
-        setTimeout(() => overlay.remove(), 200);
-    };
-}
-
-export async function initializeApp(partentPage: string, currentPage: string, includeEditor: boolean) {
-  console.log(partentPage);
+export async function initializeApp(
+  parentPage: string,
+  currentPage: string,
+  editorConfig: EditorMode = null
+) {
+  // Set page title
   if (currentPage !== "") {
-    //Set the page title
     document.title = `${currentPage} - Guatemalta USA`;
   }
-  //Wait for the DOM to load
+
+  // Load DOM
   await new Promise<void>(resolve => {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => resolve(), { once: true });
@@ -72,41 +65,57 @@ export async function initializeApp(partentPage: string, currentPage: string, in
       resolve();
     }
   });
+
   loadHeader();
-  loadNav(partentPage);
+  loadNav(parentPage);
   loadFooter();
-  nav = document.querySelector("nav") as HTMLElement;
+
+  const nav = document.querySelector("nav") as HTMLElement;
   mobileNavToggle.addEventListener("click", () => {
     nav.classList.toggle("open");
     const isOpen = nav.classList.contains("open");
-    if (isOpen) {
-      mobileNavToggle.innerText = "close";
-      mobileNavToggle.style.color = "#fff";
-    } else {
-      mobileNavToggle.innerText = "menu";
-      mobileNavToggle.style.color = "var(--main-color)";
-    }
+    mobileNavToggle.innerText = isOpen ? "close" : "menu";
+    mobileNavToggle.style.color = isOpen ? "#fff" : "var(--main-color)";
   });
 
-  // Check if there are any stored messages to display
   const storedMessageString = sessionStorage.getItem("message");
   if (storedMessageString) {
-    const storedMessage: Message = JSON.parse(storedMessageString);
+    const storedMessage = JSON.parse(storedMessageString);
     createMessage(storedMessage['message'], storedMessage['messageContainer'], storedMessage['icon']);
     sessionStorage.removeItem("message");
   }
 
-  if (includeEditor) {
+  // Editor Logic
+  if (editorConfig) {
     const editor = new TheEditor();
+    (window as any).quillEditor = editor;
+    const titleInput = document.getElementById('post-title-input') as HTMLInputElement;
+    const authorInput = document.getElementById('author-input') as HTMLInputElement;
+    const projectTitleInput = document.getElementById('project-title-input') as HTMLInputElement;
+    const projectStatusInput = document.getElementById('project-status-toggle') as HTMLInputElement;
     if (viewSection && cancelButton) {
-      await editor.load(currentPage);
+
+      // Load Initial Data
+      if (editorConfig.type === 'page') {
+        await editor.load(editorConfig.pageName);
+      } else if (editorConfig.type === 'post' && editorConfig.postId) {
+        const post = await getPostById(editorConfig.postId);
+        if (post) {
+          if (titleInput) titleInput.value = post.postTitle;
+          editor.quill.setContents(post.content);
+        }
+      } else if (editorConfig.type === 'project' && editorConfig.projectId) {
+        const project = await getProjectById(editorConfig.projectId);
+        if (project) {
+          if (projectTitleInput) projectTitleInput.value = project.projectTitle;
+          editor.quill.setContents(project.content);
+        }
+      }
+
       viewSection.innerHTML = editor.getHTML();
       viewSection.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
-        if (target.tagName === 'IMG') {
-          const imgSrc = (target as HTMLImageElement).src;
-          showLightbox(imgSrc);
-        }
+        if (target.tagName === 'IMG') showLightbox((target as HTMLImageElement).src);
       });
 
       auth.onAuthStateChanged(async (user) => {
@@ -117,10 +126,52 @@ export async function initializeApp(partentPage: string, currentPage: string, in
 
             document.getElementById('save-btn')?.addEventListener('click', async () => {
               try {
-                await editor.save();
+                if (editorConfig.type === 'page') {
+                  // Save standard page
+                  await editor.save();
+                } else if (editorConfig.type === 'post') {
+                  // Save Post
+                  const content = await editor.prepareContentForSave();
+                  const postTitle = titleInput?.value || "Untitled Post";
+                  const existingPost = editorConfig.postId
+                    ? await getPostById(editorConfig.postId)
+                    : null;
+
+                  const postToSave = new Post(
+                    postTitle,
+                    authorInput.value,
+                    existingPost ? existingPost.publishDate : Timestamp.now(),
+                    Timestamp.now(),
+                    content
+                  );
+
+                  if (editorConfig.postId) postToSave.id = editorConfig.postId;
+
+                  await savePost(postToSave);
+                } else if (editorConfig.type === 'project') {
+                  // Save Project
+                  const content = await editor.prepareContentForSave();
+                  const projectTitle = projectTitleInput?.value || "Untitled Project";
+                  const existingProject = editorConfig.projectId
+                    ? await getProjectById(editorConfig.projectId)
+                    : null;
+
+                  const projectToSave = new Project(
+                    projectTitle,
+                    projectStatusInput.checked,
+                    Timestamp.now(),
+                    content
+                  );
+
+                  if (editorConfig.projectId) projectToSave.id = editorConfig.projectId;
+                  await saveProject(projectToSave);
+                }
+
                 toggleMode(editor, false);
+                createMessage("Saved successfully!", "main-message", "check_circle");
               } catch (err) {
                 console.error("Save failed", err);
+                createMessage("Save failed.", "main-message", "error");
               }
             });
           }
@@ -129,13 +180,19 @@ export async function initializeApp(partentPage: string, currentPage: string, in
 
       cancelButton.addEventListener('click', async () => {
         try {
-          console.log("canceling");
           cancelButton.innerText = "Reverting...";
-          await editor.load(currentPage);
+          if (editorConfig.type === 'page') {
+            await editor.load(editorConfig.pageName);
+          } else if (editorConfig.type === 'post' && editorConfig.postId) {
+            const post = await getPostById(editorConfig.postId);
+            if (post) editor.quill.setContents(post.content);
+          } else if (editorConfig.type === 'project' && editorConfig.projectId) {
+            const project = await getProjectById(editorConfig.projectId);
+            if (project) editor.quill.setContents(project.content);
+          }
           toggleMode(editor, false);
         } catch (error) {
-          console.error("Failed to revert changes:", error);
-          alert("Error resetting editor.");
+          console.error("Revert failed", error);
         } finally {
           cancelButton.innerText = "Cancel";
         }

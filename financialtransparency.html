@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guatemalta USA</title>
-    <meta name="description" content="Learn more about Guatemalta USA and our team">
+    <meta name="description"
+        content="Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.">
     <script type="application/ld+json">
         {
         "@context": "https://schema.org",
@@ -50,7 +51,6 @@
                     </div>
                 </div>
                 <div id="admin-controls" class="hide"></div>
-
                 <div id="edit-section" class="hide">
                     <div id="editor-container" style="height: 300px;"></div>
                     <div class="actions">
@@ -59,37 +59,10 @@
                     </div>
                 </div>
             </div>
-            <div id="profiles-section"></div>
         </main>
         <footer></footer>
     </div>
-    <div id="modal-root" class="hide">
-        <div class="modal-overlay">
-            <div class="modal-content">
-                <h2>Add Team Member</h2>
-                <form id="add-profile-form">
-                    <input type="text" id="p-name" placeholder="First Name" />
-                    <input type="text" id="p-position" placeholder="Position" />
-                    <input type="email" id="p-email" placeholder="Email" />
-                    <select name="country" id="country">
-                        <option disabled selected>Select Country...</option>
-                        <option value="usa">USA</option>
-                        <option value="guatemala">Guatemala</option>
-                    </select>
-                    <textarea id="p-about" placeholder="About bio..."></textarea>
-
-                    <label for="p-image">Profile Photo:</label>
-                    <input type="file" id="p-image" accept="image/*" />
-
-                    <div class="button-row">
-                        <button type="button" id="close-modal" class="accent-button">Cancel</button>
-                        <button type="submit" id="save-profile" class="accent-button">Save Profile</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <script type="module" src="src/about"></script>
+    <script type="module" src="src/financial"></script>
 </body>
 
 </html>

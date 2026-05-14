@@ -18,7 +18,7 @@
     --link-color: #9a97f3;
     --link-hover: #b7b4ff;
     --green-accent: #9fde00;
-    --purple-accent: #00306d;
+    --blue-accent: #00306d;
     --message-text: #fff;
     --error-background: #b81f24;
     --error-hover: #a51b20;
@@ -44,7 +44,7 @@
     --link-color: #302ae6;
     --link-hover: #524cf5;
     --green-accent: #9fde00;
-    --purple-accent: #00306d;
+    --blue-accent: #00306d;
     --message-text: #fff;
     --error-background: #b81f24;
     --error-hover: #a51b20;
@@ -117,7 +117,7 @@ a {
   width: auto;
   height: auto;
   overflow: visible;
-  background-color: var(--purple-accent);
+  background-color: var(--blue-accent);
   color: white;
   padding: 10px;
   z-index: 9999;
@@ -218,7 +218,7 @@ main a:hover {
 }
 
 .purple-background {
-  background-color: var(--purple-accent);
+  background-color: var(--blue-accent);
   background:
     linear-gradient(30deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
     linear-gradient(150deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
@@ -234,7 +234,7 @@ main a:hover {
     40px 70px,
     0 0,
     40px 70px;
-  background-color: var(--purple-accent);
+  background-color: var(--blue-accent);
   border-top: 5px solid var(--green-accent);
   border-bottom: 5px solid var(--green-accent);
   padding: 60px 0;
@@ -250,7 +250,9 @@ main a:hover {
 .purple-background .accent-button {
   background-color: white;
   color: black !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .purple-background .accent-button:hover {
@@ -260,7 +262,7 @@ main a:hover {
 
 footer {
   flex-shrink: 0;
-  background-color: var(--purple-accent);
+  background-color: var(--blue-accent);
   padding: 20px 0;
   width: 100%;
 }
@@ -295,14 +297,31 @@ footer ul {
     box-shadow 0.2s ease;
 }
 
-.profile-image-wrapper {
-  flex: 0 0 180px;
+.image-container {
+  position: relative;
+  display: inline-block;
+  margin: 50px;
+  z-index: 3;
+}
+
+.image-container::before {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: -10px;
+  width: 100%;
+  height: 100%;
+  background-color: #00306d;
+  border-radius: 5px;
+  z-index: -1;
 }
 
 .profile-card img {
-  width: 180px;
+  display: block;
+  border-radius: 5px;
   height: 180px;
-  border-radius: 180px;
+  width: 180px;
+  z-index: 90;
 }
 
 .profile-info {
@@ -543,7 +562,7 @@ textarea {
   text-decoration: none;
   font-family: sans-serif;
   font-weight: 600;
-  color: #fff; 
+  color: #fff;
   transition: 0.2s ease;
 }
 
@@ -560,7 +579,86 @@ textarea {
 }
 
 /* =========================================
-   9. RESPONSIVE QUERIES
+   9. HOMEPAGE PHOTOS
+   ========================================= */
+
+#home-photos {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+#gallery-container, #placeholder-container {
+  display: flex;
+  width: max-content;
+  animation: scroll-horizontal 100s linear infinite;
+}
+
+.image-group {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.image-group img {
+  height: 300px;
+  width: auto;
+  padding: 0 10px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+@keyframes scroll-horizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+#gallery-toggle {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 99;
+}
+
+/* =========================================
+   10. Cards
+   ========================================= */
+
+.card {
+  border: 5px solid var(--blue-accent);
+  margin: 10px;
+  min-height: 300px;
+}
+
+/* =========================================
+   11. Skeleton placeholders
+   ========================================= */
+
+/* Skeleton Base */
+.image-skeleton-loader {
+  min-width: 300px;
+  height: 300px;
+  margin: 0 10px;
+  background: #eee;
+  background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+  background-size: 200% 100%;
+  animation: shine 1.5s linear infinite;
+  border-radius: 8px;
+}
+
+@keyframes shine {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+/* =========================================
+   11. RESPONSIVE QUERIES
    ========================================= */
 
 @media (min-width: 701px) {
@@ -591,7 +689,7 @@ textarea {
   nav {
     padding-top: 110px;
     flex-direction: column;
-    background-color: var(--purple-accent);
+    background-color: var(--blue-accent);
     width: 80%;
     height: 100vh;
     max-width: 0;

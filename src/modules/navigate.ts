@@ -3,6 +3,13 @@ export const ALL_APP_PATHS = [
   '/index',
   '/about',
   '/mailinglist',
+  '/blog',
+  '/blog/post',
+  '/blog/editpost',
+  '/impact/currentprojects',
+  '/impact/project',
+  '/impact/editproject',
+  '/financialtransparency',
   '/login'
 ] as const;
 

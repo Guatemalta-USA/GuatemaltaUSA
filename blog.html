@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guatemalta USA</title>
     <meta name="description"
-        content="Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.">
+        content="Stay updated on our latest projects and success stories. Sign up for the Guatemalta USA mailing list to see the direct impact of your support.">
     <script type="application/ld+json">
         {
         "@context": "https://schema.org",
@@ -41,37 +41,20 @@
         <nav></nav>
         <section class="message-wrapper" id="main-message"></section>
         <main id="maincontent">
-            <div id="homepage">
-                <section id="home-photos">
-                    <div id="placeholder-container" class="is-loading">
-                        <!-- These will be replaced by TS -->
-                        <div class="image-skeleton-loader"></div>
-                        <div class="image-skeleton-loader"></div>
-                        <div class="image-skeleton-loader"></div>
-                        <div class="image-skeleton-loader"></div>
-                        <div class="image-skeleton-loader"></div>
-                        <div class="image-skeleton-loader"></div>
-                    </div>
-                    <button id="gallery-toggle" class="material-symbols-outlined icon-button"
-                        aria-label="Pause Gallery">pause</button>
-                </section>
-                <section id="home-current" class="card">
-                    <div id="loading" class="loading-projects">
-                        <div class="loader"></div>
-                        <h2>Loading Projects...</h2>
-                    </div>
-                </section>
-                <section id="home-updates" class="card">
-                    <div id="loading" class="loading-updates">
-                        <div class="loader"></div>
-                        <h2>Loading Updates...</h2>
-                    </div>
+            <div class="container">
+                <div id="loading">
+                    <div class="loader"></div>
+                    <h2>Loading...</h2>
+                </div>
+                <section id="blog-posts-container" class="hide">
+                    <div id="admin-actions"></div>
                 </section>
             </div>
+
         </main>
         <footer></footer>
     </div>
-    <script type="module" src="src/index"></script>
+    <script type="module" src="src/blog"></script>
 </body>
 
 </html>
