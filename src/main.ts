@@ -152,9 +152,6 @@ export async function initializeApp(
                   // Save Project
                   const content = await editor.prepareContentForSave();
                   const projectTitle = projectTitleInput?.value || "Untitled Project";
-                  const existingProject = editorConfig.projectId
-                    ? await getProjectById(editorConfig.projectId)
-                    : null;
 
                   const projectToSave = new Project(
                     projectTitle,
