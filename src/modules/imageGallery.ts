@@ -1,8 +1,7 @@
-import { createButton, showLightbox } from "./utils.js";
+import { showLightbox } from "./utils.js";
 import { makeElement } from "./utils.js";
 
 export function displayGallery(imgPaths: string[]) {
-    const pauseButton = document.getElementById("gallery-toggle") as HTMLElement;
     const imageContainer = makeElement("div", "gallery-container", null, null);
     const imageGroup1 = imgPaths.reduce((acc: HTMLElement, currImg: string) => {
         const nextImage = document.createElement("img");
