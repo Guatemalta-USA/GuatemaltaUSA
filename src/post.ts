@@ -23,7 +23,7 @@ const slug = getPostSlug();
 async function setupPostView() {
     if (!slug) {
         console.warn("No slug found in URL, redirecting to blog list.");
-        window.location.href = "/blog";
+        // window.location.href = "/blog";
         return;
     }
 
@@ -33,7 +33,7 @@ async function setupPostView() {
     
     if (!post) {
         storeMessage("Post not found", "main-message", "error");
-        window.location.href = "/blog";
+        // window.location.href = "/blog";
         return;
     }
 
