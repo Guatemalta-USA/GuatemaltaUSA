@@ -4,7 +4,7 @@ import { initializeApp } from "./main";
 import { Project } from "./models";
 import type { TheEditor } from "./modules/editor";
 import { navigateTo } from "./modules/navigate";
-import { createMessage, storeMessage } from "./modules/utils";
+import { confirmDeleteModal, createMessage, storeMessage } from "./modules/utils";
 
 async function setUpEditProjectPage() {
     const params = new URLSearchParams(window.location.search);
@@ -42,6 +42,35 @@ async function setUpEditProjectPage() {
                 }
                 editorInstance.quill.setContents(project.content);
 
+                if (projectId && deleteBtn) {
+                    deleteBtn.style.display = 'inline-block';
+
+                    deleteBtn.addEventListener("click", async () => {
+                        const confirmed = await confirmDeleteModal(`Delete "${project.projectTitle}"?`, "Deleting this project will also delete its photos. This action cannot be undone.");
+
+                        if (confirmed) {
+                            try {
+                                deleteBtn.innerText = "Deleting...";
+                                (deleteBtn as HTMLButtonElement).disabled = true;
+
+                                if (editorInstance) {
+                                    await editorInstance.deleteAllImages();
+                                }
+
+                                await deleteProject(projectId);
+
+                                storeMessage("Project deleted successfully", "main-message", "delete");
+                                navigateTo('/impact/currentprojects');
+                            } catch (err) {
+                                console.error("Delete failed:", err);
+                                createMessage("Failed to delete the project. Please try again.", "main-message", "error");
+                                deleteBtn.innerText = "Delete Project";
+                                (deleteBtn as HTMLButtonElement).disabled = false;
+                            }
+                        }
+                    });
+                }
+
             } else {
                 storeMessage("The project you tried to edit does not exist", "main-message", "error");
                 navigateTo("/impact/currentprojects");
@@ -53,34 +82,6 @@ async function setUpEditProjectPage() {
 
     if (loading) loading.remove();
     if (titleInput.value === "" && deleteBtn) deleteBtn.remove();
-    if (projectId && deleteBtn) {
-        deleteBtn.style.display = 'inline-block';
-
-        deleteBtn.addEventListener("click", async () => {
-            const confirmed = confirm("Are you sure you want to delete this project? This action cannot be undone.");
-
-            if (confirmed) {
-                try {
-                    deleteBtn.innerText = "Deleting...";
-                    (deleteBtn as HTMLButtonElement).disabled = true;
-
-                    if (editorInstance) {
-                        await editorInstance.deleteAllImages();
-                    }
-
-                    await deleteProject(projectId);
-
-                    storeMessage("Project deleted successfully", "main-message", "delete");
-                    navigateTo('/impact/currentprojects');
-                } catch (err) {
-                    console.error("Delete failed:", err);
-                    createMessage("Failed to delete the project. Please try again.", "main-message", "error");
-                    deleteBtn.innerText = "Delete Project";
-                    (deleteBtn as HTMLButtonElement).disabled = false;
-                }
-            }
-        });
-    }
 
     if (saveBtn && titleInput) {
         saveBtn.addEventListener("click", async () => {
@@ -93,7 +94,7 @@ async function setUpEditProjectPage() {
                 saveBtn.innerText = "Publishing...";
                 (saveBtn as HTMLButtonElement).disabled = true;
                 const cleanContent = await editorInstance.prepareContentForSave();
-                
+
                 if (!titleInput || titleInput.value === "") {
                     createMessage("Please do not leave the Title empty", "main-message", "error");
                     throw Error("Title input can not be empty");

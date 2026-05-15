@@ -4,7 +4,7 @@ import { addProfile, deleteProfile, getAllProfiles, getProfilesByCountry, update
 import { initializeApp } from "./main";
 import type { Profile } from "./models";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService";
-import { createButton, createMessage, makeElement, makePBLock } from "./modules/utils";
+import { confirmDeleteModal, createButton, createMessage, makeElement, makePBLock } from "./modules/utils";
 
 const loading = document.getElementById("loading");
 const viewSection = document.getElementById('content-display') as HTMLElement;
@@ -128,7 +128,8 @@ async function loadProfiles() {
 
                     const deleteBtn = createButton("Delete", "button", `del-${index}`, "delete-btn", "delete");
                     deleteBtn.onclick = async () => {
-                        if (confirm(`Are you sure you want to delete ${currentProfile.name}? This will also remove their photo.`)) {
+                        const confirmed = await confirmDeleteModal(`Delete ${currentProfile.name}'s profile?`, "Deleting this profile will also delete their photo. This action cannot be undone.");
+                        if (confirmed) {
                             try {
                                 if (currentProfile.photoURL) {
                                     await deleteImage(currentProfile.photoURL);

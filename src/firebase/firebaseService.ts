@@ -217,8 +217,10 @@ export async function saveProject(project: Project): Promise<string> {
         return project.id;
     } else {
         // Create new
-        const docRef = await addDoc(projectsCol, project);
-        return docRef.id;
+        const customId = slugify(project.projectTitle);
+        const docRef = doc(db, 'projects', customId);
+        await setDoc(docRef, project.toFirestore());
+        return customId;
     }
 }
 

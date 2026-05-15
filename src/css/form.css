@@ -1,3 +1,16 @@
+.button {
+  border: 0;
+  cursor: pointer;
+  margin: 5px;
+  border: 0;
+  padding: 10px;
+  font-weight: 900;
+  text-decoration: none !important;
+  display: inline-block;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+}
 .accent-button,
 .action-link,
 .icon-button {

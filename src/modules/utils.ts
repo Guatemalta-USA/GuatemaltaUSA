@@ -226,3 +226,54 @@ export function showLightbox(url: string) {
   };
   window.addEventListener("keydown", handleEsc);
 }
+
+export async function confirmDeleteModal(messageHeader: string, messageBody: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modalRoot = makeElement("div", "modal-root", null, null);
+    const modalOverlay = makeElement("div", null, "modal-overlay", null);
+    const modalContent = makeElement("div", null, "modal-content", null);
+    
+    const modalH2 = makeElement("h2", null, null, messageHeader);
+    modalContent.appendChild(modalH2);
+    
+    const modalMessage = makeElement("p", null, null, messageBody);
+    modalContent.appendChild(modalMessage);
+    
+    const formRow = makeElement("div", null, "button-row", null);
+    
+    const closeModal = () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.removeChild(modalRoot);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeModal();
+        resolve(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    const deleteButton = createButton("Delete", "button", "delete-btn", "error button", "delete");
+    deleteButton.onclick = function() {
+      closeModal();
+      resolve(true);
+    };
+    formRow.appendChild(deleteButton);
+    
+    const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
+    cancelButton.onclick = function() {
+      closeModal();
+      resolve(false);
+    };
+    formRow.appendChild(cancelButton);
+    
+    modalContent.appendChild(formRow);
+    modalOverlay.appendChild(modalContent);
+    modalRoot.appendChild(modalOverlay);
+    
+    modalRoot.style.display = 'flex';
+    document.body.appendChild(modalRoot);
+  });
+}

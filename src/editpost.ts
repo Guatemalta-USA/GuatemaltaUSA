@@ -3,7 +3,7 @@ import { TheEditor } from './modules/editor';
 import { deletePost, getPostById, savePost } from './firebase/firebaseService';
 import { Timestamp } from 'firebase/firestore';
 import { navigateTo } from './modules/navigate';
-import { createMessage, storeMessage } from './modules/utils';
+import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils';
 import { Post } from './models';
 
 async function setupEditPostPage() {
@@ -36,6 +36,37 @@ async function setupEditPostPage() {
                 editorInstance.quill.setContents(post.content);
 
                 console.log("Post loaded into editor successfully");
+
+                if (postId && deleteBtn) {
+                    deleteBtn.style.display = 'inline-block';
+
+                    deleteBtn.addEventListener('click', async () => {
+                        const confirmed = await confirmDeleteModal(`Delete "${post.postTitle}"?`, "Deleting this post will also delete its photos. This action cannot be undone.");
+
+
+                        if (confirmed) {
+                            try {
+                                deleteBtn.innerText = "Deleting...";
+                                (deleteBtn as HTMLButtonElement).disabled = true;
+
+                                if (editorInstance) {
+                                    await editorInstance.deleteAllImages();
+                                }
+
+                                await deletePost(postId);
+
+                                storeMessage("Post deleted successfully", "main-message", "delete");
+                                navigateTo('/blog');
+                            } catch (err) {
+                                console.error("Delete failed:", err);
+                                createMessage("Failed to delete the post. Please try again.", "main-message", "error");
+                                deleteBtn.innerText = "Delete Post";
+                                (deleteBtn as HTMLButtonElement).disabled = false;
+                            }
+                        }
+                    });
+                }
+
             } else {
                 console.error("No post found with that ID");
                 storeMessage("The post you tried to edit does not exist", "main-message", "error");
@@ -50,34 +81,7 @@ async function setupEditPostPage() {
 
     if (titleInput.value === "" && deleteBtn) deleteBtn.remove();
 
-    if (postId && deleteBtn) {
-        deleteBtn.style.display = 'inline-block';
 
-        deleteBtn.addEventListener('click', async () => {
-            const confirmed = confirm("Are you sure you want to delete this post? This action cannot be undone.");
-
-            if (confirmed) {
-                try {
-                    deleteBtn.innerText = "Deleting...";
-                    (deleteBtn as HTMLButtonElement).disabled = true;
-
-                    if (editorInstance) {
-                        await editorInstance.deleteAllImages();
-                    }
-
-                    await deletePost(postId);
-
-                    storeMessage("Post deleted successfully", "main-message", "delete");
-                    navigateTo('/blog');
-                } catch (err) {
-                    console.error("Delete failed:", err);
-                    createMessage("Failed to delete the post. Please try again.", "main-message", "error");
-                    deleteBtn.innerText = "Delete Post";
-                    (deleteBtn as HTMLButtonElement).disabled = false;
-                }
-            }
-        });
-    }
 
     if (saveBtn && titleInput) {
         saveBtn.addEventListener('click', async () => {
