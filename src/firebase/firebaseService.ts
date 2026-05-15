@@ -34,6 +34,14 @@ const projectConverter: FirestoreDataConverter<Project> = {
 
 const projectsCol = collection(db, 'projects').withConverter(projectConverter);
 
+function slugify(text: string): string {
+    return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w ]+/g, '') // Remove special characters
+        .replace(/ +/g, '-');    // Replace spaces with hyphens
+}
+
 export async function addPage(pageData: PageContents): Promise<void> {
     try {
         const docRef = doc(db, "pages", pageData.pageName);
@@ -149,16 +157,21 @@ export async function getAllPosts(): Promise<Post[]> {
 }
 
 export async function savePost(post: Post): Promise<string> {
+    // If the post already has an ID (e.g., editing an existing post)
     if (post.id) {
-        // Update existing
         const docRef = doc(db, POSTS_PATH, post.id);
         await updateDoc(docRef, post.toFirestore());
         return post.id;
-    } else {
-        // Create new
-        const docRef = await addDoc(collection(db, POSTS_PATH), post.toFirestore());
-        return docRef.id;
-    }
+    } 
+    
+    // For NEW posts: generate ID from title
+    const customId = slugify(post.postTitle);
+    const docRef = doc(db, POSTS_PATH, customId);
+    
+    // We use setDoc because we are specifying the ID manually
+    await setDoc(docRef, post.toFirestore());
+    
+    return customId;
 }
 
 export async function getPostById(id: string): Promise<Post | null> {
