@@ -1,5 +1,5 @@
 import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
-import { clearMessages, createButton, createMessage, showLightbox } from "./modules/utils.js";
+import { clearMessages, createButton, createMessage } from "./modules/utils.js";
 import { Post, Project } from "./models.js";
 import { TheEditor } from "./modules/editor.js";
 import { getUserRole } from "./firebase/authService.js";

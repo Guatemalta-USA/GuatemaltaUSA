@@ -25,10 +25,11 @@ class StyledImage extends ImageFormat {
         const node = super.create(value) as HTMLImageElement;
         
         node.addEventListener('click', () => {
-        if (node.closest('.ql-editor')) {
-            console.log("Lightbox skipped: Image is in editor mode.");
+            const saveBtn = document.getElementById("save-btn");
+            if (saveBtn) {
+                console.log("Lightbox skipped: Image is in editor mode.");
             return;
-        }
+            }
 
         showLightbox(node.src, node.alt);
     });
@@ -149,11 +150,11 @@ export class TheEditor {
                     ],
                     handlers: {
                         'link': async () => {
-                            const url = await promptModal("Enter URL", "url...", "Insert url");
+                            const url = await promptModal("Enter URL", "url...", "Insert url", false);
                             if (url !== "") this.quill.format('link', url);
                         },
                         'action-link': async () => {
-                            const url = await promptModal("Enter Action URL", "url...", "Add Action Button")
+                            const url = await promptModal("Enter Action URL", "url...", "Add Action Button", false)
                             if (url !== "") this.quill.format('actionLink', url);
                         },
                         'nav-link': (value: string) => {
@@ -173,7 +174,7 @@ export class TheEditor {
                         'video': async () => {
                             const range = this.quill.getSelection();
 
-                            const url = await promptModal("Enter the URL of the video", "video url", "Insert Video");
+                            const url = await promptModal("Enter the URL of the video", "video url", "Insert Video", false);
                             console.log(url);
 
                             if (url && url !== "") {
@@ -344,7 +345,8 @@ export class TheEditor {
                 const altText = await promptModal(
                     "Please provide a description for this image", 
                     "Image Description...", 
-                    "Add Description"
+                    "Add Description",
+                    true
                 );
 
                 const range = this.quill.getSelection(true);

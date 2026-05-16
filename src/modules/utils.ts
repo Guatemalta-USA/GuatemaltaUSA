@@ -280,7 +280,7 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
   });
 }
 
-export async function promptModal(messageHeader: string, placeholderText: string, buttonText: string): Promise<string> {
+export async function promptModal(messageHeader: string, placeholderText: string, buttonText: string, required: boolean): Promise<string> {
   return new Promise((resolve) => {
     const modalRoot = makeElement("div", "modal-root", null, null);
     const modalOverlay = makeElement("div", null, "modal-overlay", null);
@@ -312,8 +312,6 @@ export async function promptModal(messageHeader: string, placeholderText: string
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-
     const submitBtn = createButton(buttonText, "button", "submit-btn", "accent-button", "add");
     submitBtn.onclick = function() {
       closeModal();
@@ -326,8 +324,12 @@ export async function promptModal(messageHeader: string, placeholderText: string
       closeModal();
       resolve("");
     };
-    buttonRow.appendChild(cancelButton);
 
+    if (!required) {
+      window.addEventListener("keydown", handleKeyDown);
+      buttonRow.appendChild(cancelButton);
+    }
+    
     modalContent.appendChild(buttonRow);
     modalOverlay.appendChild(modalContent);
     modalRoot.appendChild(modalOverlay);
