@@ -189,22 +189,24 @@ export function makePBLock(pParts: KeyValue[]) {
   }, document.createElement("p"));
 }
 
-export function showLightbox(url: string) {
+export function showLightbox(url: string, alt: string) {
   const overlay = document.createElement('div');
   overlay.className = 'lightbox-overlay';
   const img = document.createElement('img');
   img.src = url;
   img.className = 'lightbox-image';
   const hint = document.createElement('span');
-  hint.textContent = 'Click anywhere to close';
+  hint.textContent = '(Click anywhere to close)';
   hint.className = 'lightbox-hint';
+  const caption = makeElement("span", null, "image-caption", alt);
+  overlay.append(img, caption, hint);
 
   const gallery = document.getElementById("gallery-container");
   if (gallery) {
     gallery.style.animationPlayState = 'paused';
   }
 
-  overlay.append(img, hint);
+  
   document.body.appendChild(overlay);
   overlay.onclick = () => {
     overlay.classList.add('fadeOut');

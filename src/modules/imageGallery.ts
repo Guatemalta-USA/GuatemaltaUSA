@@ -6,7 +6,8 @@ export function displayGallery(imgPaths: string[]) {
     const imageGroup1 = imgPaths.reduce((acc: HTMLElement, currImg: string) => {
         const nextImage = document.createElement("img");
         nextImage.src = currImg;
-        nextImage.addEventListener("click", () => showLightbox(currImg));
+        nextImage.alt = "Description Unavailable";
+        nextImage.addEventListener("click", () => showLightbox(currImg, nextImage.alt));
         acc.appendChild(nextImage);
         return acc;
     }, makeElement("div", null, "image-group", null));
@@ -14,7 +15,8 @@ export function displayGallery(imgPaths: string[]) {
     const imageGroup2 = imgPaths.reduce((acc: HTMLElement, currImg: string) => {
         const nextImage = document.createElement("img");
         nextImage.src = currImg;
-        nextImage.addEventListener("click", () => showLightbox(currImg));
+        nextImage.alt = "Description Unavailable";
+        nextImage.addEventListener("click", () => showLightbox(currImg, nextImage.alt));
         acc.appendChild(nextImage);
         return acc;
     }, makeElement("div", null, "image-group", null));

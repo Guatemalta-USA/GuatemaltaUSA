@@ -4,7 +4,7 @@ import { ALL_APP_PATHS } from './navigate';
 import { getPageContents, updatePageContents } from '../firebase/firebaseService';
 import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
-import { createMessage, promptModal } from './utils';
+import { createMessage, promptModal, showLightbox } from './utils';
 
 // --- Quill Customizations ---
 
@@ -12,21 +12,41 @@ if (!Quill.imports['modules/imageResize']) {
     Quill.register('modules/imageResize', ImageResize);
 }
 
-const ImageFormat = Quill.import('formats/image') as new (...args: any[]) => any;
+const ImageFormat = Quill.import('formats/image') as {
+    new (...args: any[]): any;
+    create(value: any): HTMLElement;
+};
 
 class StyledImage extends ImageFormat {
     static blotName = 'image';
     static tagName = 'IMG';
+
+    static create(value: string) {
+        const node = super.create(value) as HTMLImageElement;
+        
+        node.addEventListener('click', () => {
+        if (node.closest('.ql-editor')) {
+            console.log("Lightbox skipped: Image is in editor mode.");
+            return;
+        }
+
+        showLightbox(node.src, node.alt);
+    });
+
+        return node;
+    }
+
     static formats(domNode: HTMLElement) {
         return {
             style: domNode.getAttribute('style'),
             width: domNode.getAttribute('width'),
             height: domNode.getAttribute('height'),
+            alt: domNode.getAttribute('alt'),
         };
     }
 
     format(name: string, value: string) {
-        if (['style', 'width', 'height'].includes(name)) {
+        if (['style', 'width', 'height', 'alt'].includes(name)) {
             if (value) {
                 this.domNode.setAttribute(name, value);
             } else {
@@ -297,40 +317,50 @@ export class TheEditor {
     }
 
     private async selectLocalImage() {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
 
-        input.onchange = async () => {
-            const file = input.files![0];
-            if (!file) return;
+    input.onchange = async () => {
+        const file = input.files![0];
+        if (!file) return;
 
-            const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true, fileType: 'image/jpeg' };
+        const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true, fileType: 'image/jpeg' };
 
-            try {
-                // @ts-ignore
-                const compressedFile = await imageCompression(file, options);
-                const response = await fetch('https://photo-upload.guatemaltausa.workers.dev', {
-                    method: 'POST',
-                    body: compressedFile,
-                    headers: { 'Content-Type': 'image/jpeg' }
-                });
+        try {
+            // @ts-ignore
+            const compressedFile = await imageCompression(file, options);
+            const response = await fetch('https://photo-upload.guatemaltausa.workers.dev', {
+                method: 'POST',
+                body: compressedFile,
+                headers: { 'Content-Type': 'image/jpeg' }
+            });
 
-                if (!response.ok) throw new Error(`Worker Error ${response.status}`);
-                const data = await response.json();
+            if (!response.ok) throw new Error(`Worker Error ${response.status}`);
+            const data = await response.json();
 
-                if (data.url) {
-                    const range = this.quill.getSelection(true);
-                    this.quill.insertEmbed(range.index, 'image', data.url);
-                    this.quill.setSelection(range.index + 1);
-                    createMessage("Image uploaded!", "main-message", "check_circle");
+            if (data.url) {
+                const altText = await promptModal(
+                    "Please provide a description for this image", 
+                    "Image Description...", 
+                    "Add Description"
+                );
+
+                const range = this.quill.getSelection(true);
+                this.quill.insertEmbed(range.index, 'image', data.url);
+                if (altText && altText.trim() !== "") {
+                    this.quill.formatText(range.index, 1, 'alt', altText.trim());
                 }
-            } catch (error) {
-                createMessage("Upload failed.", "main-message", "error");
+
+                this.quill.setSelection(range.index + 1);
+                createMessage("Image uploaded successfully!", "main-message", "check_circle");
             }
-        };
-    }
+        } catch (error) {
+            createMessage("Upload failed.", "main-message", "error");
+        }
+    };
+}
 
     public async prepareContentForSave(): Promise<any> {
         const delta = this.quill.getContents();
