@@ -202,3 +202,16 @@ export class Project {
         return firstParagraph.trim();
     }
 }
+
+export class ImageMetadata {
+    public filename: string;
+    public altText: string;
+
+    constructor(
+        filename: string,
+        altText: string
+    ) {
+        this.filename = filename;
+        this.altText = altText;
+    }
+}

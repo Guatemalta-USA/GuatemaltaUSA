@@ -1,7 +1,7 @@
 import { getAllPosts, getProjectsByStatus } from "./firebase/firebaseService.js";
 import { initializeApp } from "./main.js";
 import type { Post, Project } from "./models.js";
-import { displayGallery, setupControls } from "./modules/imageGallery.js";
+import { displayGallery, getPhotosFromGithub, setupControls } from "./modules/imageGallery.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createLink, makeElement } from "./modules/utils.js";
 
@@ -15,12 +15,8 @@ const updatesSection = document.getElementById("home-updates") as HTMLElement;
 
 initializeApp("Home", "Home").then(async () => {
     // Load image gallery
-    const IMG_BASE = "https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/homepage/";
     const placeholderGallery = document.getElementById("placeholder-container") as HTMLElement;
-    const imagesPaths = Array.from({ length: 31 }, (_, i) => {
-        const id = i + 1;
-        return new URL(`${IMG_BASE}${id}.png`, import.meta.url).href;
-    });
+    const imagesPaths = await getPhotosFromGithub("https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/homepage/");
     const photos = displayGallery(imagesPaths);
     photosSection.appendChild(photos);
     setupControls();

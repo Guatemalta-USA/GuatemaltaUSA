@@ -189,46 +189,6 @@ export function makePBLock(pParts: KeyValue[]) {
   }, document.createElement("p"));
 }
 
-export function showLightbox(url: string, alt: string) {
-  const overlay = document.createElement('div');
-  overlay.className = 'lightbox-overlay';
-  const img = document.createElement('img');
-  img.src = url;
-  img.className = 'lightbox-image';
-  const hint = document.createElement('span');
-  hint.textContent = '(Click anywhere to close)';
-  hint.className = 'lightbox-hint';
-  const caption = makeElement("span", null, "image-caption", alt);
-  overlay.append(img, caption, hint);
-
-  const gallery = document.getElementById("gallery-container");
-  if (gallery) {
-    gallery.style.animationPlayState = 'paused';
-  }
-
-  
-  document.body.appendChild(overlay);
-  overlay.onclick = () => {
-    overlay.classList.add('fadeOut');
-    setTimeout(() => overlay.remove(), 200);
-    if (gallery) {
-      gallery.style.animationPlayState = 'running';
-    }
-  };
-
-  const handleEsc = (event: KeyboardEvent) => {
-    if (event.key === "Escape") {
-      overlay.classList.add('fadeOut');
-      setTimeout(() => overlay.remove(), 200);
-      if (gallery) {
-        gallery.style.animationPlayState = 'running';
-      }
-
-    }
-  };
-  window.addEventListener("keydown", handleEsc);
-}
-
 export async function confirmDeleteModal(messageHeader: string, messageBody: string): Promise<boolean> {
   return new Promise((resolve) => {
     const modalRoot = makeElement("div", "modal-root", null, null);
