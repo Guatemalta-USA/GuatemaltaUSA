@@ -1,6 +1,5 @@
 import { PageContents, Post, Project, type Profile } from "../models";
 import {
-  addDoc,
     collection,
     deleteDoc,
     doc,
