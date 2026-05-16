@@ -232,15 +232,15 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
     const modalRoot = makeElement("div", "modal-root", null, null);
     const modalOverlay = makeElement("div", null, "modal-overlay", null);
     const modalContent = makeElement("div", null, "modal-content", null);
-    
+
     const modalH2 = makeElement("h2", null, null, messageHeader);
     modalContent.appendChild(modalH2);
-    
+
     const modalMessage = makeElement("p", null, null, messageBody);
     modalContent.appendChild(modalMessage);
-    
+
     const formRow = makeElement("div", null, "button-row", null);
-    
+
     const closeModal = () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.removeChild(modalRoot);
@@ -256,20 +256,77 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
     window.addEventListener("keydown", handleKeyDown);
 
     const deleteButton = createButton("Delete", "button", "delete-btn", "error button", "delete");
-    deleteButton.onclick = function() {
+    deleteButton.onclick = function () {
       closeModal();
       resolve(true);
     };
     formRow.appendChild(deleteButton);
-    
+
     const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
-    cancelButton.onclick = function() {
+    cancelButton.onclick = function () {
       closeModal();
       resolve(false);
     };
     formRow.appendChild(cancelButton);
-    
+
     modalContent.appendChild(formRow);
+    modalOverlay.appendChild(modalContent);
+    modalRoot.appendChild(modalOverlay);
+
+    modalRoot.style.display = 'flex';
+    document.body.appendChild(modalRoot);
+  });
+}
+
+export async function promptModal(messageHeader: string, placeholderText: string, buttonText: string): Promise<string> {
+  return new Promise((resolve) => {
+    const modalRoot = makeElement("div", "modal-root", null, null);
+    const modalOverlay = makeElement("div", null, "modal-overlay", null);
+    const modalContent = makeElement("div", null, "modal-content", null);
+
+    const modalH2 = makeElement("h2", null, null, messageHeader);
+    modalContent.appendChild(modalH2);
+
+    const formRow = makeElement("div", null, "form-row", null);
+    const userInput = document.createElement("input") as HTMLInputElement;
+    userInput.type = "Text";
+    userInput.placeholder = placeholderText;
+    userInput.id = "userInput";
+    userInput.name = "userInput";
+    formRow.appendChild(userInput);
+    modalContent.appendChild(formRow);
+
+    const buttonRow = makeElement("div", null, "button-row", null);
+    
+    const closeModal = () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.removeChild(modalRoot);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeModal();
+        resolve("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    const submitBtn = createButton(buttonText, "button", "submit-btn", "accent-button", "add");
+    submitBtn.onclick = function() {
+      closeModal();
+      resolve(userInput.value);
+    }
+    buttonRow.appendChild(submitBtn);
+
+    const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
+    cancelButton.onclick = function() {
+      closeModal();
+      resolve("");
+    };
+    buttonRow.appendChild(cancelButton);
+
+    modalContent.appendChild(buttonRow);
     modalOverlay.appendChild(modalContent);
     modalRoot.appendChild(modalOverlay);
     

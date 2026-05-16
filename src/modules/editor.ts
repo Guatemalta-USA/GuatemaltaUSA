@@ -4,7 +4,7 @@ import { ALL_APP_PATHS } from './navigate';
 import { getPageContents, updatePageContents } from '../firebase/firebaseService';
 import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
-import { createMessage } from './utils';
+import { createMessage, promptModal } from './utils';
 
 // --- Quill Customizations ---
 
@@ -128,13 +128,13 @@ export class TheEditor {
                         ['clean']
                     ],
                     handlers: {
-                        'link': () => {
-                            const url = prompt('Enter URL (use /path for internal):');
-                            if (url) this.quill.format('link', url);
+                        'link': async () => {
+                            const url = await promptModal("Enter URL", "url...", "Insert url");
+                            if (url !== "") this.quill.format('link', url);
                         },
-                        'action-link': () => {
-                            const url = prompt('Enter Action URL:');
-                            if (url) this.quill.format('actionLink', url);
+                        'action-link': async () => {
+                            const url = await promptModal("Enter Action URL", "url...", "Add Action Button")
+                            if (url !== "") this.quill.format('actionLink', url);
                         },
                         'nav-link': (value: string) => {
                             if (value) {
@@ -150,12 +150,19 @@ export class TheEditor {
                         'image': () => {
                             this.selectLocalImage();
                         },
-                        'video': () => {
-                            const url = prompt('Enter YouTube URL:');
-                            if (url) {
-                                const range = this.quill.getSelection();
+                        'video': async () => {
+                            const range = this.quill.getSelection();
+
+                            const url = await promptModal("Enter the URL of the video", "video url", "Insert Video");
+                            console.log(url);
+
+                            if (url && url !== "") {
                                 if (range) {
                                     this.quill.insertEmbed(range.index, 'video', url, Quill.sources.USER);
+                                    this.quill.setSelection(range.index + 1);
+                                } else {
+                                    const length = this.quill.getLength();
+                                    this.quill.insertEmbed(length, 'video', url, Quill.sources.USER);
                                 }
                             }
                         }
