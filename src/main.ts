@@ -113,10 +113,6 @@ export async function initializeApp(
       }
 
       viewSection.innerHTML = editor.getHTML();
-      viewSection.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.tagName === 'IMG') showLightbox((target as HTMLImageElement).src);
-      });
 
       auth.onAuthStateChanged(async (user) => {
         if (user) {
