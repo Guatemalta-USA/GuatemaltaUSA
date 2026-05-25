@@ -10,7 +10,8 @@ export const ALL_APP_PATHS = [
   '/impact/project',
   '/impact/editproject',
   '/financialtransparency',
-  '/login'
+  '/login',
+  '/privatepolicy'
 ] as const;
 
 export type AppPath = typeof ALL_APP_PATHS[number];

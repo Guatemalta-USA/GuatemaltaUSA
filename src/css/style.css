@@ -10,22 +10,21 @@
     --body-color: #ccc;
     --header-background-color: #000;
     --header-color: #fff;
-    --nav-background-color: #00306d;
+    --nav-background-color: #002E6C;
     --nav-color: #fff;
-    /* --main-background-color: #2e2e2e; */
     --main-background-color: #000;
     --profile-card-background: #2e2e2e;
     --link-color: #9a97f3;
     --link-hover: #b7b4ff;
-    --green-accent: #9fde00;
-    --blue-accent: #00306d;
+    --green-accent: #9CD500;
+    --blue-accent: #002E6C;
     --message-text: #fff;
     --error-background: #b81f24;
     --error-hover: #a51b20;
     --success-background: green;
     --delete-background: #fc6a03;
     --info-background: #006270;
-    --loading: #9fde00;
+    --loading: #9CD500;
     --table-even-row: rgba(0, 0, 0, 0.25);
     --quill-border: #444444;
   }
@@ -37,21 +36,21 @@
     --body-color: #000;
     --header-background-color: #fff;
     --header-color: #000;
-    --nav-background-color: #00306d;
+    --nav-background-color: #002E6C;
     --nav-color: #fff;
     --main-background-color: #fff;
     --profile-card-background: #fff;
     --link-color: #302ae6;
     --link-hover: #524cf5;
-    --green-accent: #9fde00;
-    --blue-accent: #00306d;
+    --green-accent: #9CD500;
+    --blue-accent: #002E6C;
     --message-text: #fff;
     --error-background: #b81f24;
     --error-hover: #a51b20;
     --success-background: green;
     --delete-background: #fc6a03;
     --info-background: #006270;
-    --loading: #00306d;
+    --loading: #002E6C;
     --table-even-row: rgba(0, 0, 0, 0.05);
     --quill-border: #cccccc;
   }
@@ -205,8 +204,6 @@ main {
   background-color: var(--main-background-color);
   padding: 20px 0;
   flex: 1 0 auto;
-  background-color: var(--main-background-color);
-  padding: 20px 0;
 }
 
 main p {
@@ -217,7 +214,7 @@ main a:hover {
   color: var(--link-hover);
 }
 
-.purple-background {
+.blue-background {
   background-color: var(--blue-accent);
   background:
     linear-gradient(30deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
@@ -247,7 +244,7 @@ main a:hover {
   color: #fff;
 }
 
-.purple-background .accent-button {
+.blue-background .accent-button {
   background-color: white;
   color: black !important;
   transition:
@@ -255,7 +252,7 @@ main a:hover {
     box-shadow 0.2s ease;
 }
 
-.purple-background .accent-button:hover {
+.blue-background .accent-button:hover {
   background-color: white;
   transform: translateY(-2px);
 }
@@ -273,6 +270,22 @@ footer ul {
   justify-content: center;
   align-items: center;
   gap: 15px;
+}
+
+footer .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  font-family: sans-serif;
+  font-weight: 600;
+  color: #fff;
+  transition: 0.2s ease;
+  cursor: pointer;
+}
+
+footer .link:hover {
+  color: var(--green-accent);
 }
 
 /* =========================================
@@ -488,7 +501,8 @@ footer ul {
 }
 
 .modal-content {
-  background: var(--main-background-color);
+  background-color: var(--main-background-color);
+  color: var(--body-color);
   padding: 24px;
   border-radius: 12px;
   width: 700px;

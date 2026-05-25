@@ -4,7 +4,7 @@ import { ALL_APP_PATHS } from './navigate';
 import { getPageContents, updatePageContents } from '../firebase/firebaseService';
 import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
-import { createMessage, promptModal } from './utils';
+import { createMessage, makeElement, promptModal } from './utils';
 import { showLightbox } from './imageGallery';
 
 // --- Quill Customizations ---
@@ -83,8 +83,13 @@ class StandardLink extends (Link as any) {
     static create(value: string) {
         const node = super.create(value);
         const isInternal = value.startsWith('/');
+        const isMailto = value.startsWith('mailto:');
+
         if (isInternal) {
             node.setAttribute('target', '_self');
+        } else if (isMailto) {
+            node.removeAttribute('target');
+            node.removeAttribute('rel');
         } else {
             node.setAttribute('target', '_blank');
             node.setAttribute('rel', 'noopener noreferrer');
@@ -144,7 +149,7 @@ export class TheEditor {
                         [{ header: [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        ['link', { 'nav-link': ALL_APP_PATHS }, 'action-link'],
+                        ['link', 'mailto', { 'nav-link': ALL_APP_PATHS }, 'action-link'],
                         ['image', 'video'],
                         ['clean']
                     ],
@@ -186,7 +191,26 @@ export class TheEditor {
                                     this.quill.insertEmbed(length, 'video', url, Quill.sources.USER);
                                 }
                             }
-                        }
+                        },
+                        'mailto': async () => {
+                            const savedRange = this.quill.getSelection();
+                            const savedIndex = savedRange ? savedRange.index : this.quill.getLength() - 1;
+                            const savedLength = savedRange ? savedRange.length : 0;
+
+                            const email = await promptModal("Enter Email Address", "example@domain.com", "Insert Email Link", false);
+
+                            if (email && email.trim() !== "") {
+                                const mailtoUrl = email.startsWith('mailto:') ? email.trim() : `mailto:${email.trim()}`;
+                                this.quill.focus();
+
+                                if (savedLength > 0) {
+                                    this.quill.formatText(savedIndex, savedLength, 'link', mailtoUrl);
+                                } else {
+                                    this.quill.insertText(savedIndex, email, 'link', mailtoUrl);
+                                    this.quill.setSelection(savedIndex + email.length);
+                                }
+                            }
+                        },
                     }
                 }
             }
@@ -294,6 +318,18 @@ export class TheEditor {
         }
         const imageBtn = document.querySelector('.ql-image');
         if (imageBtn) imageBtn.setAttribute('title', 'Upload Image');
+
+        const mailtoBtn = document.querySelector('.ql-mailto');
+        if (mailtoBtn) {
+            mailtoBtn.setAttribute('title', 'Insert Email Link');
+            // SVG of an envelope
+            mailtoBtn.innerHTML = `
+            <svg viewBox="0 0 18 18">
+                <polyline class="ql-stroke" points="2 4 9 11 16 4"></polyline>
+                <rect class="ql-stroke" height="10" width="14" x="2" y="4" rx="1" ry="1"></rect>
+            </svg>
+        `;
+        }
     }
 
     private setupDeleteObserver() {
@@ -392,6 +428,13 @@ export class TheEditor {
                 this.quill.setContents(data.content);
             } else {
                 this.quill.setContents([]);
+            }
+            const lastUpdatedDiv = document.getElementById("last-updated");
+            if (lastUpdatedDiv && data) {
+                lastUpdatedDiv.innerHTML = "";
+                const date = data?.lastUpdated.toDate();
+                const lastUpdatedP = makeElement("p", null, null, `Last Updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`);
+                lastUpdatedDiv.appendChild(lastUpdatedP);
             }
         } catch (err) {
             console.error("Failed to load page content:", err);

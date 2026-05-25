@@ -87,7 +87,7 @@ async function loadProfiles() {
     countries.forEach(async (country: string) => {
         let profilesForCountry: Profile[] = await getProfilesByCountry(country);
         if (profilesForCountry.length !== 0) {
-            profilesSection.classList.add("purple-background");
+            profilesSection.classList.add("blue-background");
 
             const profilesContainer = makeElement("div", null, "container", null);
 

@@ -61,6 +61,13 @@ export function loadFooter() {
     if (facebook) ul.appendChild(facebook);
     const instagram = createSocialLink("instagram", 20);
     if (instagram) ul.appendChild(instagram);
+    const privatePolicy = document.createElement("a");
+    privatePolicy.textContent = "Privacy Policy";
+    privatePolicy.className = "link";
+    privatePolicy.onclick = function() {
+        navigateTo("/privatepolicy");
+    }
+    ul.appendChild(privatePolicy);
     footerElement.appendChild(ul);
 
 }
