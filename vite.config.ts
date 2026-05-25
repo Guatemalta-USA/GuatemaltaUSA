@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [
     sitemap({
       hostname: 'https://guatemaltausa.org',
+      outDir: 'dist',
+      generateRobotsTxt: true,
       dynamicRoutes: [
         '/about',
         '/mailinglist',
@@ -24,6 +26,7 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -34,8 +37,8 @@ export default defineConfig({
         posts: resolve(__dirname, 'blog.html'),
         post: resolve(__dirname, 'blog/post.html'),
         currentprojects: resolve(__dirname, 'impact/currentprojects.html'),
-        project: resolve(__dirname, '/impact/project.html'),
-        editproject: resolve(__dirname, '/impact/editproject.html'),
+        project: resolve(__dirname, 'impact/project.html'),
+        editproject: resolve(__dirname, 'impact/editproject.html'),
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
         privatepolicy: resolve(__dirname, 'private-policy.html')
       },
