@@ -40,7 +40,7 @@ export default defineConfig({
         project: resolve(__dirname, 'impact/project.html'),
         editproject: resolve(__dirname, 'impact/editproject.html'),
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
-        privatepolicy: resolve(__dirname, 'private-policy.html')
+        privatepolicy: resolve(__dirname, 'privatepolicy.html')
       },
     },
   },
