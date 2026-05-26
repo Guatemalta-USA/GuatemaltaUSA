@@ -126,7 +126,7 @@ async function setupEditPostPage() {
 
             } catch (err) {
                 console.error("Save failed:", err);
-                createMessage("Error: Could not save post.", "main-message", "error");
+                createMessage(`Error: Could not save post: ${err}`, "main-message", "error");
                 saveBtn.innerText = "Publish Post";
                 (saveBtn as HTMLButtonElement).disabled = false;
             }
