@@ -144,13 +144,15 @@ export class TheEditor {
             theme: 'snow',
             placeholder: 'Start writing your content...',
             modules: {
+                // Enable core table modules natively supported by Quill's layout engine
+                table: true,
                 toolbar: {
                     container: [
                         [{ header: [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                         ['link', 'mailto', { 'nav-link': ALL_APP_PATHS }, 'action-link'],
-                        ['image', 'video'],
+                        ['image', 'video', 'table'], // Using the native table module format button
                         ['clean']
                     ],
                     handlers: {
@@ -159,7 +161,7 @@ export class TheEditor {
                             if (url !== "") this.quill.format('link', url);
                         },
                         'action-link': async () => {
-                            const url = await promptModal("Enter Action URL", "url...", "Add Action Button", false)
+                            const url = await promptModal("Enter Action URL", "url...", "Add Action Button", false);
                             if (url !== "") this.quill.format('actionLink', url);
                         },
                         'nav-link': (value: string) => {
@@ -178,7 +180,6 @@ export class TheEditor {
                         },
                         'video': async () => {
                             const range = this.quill.getSelection();
-
                             const url = await promptModal("Enter the URL of the video", "video url", "Insert Video", false);
                             console.log(url);
 
@@ -211,6 +212,13 @@ export class TheEditor {
                                 }
                             }
                         },
+                        // Overridden table toolbar button to automatically insert a clean 2-column layout row
+                        'table': () => {
+                            const tableModule = this.quill.getModule('table') as any;
+                            if (tableModule) {
+                                tableModule.insertTable(1, 2);
+                            }
+                        }
                     }
                 }
             }
@@ -322,13 +330,24 @@ export class TheEditor {
         const mailtoBtn = document.querySelector('.ql-mailto');
         if (mailtoBtn) {
             mailtoBtn.setAttribute('title', 'Insert Email Link');
-            // SVG of an envelope
             mailtoBtn.innerHTML = `
             <svg viewBox="0 0 18 18">
                 <polyline class="ql-stroke" points="2 4 9 11 16 4"></polyline>
                 <rect class="ql-stroke" height="10" width="14" x="2" y="4" rx="1" ry="1"></rect>
             </svg>
         `;
+        }
+
+        // Setup clear visual title for our 2-column formatting table trigger
+        const tableBtn = document.querySelector('.ql-table');
+        if (tableBtn) {
+            tableBtn.setAttribute('title', 'Insert 2-Column Block Layout');
+            tableBtn.innerHTML = `
+                <svg viewBox="0 0 18 18">
+                    <rect class="ql-stroke" height="14" width="6" x="2" y="2" rx="1" ry="1"></rect>
+                    <rect class="ql-stroke" height="14" width="6" x="10" y="2" rx="1" ry="1"></rect>
+                </svg>
+            `;
         }
     }
 
@@ -354,6 +373,13 @@ export class TheEditor {
     }
 
     private async selectLocalImage() {
+        // Capture exact insertion point coordinates before focus is manipulated
+        const savedRange = this.quill.getSelection();
+        if (!savedRange) {
+            createMessage("Please click inside the editor or a block column first.", "main-message", "error");
+            return;
+        }
+
         const input = document.createElement('input');
         input.setAttribute('type', 'file');
         input.setAttribute('accept', 'image/*');
@@ -378,6 +404,12 @@ export class TheEditor {
                 const data = await response.json();
 
                 if (data.url) {
+                    // Embed image immediately to lock it into the active text/table position
+                    this.quill.insertEmbed(savedRange.index, 'image', data.url);
+                    this.quill.setSelection(savedRange.index + 1);
+                    createMessage("Image uploaded successfully!", "main-message", "check_circle");
+
+                    // Request description metadata via prompt modal overlay
                     const altText = await promptModal(
                         "Please provide a description for this image",
                         "Image Description...",
@@ -385,14 +417,9 @@ export class TheEditor {
                         true
                     );
 
-                    const range = this.quill.getSelection(true);
-                    this.quill.insertEmbed(range.index, 'image', data.url);
                     if (altText && altText.trim() !== "") {
-                        this.quill.formatText(range.index, 1, 'alt', altText.trim());
+                        this.quill.formatText(savedRange.index, 1, 'alt', altText.trim());
                     }
-
-                    this.quill.setSelection(range.index + 1);
-                    createMessage("Image uploaded successfully!", "main-message", "check_circle");
                 }
             } catch (error) {
                 createMessage("Upload failed.", "main-message", "error");

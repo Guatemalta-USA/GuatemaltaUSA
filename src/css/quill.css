@@ -222,3 +222,86 @@ iframe.ql-video {
 #author-input {
   font-size: 20px;
 }
+
+/* ==========================================================================
+   Quill Responsive 2-Column Layout (Using Table Elements)
+   ========================================================================== */
+
+/* 1. Global Layout Structural Rules (Applies to BOTH Edit and View mode) */
+.ql-container table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1.5rem 0 !important;
+    border: none !important;
+}
+
+/* Force table rows to stack their child columns vertically on mobile viewports */
+.ql-container table tr {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 1.25rem !important;
+    margin-bottom: 1.25rem;
+}
+
+/* Force cells to act like standard full-width blocks on mobile screen sizes */
+.ql-container td {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+}
+
+/* Ensure embedded images/videos adapt beautifully to mobile column widths */
+.ql-container td img,
+.ql-container td .ql-video {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+}
+
+
+/* 2. ACTIVE EDITOR MODE STYLES (.ql-snow)
+   ----------------------------------------------------------------------- */
+/* These guidelines only appear when you are actively modifying layout content */
+
+.ql-snow td {
+    padding: 1.25rem !important;
+    border: 1px dashed #a855f7 !important; /* Purple guides visible to authors */
+    border-radius: 6px !important;
+    background-color: rgba(168, 85, 247, 0.02) !important;
+}
+
+
+/* 3. LIVE VIEW MODE STYLES (.ql-disabled)
+   ----------------------------------------------------------------------- */
+/* When the editor is disabled, strip the borders and margins for a clean UI */
+
+.ql-disabled td {
+    padding: 0 !important;             /* Removes the editing internal sandbox spacing */
+    border: none !important;           /* Completely hides the dashed border */
+    background-color: transparent !important; /* Removes the purple background tint */
+}
+
+
+/* 4. Desktop View (Side-by-Side 50/50 Grid Layout for BOTH modes)
+   ========================================================================== */
+@media (min-width: 768px) {
+    /* Switch the row's flex direction to horizontal on larger screens */
+    .ql-container table tr {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+    }
+
+    /* Lock the columns into a perfectly balanced 50/50 side-by-side split */
+    .ql-container td {
+        flex: 1 1 0% !important;
+        width: 50% !important; /* Allocates exactly half the row width */
+        min-width: 0 !important; /* Keeps long text strings from forcing overflow */
+    }
+}
+
+.ql-container img {
+  cursor: pointer;
+}

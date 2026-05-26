@@ -97,11 +97,11 @@ async function setUpEditProjectPage() {
 
                 if (!titleInput || titleInput.value === "") {
                     createMessage("Please do not leave the Title empty", "main-message", "error");
-                    throw Error("Title input can not be empty");
+                    throw Error("Can not save project. Title input can not be empty");
                 }
 
                 const projectToSave = new Project(
-                    titleInput.value || "Untitled Project",
+                    titleInput.value,
                     projectStatusInput.checked,
                     Timestamp.now(),
                     cleanContent
@@ -112,9 +112,9 @@ async function setUpEditProjectPage() {
                 const savedId = await saveProject(projectToSave);
                 storeMessage("Project published successfully!", "main-message", "check_circle")
                 navigateTo("/impact/project", { params: { id: savedId } });
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Save failed:", err);
-                createMessage("Error: Could not save project.", "main-message", "error");
+                createMessage(err, "main-message", "error");
                 saveBtn.innerText = "Publish Post";
                 (saveBtn as HTMLButtonElement).disabled = false;
             }

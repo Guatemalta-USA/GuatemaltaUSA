@@ -104,11 +104,11 @@ async function setupEditPostPage() {
                 }
                 if (!titleInput || titleInput.value === "") {
                     createMessage("Please do not leave the Title empty", "main-message", "error");
-                    throw Error("Title input can not be empty");
+                    throw Error("Can not save post. Title input can not be empty");
                 }
                 if (!authorInput || authorInput.value === "") {
                     createMessage("Please do not leave the author empty", "main-message", "error");
-                    throw Error("Author input can not be empty");
+                    throw Error("Can not save post. Author input can not be empty");
                 }
                 const postToSave = new Post(
                     titleInput.value || "Untitled Post",
@@ -124,9 +124,9 @@ async function setupEditPostPage() {
                 storeMessage("Post published successfully!", "main-message", "check_circle")
                 navigateTo('/blog/post', { params: { id: savedId } });
 
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Save failed:", err);
-                createMessage(`Error: Could not save post: ${err}`, "main-message", "error");
+                createMessage(err, "main-message", "error");
                 saveBtn.innerText = "Publish Post";
                 (saveBtn as HTMLButtonElement).disabled = false;
             }
