@@ -1,14 +1,15 @@
 import Quill from "quill";
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
-import { getProjectById } from "./firebase/firebaseService";
+import { getPostsWithLinkedProjectId, getProjectById } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import { navigateTo } from "./modules/navigate";
-import { createButton, storeMessage } from "./modules/utils";
+import { createButton, createLink, makeElement, storeMessage } from "./modules/utils";
 
 async function setUpProjectView() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
+    const linkedPostsDiv = document.getElementById("linked-posts") as HTMLElement;
     const lastUpdatedDiv = document.getElementById("lastUpdated") as HTMLElement;
 
     if (!id) {
@@ -50,6 +51,33 @@ async function setUpProjectView() {
         const loading = document.getElementById("loading");
 
         if (titleElem) titleElem.innerText = project.projectTitle;
+        const linkedPosts = await getPostsWithLinkedProjectId(id);
+        if (linkedPosts.length > 0) {
+            linkedPosts.forEach((post) => {
+                let postId = "";
+                if (post.id) {
+                    postId = post.id;
+                }
+                const postArticle = makeElement("article", postId, "", null);
+                const postLink = makeElement("a", null, "post-link", null);
+                postLink.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }))
+                const postTitle = makeElement("h2", null, null, post.postTitle);
+                postLink.appendChild(postTitle);
+                postArticle.appendChild(postLink);
+                const postInfo = makeElement("h3", null, null, `By ${post.author} on ${post.publishDate.toDate().toLocaleDateString()}`);
+                postArticle.appendChild(postInfo);
+                const firstP = post.getFirstParagraph();
+                const firstPElm = makeElement("p", null, null, firstP);
+                postArticle.appendChild(firstPElm);
+                const readMore = createLink("Read More...", "", false);
+                readMore.classList.add("post-link");
+                readMore.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }));
+                postArticle.appendChild(readMore);
+                linkedPostsDiv.appendChild(postArticle);
+            });
+        } else {
+            linkedPostsDiv.remove();
+        }
 
         // Initialize Read-Only Quill
         const viewer = new Quill('#viewer-container', {
@@ -71,6 +99,7 @@ async function setUpProjectView() {
         lastUpdatedDiv.innerText = `Last updated: ${lastUpdatedStr}`;
         if (loading) loading.remove();
         projectContainer.classList.remove("hide");
+        linkedPostsDiv.classList.remove("hide");
     }
 }
 

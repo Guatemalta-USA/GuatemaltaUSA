@@ -1,10 +1,10 @@
 import { initializeApp } from './main';
 import { TheEditor } from './modules/editor';
-import { deletePost, getPostById, savePost } from './firebase/firebaseService';
+import { deletePost, getAllProjects, getPostById, savePost } from './firebase/firebaseService';
 import { Timestamp } from 'firebase/firestore';
 import { navigateTo } from './modules/navigate';
 import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils';
-import { Post } from './models';
+import { Post, Project } from './models';
 
 async function setupEditPostPage() {
     const params = new URLSearchParams(window.location.search);
@@ -24,6 +24,7 @@ async function setupEditPostPage() {
     editorSection.classList.remove("hide");
     const titleInput = document.getElementById('post-title-input') as HTMLInputElement;
     const authorInput = document.getElementById("author-input") as HTMLInputElement;
+    const linkToProjectSelect = document.getElementById("link-to-project") as HTMLSelectElement;
     const saveBtn = document.getElementById('save-btn');
     const deleteBtn = document.getElementById('delete-post-btn');
 
@@ -77,6 +78,24 @@ async function setupEditPostPage() {
         }
     }
 
+    const projects: Project[] = await getAllProjects();
+    if (linkToProjectSelect) {
+        console.log("found select");
+    } else {
+        console.warn("Can't find select");
+    }
+    const none = document.createElement("option");
+    none.text = "None";
+    linkToProjectSelect.add(none);
+
+    projects.forEach((project) => {
+        const option = document.createElement("option");
+        option.text = project.projectTitle;
+        if (project.id) option.value = project.id
+        linkToProjectSelect.add(option);
+        console.log(`${project.projectTitle} = ${project.id}`)
+    });
+
     if (loading) loading.remove();
 
     if (titleInput.value === "" && deleteBtn) deleteBtn.remove();
@@ -115,7 +134,8 @@ async function setupEditPostPage() {
                     authorInput.value,
                     originalPublishDate,
                     Timestamp.now(),
-                    cleanContent
+                    cleanContent,
+                    linkToProjectSelect.value
                 );
 
                 if (postId) postToSave.id = postId;

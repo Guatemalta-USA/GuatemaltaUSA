@@ -72,11 +72,11 @@ export async function getPageContents(pageName: string): Promise<PageContents | 
 
 export async function updatePageContents(pageName: string, updates: Partial<PageContents>): Promise<void> {
     const docRef = doc(db, "pages", pageName);
-    
-    await setDoc(docRef, { 
-        ...updates, 
+
+    await setDoc(docRef, {
+        ...updates,
         pageName: pageName,
-        lastUpdated: serverTimestamp() 
+        lastUpdated: serverTimestamp()
     }, { merge: true });
 }
 
@@ -92,65 +92,71 @@ export async function addProfile(data: Profile) {
 
 // PROFILES
 export async function getAllProfiles(): Promise<Profile[]> {
-  try {
-    const profilesQuery = query(collection(db, "profiles"), orderBy("name", "asc"));
-    const querySnapshot = await getDocs(profilesQuery);
+    try {
+        const profilesQuery = query(collection(db, "profiles"), orderBy("name", "asc"));
+        const querySnapshot = await getDocs(profilesQuery);
 
-    const profiles: Profile[] = querySnapshot.docs.map(doc => ({
-      ...doc.data()
-    } as Profile));
+        const profiles: Profile[] = querySnapshot.docs.map(doc => ({
+            ...doc.data()
+        } as Profile));
 
-    return profiles;
-  } catch (error) {
-    console.error("Error fetching all profiles: ", error);
-    throw new Error("Failed to fetch profiles");
-  }
+        return profiles;
+    } catch (error) {
+        console.error("Error fetching all profiles: ", error);
+        throw new Error("Failed to fetch profiles");
+    }
 }
 
 export async function getProfilesByCountry(countryName: string): Promise<Profile[]> {
-  try {
-    const profilesQuery = query(
-      collection(db, "profiles"),
-      where("country", "==", countryName),
-      orderBy("name", "asc")
-    );
+    try {
+        const profilesQuery = query(
+            collection(db, "profiles"),
+            where("country", "==", countryName),
+            orderBy("name", "asc")
+        );
 
-    const querySnapshot = await getDocs(profilesQuery);
+        const querySnapshot = await getDocs(profilesQuery);
 
-    const profiles: Profile[] = querySnapshot.docs.map(doc => ({
-      ...doc.data()
-    } as Profile));
+        const profiles: Profile[] = querySnapshot.docs.map(doc => ({
+            ...doc.data()
+        } as Profile));
 
-    return profiles;
-  } catch (error) {
-    console.error(`Error fetching profiles for ${countryName}: `, error);
-    throw new Error("Failed to fetch profiles by country");
-  }
+        return profiles;
+    } catch (error) {
+        console.error(`Error fetching profiles for ${countryName}: `, error);
+        throw new Error("Failed to fetch profiles by country");
+    }
 }
 
 export async function updateProfile(name: string, updates: Partial<Profile>) {
-  try {
-    const docRef = doc(db, "profiles", name);
-    await updateDoc(docRef, updates);
-  } catch (error) {
-    console.error("Error updating profile: ", error);
-    throw new Error("Failed to update profile");
-  }
+    try {
+        const docRef = doc(db, "profiles", name);
+        await updateDoc(docRef, updates);
+    } catch (error) {
+        console.error("Error updating profile: ", error);
+        throw new Error("Failed to update profile");
+    }
 }
 
 export async function deleteProfile(name: string) {
-  try {
-    const docRef = doc(db, "profiles", name);
-    await deleteDoc(docRef);
-  } catch (error) {
-    console.error("Error deleting profile: ", error);
-    throw new Error("Failed to delete profile");
-  }
+    try {
+        const docRef = doc(db, "profiles", name);
+        await deleteDoc(docRef);
+    } catch (error) {
+        console.error("Error deleting profile: ", error);
+        throw new Error("Failed to delete profile");
+    }
 }
 
 //POSTS
 export async function getAllPosts(): Promise<Post[]> {
     const q = query(collection(db, "posts"), orderBy("publishDate", "desc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => Post.fromFirestore(doc.id, doc.data()));
+}
+
+export async function getPostsWithLinkedProjectId(projectId: string): Promise<Post[]> {
+    const q = query(collection(db, "posts"), where('linkedProjectId', '==', projectId));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => Post.fromFirestore(doc.id, doc.data()));
 }
@@ -161,15 +167,15 @@ export async function savePost(post: Post): Promise<string> {
         const docRef = doc(db, POSTS_PATH, post.id);
         await updateDoc(docRef, post.toFirestore());
         return post.id;
-    } 
-    
+    }
+
     // For NEW posts: generate ID from title
     const customId = slugify(post.postTitle);
     const docRef = doc(db, POSTS_PATH, customId);
-    
+
     // We use setDoc because we are specifying the ID manually
     await setDoc(docRef, post.toFirestore());
-    
+
     return customId;
 }
 
@@ -186,7 +192,7 @@ export async function deletePost(postId: string): Promise<void> {
     try {
         const postRef = doc(db, "posts", postId);
         await deleteDoc(postRef);
-        
+
         console.log(`Firestore: Post ${postId} successfully deleted.`);
     } catch (error) {
         console.error("Error deleting post from Firestore:", error);
@@ -195,6 +201,12 @@ export async function deletePost(postId: string): Promise<void> {
 }
 
 // PROJECTS
+export async function getAllProjects(): Promise<Project[]> {
+    const q = query(collection(db, "projects"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => Project.fromFirestore(doc.id, doc.data()));
+}
+
 export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]> {
     const q = query(projectsCol, where("currentProject", "==", isCurrent));
     const querySnapshot = await getDocs(q);
@@ -204,7 +216,7 @@ export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]
 export async function getProjectById(id: string): Promise<Project | null> {
     const docRef = doc(db, 'projects', id).withConverter(projectConverter);
     const docSnap = await getDoc(docRef);
-    
+
     return docSnap.exists() ? docSnap.data() : null;
 }
 

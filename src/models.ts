@@ -85,19 +85,22 @@ export class Post {
     public publishDate: Timestamp;
     public lastUpdated: Timestamp;
     public content: any;
+    public linkedProjectId: string;
 
     constructor(
         postTitle: string,
         author: string,
         publishDate: Timestamp,
         lastUpdated: Timestamp,
-        content: any
+        content: any,
+        linkedProjectId: string
     ) {
         this.postTitle = postTitle;
         this.author = author;
         this.publishDate = publishDate;
         this.lastUpdated = lastUpdated;
         this.content = content;
+        this.linkedProjectId = linkedProjectId;
     }
 
     static fromFirestore(id: string, data: any): Post {
@@ -106,7 +109,8 @@ export class Post {
             data.author,
             data.publishDate,
             data.lastUpdated,
-            data.content
+            data.content,
+            data.linkedProjectId
         );
         post.id = id;
         return post;
@@ -118,7 +122,8 @@ export class Post {
             author: this.author,
             publishDate: this.publishDate,
             lastUpdated: serverTimestamp(),
-            content: this.content
+            content: this.content,
+            linkedProjectId: this.linkedProjectId
         };
     }
 
