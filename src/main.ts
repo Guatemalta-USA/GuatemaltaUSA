@@ -132,13 +132,14 @@ export async function initializeApp(
                   const existingPost = editorConfig.postId
                     ? await getPostById(editorConfig.postId)
                     : null;
-
+                  const linkToProjectSelect = document.getElementById("link-to-project") as HTMLSelectElement;
                   const postToSave = new Post(
                     postTitle,
                     authorInput.value,
                     existingPost ? existingPost.publishDate : Timestamp.now(),
                     Timestamp.now(),
-                    content
+                    content,
+                    linkToProjectSelect.value
                   );
 
                   if (editorConfig.postId) postToSave.id = editorConfig.postId;
