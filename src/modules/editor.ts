@@ -212,7 +212,6 @@ export class TheEditor {
                                 }
                             }
                         },
-                        // Overridden table toolbar button to automatically insert a clean 2-column layout row
                         'table': () => {
                             const tableModule = this.quill.getModule('table') as any;
                             if (tableModule) {
