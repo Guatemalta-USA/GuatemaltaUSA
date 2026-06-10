@@ -7,16 +7,19 @@ import { ImageResize } from 'quill-image-resize-module-ts';
 import { createMessage, makeElement, promptModal } from './utils';
 import { showLightbox } from './imageGallery';
 
-// --- Quill Customizations ---
+// --- Quill Customizations & Types ---
+
+interface BlotFormat {
+    new(...args: any[]): any;
+    create(value: any): HTMLElement;
+    sanitize?(url: string): string;
+}
 
 if (!Quill.imports['modules/imageResize']) {
     Quill.register('modules/imageResize', ImageResize);
 }
 
-const ImageFormat = Quill.import('formats/image') as {
-    new(...args: any[]): any;
-    create(value: any): HTMLElement;
-};
+const ImageFormat = Quill.import('formats/image') as BlotFormat;
 
 class StyledImage extends ImageFormat {
     static blotName = 'image';
@@ -61,11 +64,12 @@ class StyledImage extends ImageFormat {
 
 Quill.register('formats/image', StyledImage, true);
 
-const Link = Quill.import('formats/link');
+const Link = Quill.import('formats/link') as BlotFormat;
 
-class ActionLink extends (Link as any) {
+class ActionLink extends Link {
     static blotName = 'actionLink';
     static tagName = 'A';
+
     static create(value: string) {
         const node = super.create(value);
         node.setAttribute('class', 'action-link');
@@ -74,12 +78,13 @@ class ActionLink extends (Link as any) {
         node.setAttribute('rel', 'noopener noreferrer');
         return node;
     }
+
     static formats(node: HTMLElement) {
         return node.getAttribute('href');
     }
 }
 
-class StandardLink extends (Link as any) {
+class StandardLink extends Link {
     static create(value: string) {
         const node = super.create(value);
         const isInternal = value.startsWith('/');
@@ -96,17 +101,18 @@ class StandardLink extends (Link as any) {
         }
         return node;
     }
+
     static formats(node: HTMLElement) {
         return node.getAttribute('href');
     }
 }
 
-const VideoFormat = Quill.import('formats/video') as any;
+const VideoFormat = Quill.import('formats/video') as BlotFormat;
 
 class YouTubeVideo extends VideoFormat {
     static create(value: string) {
         const node = super.create(value);
-        const url = this.sanitize(value);
+        const url = this.sanitize ? this.sanitize(value) : value;
         node.setAttribute('src', url);
         node.setAttribute('frameborder', '0');
         node.setAttribute('allowfullscreen', 'true');
@@ -123,16 +129,18 @@ class YouTubeVideo extends VideoFormat {
     }
 }
 
-Quill.register(YouTubeVideo, true);
+Quill.register('formats/video', YouTubeVideo, true);
 Quill.register('formats/actionLink', ActionLink);
-Quill.register(StandardLink, true);
+Quill.register('formats/link', StandardLink, true);
 
 // --- Main Editor Class ---
 
 export class TheEditor {
     public quill!: Quill;
-    private deletedImageURLs: string[] = [];
     public currentPage: string | null = null;
+    private deletedImageURLs: string[] = [];
+    private deleteObserver: MutationObserver | null = null;
+    private activeImageElement: HTMLImageElement | null = null;
 
     constructor() {
         const container = document.getElementById('editor-container');
@@ -144,25 +152,24 @@ export class TheEditor {
             theme: 'snow',
             placeholder: 'Start writing your content...',
             modules: {
-                // Enable core table modules natively supported by Quill's layout engine
                 table: true,
                 toolbar: {
                     container: [
                         [{ header: [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        ['link', 'mailto', { 'nav-link': ALL_APP_PATHS }, 'action-link'],
-                        ['image', 'video', 'table'], // Using the native table module format button
+                        ['action-link', 'link', { 'nav-link': ALL_APP_PATHS }, 'mailto'],
+                        ['table', 'image', 'video'],
                         ['clean']
                     ],
                     handlers: {
                         'link': async () => {
                             const url = await promptModal("Enter URL", "url...", "Insert url", false);
-                            if (url !== "") this.quill.format('link', url);
+                            if (url) this.quill.format('link', url);
                         },
                         'action-link': async () => {
                             const url = await promptModal("Enter Action URL", "url...", "Add Action Button", false);
-                            if (url !== "") this.quill.format('actionLink', url);
+                            if (url) this.quill.format('actionLink', url);
                         },
                         'nav-link': (value: string) => {
                             if (value) {
@@ -172,6 +179,7 @@ export class TheEditor {
                                 } else {
                                     const index = range ? range.index : 0;
                                     this.quill.insertText(index, value, 'link', value);
+                                    this.quill.setSelection(index + value.length);
                                 }
                             }
                         },
@@ -181,7 +189,6 @@ export class TheEditor {
                         'video': async () => {
                             const range = this.quill.getSelection();
                             const url = await promptModal("Enter the URL of the video", "video url", "Insert Video", false);
-                            console.log(url);
 
                             if (url && url !== "") {
                                 if (range) {
@@ -247,6 +254,20 @@ export class TheEditor {
 
         this.setupToolbarUI();
         this.setupDeleteObserver();
+        this.setupImageClickTracking();
+    }
+
+    private setupImageClickTracking() {
+        this.quill.root.addEventListener('mousedown', (e) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'IMG') {
+                this.activeImageElement = target as HTMLImageElement;
+                target.classList.add('ql-active');
+            } else {
+                this.activeImageElement = null;
+                document.querySelectorAll('.ql-editor img').forEach(img => img.classList.remove('ql-active'));
+            }
+        });
     }
 
     private injectCustomToolbar(parent: HTMLElement) {
@@ -279,15 +300,16 @@ export class TheEditor {
             btn.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                let img = document.querySelector('img.ql-active') as HTMLImageElement;
+
+                let img = document.querySelector('img.ql-active') as HTMLImageElement || this.activeImageElement;
                 if (!img) {
                     const images = Array.from(document.querySelectorAll('.ql-editor img'));
-                    img = images.find(i => i.classList.contains('ql-active')) as HTMLImageElement || (window as any).lastClickedImg;
+                    img = images.find(i => i.classList.contains('ql-active')) as HTMLImageElement;
                 }
 
                 if (img) {
-                    const blot = Quill.find(img) as any;
-                    if (blot) {
+                    const blot = Quill.find(img);
+                    if (blot && !('root' in blot)) {
                         const index = this.quill.getIndex(blot);
                         this.quill.formatText(index, 1, 'style', align.style);
                     }
@@ -296,22 +318,15 @@ export class TheEditor {
             toolbar.appendChild(btn);
         });
 
-        this.quill.root.addEventListener('mousedown', (e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === 'IMG') {
-                (window as any).lastClickedImg = target;
-                target.classList.add('ql-active');
-            } else {
-                document.querySelectorAll('.ql-editor img').forEach(img => img.classList.remove('ql-active'));
-            }
-        });
-
         parent.appendChild(toolbar);
     }
 
     private setupToolbarUI() {
-        const navPicker = document.querySelector('.ql-nav-link .ql-picker-label');
-        if (navPicker) navPicker.setAttribute('data-label', 'App Pages');
+        const navPicker = document.querySelector('.ql-nav-link');
+        if (navPicker) {
+            navPicker.setAttribute('data-label', 'App Pages');
+            navPicker.setAttribute("data-title", "Insert a link to an internal page");
+        }
 
         const navItems = document.querySelectorAll('.ql-nav-link .ql-picker-item');
         navItems.forEach(item => {
@@ -319,40 +334,50 @@ export class TheEditor {
             if (val) item.textContent = val;
         });
 
+        const externalLink = document.querySelector(".ql-link");
+        if (externalLink) externalLink.setAttribute('data-title', "Insert an external link");
+
         const actionBtn = document.querySelector('.ql-action-link');
         if (actionBtn) {
+            actionBtn.setAttribute('data-title', "Insert an action link");
             actionBtn.innerHTML = `<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="14" x="2" y="4" rx="2" ry="2"></rect><line class="ql-stroke" x1="7" x2="11" y1="9" y2="9"></line></svg>`;
         }
-        const imageBtn = document.querySelector('.ql-image');
-        if (imageBtn) imageBtn.setAttribute('title', 'Upload Image');
 
+        const imageBtn = document.querySelector('.ql-image');
+        if (imageBtn) {
+            imageBtn.setAttribute("data-title", "Upload Image");
+        }
+
+        const videoBtn = document.querySelector(".ql-video");
+        if (videoBtn) videoBtn.setAttribute("data-title", "Insert a Youtube video");
+            
         const mailtoBtn = document.querySelector('.ql-mailto');
         if (mailtoBtn) {
-            mailtoBtn.setAttribute('title', 'Insert Email Link');
+            mailtoBtn.setAttribute('data-title', "Insert Email Link");
             mailtoBtn.innerHTML = `
             <svg viewBox="0 0 18 18">
                 <polyline class="ql-stroke" points="2 4 9 11 16 4"></polyline>
                 <rect class="ql-stroke" height="10" width="14" x="2" y="4" rx="1" ry="1"></rect>
-            </svg>
-        `;
+            </svg>`;
         }
 
-        // Setup clear visual title for our 2-column formatting table trigger
         const tableBtn = document.querySelector('.ql-table');
         if (tableBtn) {
-            tableBtn.setAttribute('title', 'Insert 2-Column Block Layout');
+            tableBtn.setAttribute('data-title', 'Insert 2-Column Block Layout');
             tableBtn.innerHTML = `
                 <svg viewBox="0 0 18 18">
                     <rect class="ql-stroke" height="14" width="6" x="2" y="2" rx="1" ry="1"></rect>
                     <rect class="ql-stroke" height="14" width="6" x="10" y="2" rx="1" ry="1"></rect>
-                </svg>
-            `;
+                </svg>`;
         }
+
+        const cleanBtn = document.querySelector(".ql-clean");
+        if (cleanBtn) cleanBtn.setAttribute("data-title", "Clear all formatting for selection");
     }
 
     private setupDeleteObserver() {
         let currentImages = new Set(this.getImagesFromEditor());
-        const observer = new MutationObserver(() => {
+        this.deleteObserver = new MutationObserver(() => {
             const newImages = new Set(this.getImagesFromEditor());
             for (const url of currentImages) {
                 if (!newImages.has(url)) {
@@ -363,7 +388,7 @@ export class TheEditor {
             }
             currentImages = newImages;
         });
-        observer.observe(this.quill.root, { childList: true, subtree: true });
+        this.deleteObserver.observe(this.quill.root, { childList: true, subtree: true });
     }
 
     private getImagesFromEditor(): string[] {
@@ -372,7 +397,6 @@ export class TheEditor {
     }
 
     private async selectLocalImage() {
-        // Capture exact insertion point coordinates before focus is manipulated
         const savedRange = this.quill.getSelection();
         if (!savedRange) {
             createMessage("Please click inside the editor or a block column first.", "main-message", "error");
@@ -385,13 +409,12 @@ export class TheEditor {
         input.click();
 
         input.onchange = async () => {
-            const file = input.files![0];
+            const file = input.files?.[0];
             if (!file) return;
 
             const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true, fileType: 'image/jpeg' };
 
             try {
-                // @ts-ignore
                 const compressedFile = await imageCompression(file, options);
                 const response = await fetch('https://photo-upload.guatemaltausa.workers.dev', {
                     method: 'POST',
@@ -403,12 +426,10 @@ export class TheEditor {
                 const data = await response.json();
 
                 if (data.url) {
-                    // Embed image immediately to lock it into the active text/table position
                     this.quill.insertEmbed(savedRange.index, 'image', data.url);
                     this.quill.setSelection(savedRange.index + 1);
                     createMessage("Image uploaded successfully!", "main-message", "check_circle");
 
-                    // Request description metadata via prompt modal overlay
                     const altText = await promptModal(
                         "Please provide a description for this image",
                         "Image Description...",
@@ -453,12 +474,12 @@ export class TheEditor {
             if (data && data.content) {
                 this.quill.setContents(data.content);
             } else {
-                this.quill.setContents([]);
+                this.quill.setContents([] as any);
             }
             const lastUpdatedDiv = document.getElementById("last-updated");
-            if (lastUpdatedDiv && data) {
+            if (lastUpdatedDiv && data?.lastUpdated) {
                 lastUpdatedDiv.innerHTML = "";
-                const date = data?.lastUpdated.toDate();
+                const date = data.lastUpdated.toDate();
                 const lastUpdatedP = makeElement("p", null, null, `Last Updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`);
                 lastUpdatedDiv.appendChild(lastUpdatedP);
             }
@@ -480,7 +501,6 @@ export class TheEditor {
 
     public async deleteAllImages(): Promise<void> {
         const images = this.getImagesFromEditor();
-
         if (images.length === 0) return;
 
         try {
@@ -494,8 +514,16 @@ export class TheEditor {
             await Promise.all(deletePromises);
             console.log(`${images.length} images cleaned up from R2.`);
         } catch (err) {
-            console.error("Failed to clean up images from R2 during post deletion:", err);
+            console.error("Failed to clean up images from R2:", err);
         }
+    }
+
+    public destroy(): void {
+        if (this.deleteObserver) {
+            this.deleteObserver.disconnect();
+            this.deleteObserver = null;
+        }
+        this.activeImageElement = null;
     }
 
     public getHTML(): string { return this.quill.root.innerHTML; }
