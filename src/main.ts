@@ -6,6 +6,7 @@ import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
 import { Timestamp } from 'firebase/firestore';
 import { getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
+import { initGivebutter } from "./services/givebutter.service.js";
 
 let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
 
@@ -13,6 +14,10 @@ const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
 const adminControls = document.getElementById('admin-controls');
 const cancelButton = document.getElementById('cancel-btn');
+
+initGivebutter()
+  .then(() => console.log('Givebutter widget loaded successfully.'))
+  .catch((err) => console.error('Givebutter loading error:', err));
 
 function toggleMode(editor: TheEditor, isEditing: boolean) {
   if (viewSection && adminControls && editSection) {

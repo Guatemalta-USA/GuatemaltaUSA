@@ -165,7 +165,7 @@ nav {
   height: 60px;
   display: flex;
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: center;
   gap: 10px;
   background-color: var(--nav-background-color);
   color: var(--nav-color);

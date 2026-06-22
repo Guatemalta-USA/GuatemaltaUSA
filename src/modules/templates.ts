@@ -5,7 +5,7 @@ import { signOutUser } from "../firebase/authService.js";
 
 type NavItem = {
     label: string;
-    path: AppPath;
+    path: AppPath | "givebutter";
 };
 //{ label: "About Us", path: "/about" },
 const NAV_ITEMS: NavItem[] = [
@@ -13,21 +13,35 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Impact", path: "/impact/currentprojects" }, 
     { label: "Blog", path: "/blog" },
     { label: "Mailing List", path: "/mailinglist" },
+    { label: "Donate", path: "givebutter" }
 ] as const;
 
 export function loadNav(activeNavLink: string) {
     const nav = document.querySelector("nav") as HTMLElement;
     if (!nav) return;
+    
     auth.onAuthStateChanged(async (user) => {
         nav.innerHTML = "";
+        
         NAV_ITEMS.forEach(({ label, path }) => {
-            const link = createLink(label, "", false);
-            link.addEventListener('click', () => navigateTo(path as any));
-            if (activeNavLink === label) {
-                link.setAttribute("aria-current", "page");
+            if (path === "givebutter") {
+                // Generate the Givebutter Web Component dynamically
+                const widget = document.createElement("givebutter-widget");
+                widget.setAttribute("id", "gRGya8");
+                
+                nav.appendChild(widget);
+            } else {
+                // Your exact baseline layout generation logic remains completely untouched
+                const link = createLink(label, "", false);
+                link.addEventListener('click', () => navigateTo(path as any));
+                
+                if (activeNavLink === label) {
+                    link.setAttribute("aria-current", "page");
+                }
+                nav.appendChild(link);
             }
-            nav.appendChild(link);
         });
+        
         if (user) {
             const logout = makeElement("a", "logout", "", "Log Out");
             logout.addEventListener('click', (e) => {
@@ -38,6 +52,7 @@ export function loadNav(activeNavLink: string) {
         }
     });
 }
+
 
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
