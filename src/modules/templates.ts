@@ -1,5 +1,5 @@
 import { navigateTo, type AppPath } from "./navigate.js";
-import { createLink, createSocialLink, makeElement } from "./utils.js";
+import { createGiveButterWidget, createLink, createSocialLink, makeElement } from "./utils.js";
 import { auth } from "../firebase/firebase.js";
 import { signOutUser } from "../firebase/authService.js";
 
@@ -25,13 +25,9 @@ export function loadNav(activeNavLink: string) {
         
         NAV_ITEMS.forEach(({ label, path }) => {
             if (path === "givebutter") {
-                // Generate the Givebutter Web Component dynamically
-                const widget = document.createElement("givebutter-widget");
-                widget.setAttribute("id", "gRGya8");
-                
+                const widget = createGiveButterWidget(null, "button");
                 nav.appendChild(widget);
             } else {
-                // Your exact baseline layout generation logic remains completely untouched
                 const link = createLink(label, "", false);
                 link.addEventListener('click', () => navigateTo(path as any));
                 
