@@ -259,7 +259,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
     modalContent.appendChild(formRow);
 
     const buttonRow = makeElement("div", null, "button-row", null);
-    
+
     const closeModal = () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.removeChild(modalRoot);
@@ -273,14 +273,14 @@ export async function promptModal(messageHeader: string, placeholderText: string
     };
 
     const submitBtn = createButton(buttonText, "button", "submit-btn", "accent-button", "add");
-    submitBtn.onclick = function() {
+    submitBtn.onclick = function () {
       closeModal();
       resolve(userInput.value);
     }
     buttonRow.appendChild(submitBtn);
 
     const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
-    cancelButton.onclick = function() {
+    cancelButton.onclick = function () {
       closeModal();
       resolve("");
     };
@@ -289,12 +289,31 @@ export async function promptModal(messageHeader: string, placeholderText: string
       window.addEventListener("keydown", handleKeyDown);
       buttonRow.appendChild(cancelButton);
     }
-    
+
     modalContent.appendChild(buttonRow);
     modalOverlay.appendChild(modalContent);
     modalRoot.appendChild(modalOverlay);
-    
+
     modalRoot.style.display = 'flex';
     document.body.appendChild(modalRoot);
   });
+}
+
+export function createGiveButterWidget(id: string | null, type: string) {
+  const widget = document.createElement("givebutter-widget");
+  if (type === "button") {
+    if (id) {
+      widget.setAttribute("id", id);
+    } else {
+      widget.setAttribute("id", "gRGya8");
+    }
+  } else {
+    if (id) {
+      widget.setAttribute("id", id);
+    } else {
+      widget.setAttribute("id", "goeb69");
+    }
+  }
+  return widget;
+
 }

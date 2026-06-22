@@ -20,7 +20,8 @@ export default defineConfig({
         '/impact/editproject',
         '/financialtransparency',
         '/login',
-        '/privatepolicy'
+        '/privatepolicy',
+        '/donate'
       ],
     }),
   ],
@@ -40,7 +41,8 @@ export default defineConfig({
         project: resolve(__dirname, 'impact/project.html'),
         editproject: resolve(__dirname, 'impact/editproject.html'),
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
-        privatepolicy: resolve(__dirname, 'privatepolicy.html')
+        privatepolicy: resolve(__dirname, 'privatepolicy.html'),
+        donate: resolve(__dirname, 'donate.html')
       },
     },
   },

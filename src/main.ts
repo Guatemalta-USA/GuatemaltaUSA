@@ -16,8 +16,6 @@ const adminControls = document.getElementById('admin-controls');
 const cancelButton = document.getElementById('cancel-btn');
 
 initGivebutter()
-  .then(() => console.log('Givebutter widget loaded successfully.'))
-  .catch((err) => console.error('Givebutter loading error:', err));
 
 function toggleMode(editor: TheEditor, isEditing: boolean) {
   if (viewSection && adminControls && editSection) {
@@ -70,7 +68,7 @@ export async function initializeApp(
       resolve();
     }
   });
-
+  
   loadHeader();
   loadNav(parentPage);
   loadFooter();

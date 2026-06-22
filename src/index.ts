@@ -11,8 +11,6 @@ const photosSection = document.getElementById("home-photos") as HTMLElement;
 const currentProjectsSection = document.getElementById("home-current") as HTMLElement;
 const updatesSection = document.getElementById("home-updates") as HTMLElement;
 
-
-
 initializeApp("Home", "Home").then(async () => {
     // Load image gallery
     const placeholderGallery = document.getElementById("placeholder-container") as HTMLElement;
@@ -64,28 +62,28 @@ initializeApp("Home", "Home").then(async () => {
             updatesSection.innerHTML = "<p>No posts yet. Check back soon!</p>";
         } else {
             const postsDiv = posts.slice(0, 3).reduce((acc: HTMLElement, post: Post) => {
-            const postId = post.id ? post.id : "";
-            const postArticle = makeElement("article", postId, "", null);
-            const postLink = makeElement("a", null, "post-link", null);
-            postLink.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }))
-            const postTitle = makeElement("h2", null, null, post.postTitle);
-            postLink.appendChild(postTitle);
-            postArticle.appendChild(postLink);
-            const postInfo = makeElement("h3", null, null, `By ${post.author} on ${post.publishDate.toDate().toLocaleDateString()}`);
-            postArticle.appendChild(postInfo);
-            const firstP = post.getFirstParagraph();
-            const firstPElm = makeElement("p", null, null, firstP);
-            postArticle.appendChild(firstPElm);
-            const readMore = createLink("Read More...", "", false);
-            readMore.classList.add("post-link");
-            readMore.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }));
-            postArticle.appendChild(readMore);
-            acc.appendChild(postArticle);
-            return acc;
+                const postId = post.id ? post.id : "";
+                const postArticle = makeElement("article", postId, "", null);
+                const postLink = makeElement("a", null, "post-link", null);
+                postLink.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }))
+                const postTitle = makeElement("h2", null, null, post.postTitle);
+                postLink.appendChild(postTitle);
+                postArticle.appendChild(postLink);
+                const postInfo = makeElement("h3", null, null, `By ${post.author} on ${post.publishDate.toDate().toLocaleDateString()}`);
+                postArticle.appendChild(postInfo);
+                const firstP = post.getFirstParagraph();
+                const firstPElm = makeElement("p", null, null, firstP);
+                postArticle.appendChild(firstPElm);
+                const readMore = createLink("Read More...", "", false);
+                readMore.classList.add("post-link");
+                readMore.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }));
+                postArticle.appendChild(readMore);
+                acc.appendChild(postArticle);
+                return acc;
 
-        }, document.createElement("div"));
-        loadingUpdates.remove();
-        updatesSection.appendChild(postsDiv);
+            }, document.createElement("div"));
+            loadingUpdates.remove();
+            updatesSection.appendChild(postsDiv);
         }
         const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts");
         updatesSection.prepend(updatesHeading);
