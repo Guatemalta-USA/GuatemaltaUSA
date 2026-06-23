@@ -306,7 +306,7 @@ iframe.ql-video {
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid #a855f7; /* Matches your purple handle controls */
+  border: 1px solid #a855f7;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -319,4 +319,20 @@ iframe.ql-video {
 .ql-toolbar .ql-picker[data-title]:hover::after {
   opacity: 1;
   transform: translateX(-50%) scale(1);
+}
+
+#viewer-container button.action-link[data-id],
+.ql-editor button.action-link[data-id] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+/* Subtle background tag text for the ID parameter inside the editor */
+.ql-editor button.action-link .donate-id-tag {
+    font-size: 0.8em;
+    opacity: 0.7;
+    font-weight: normal;
+    padding-left: 2px;
 }

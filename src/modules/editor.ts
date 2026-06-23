@@ -4,11 +4,10 @@ import { ALL_APP_PATHS } from './navigate';
 import { getPageContents, updatePageContents } from '../firebase/firebaseService';
 import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
-import { createMessage, makeElement, promptModal } from './utils';
+import { createButton, createMessage, makeElement, promptModal } from './utils';
 import { showLightbox } from './imageGallery';
 
 // --- Quill Customizations & Types ---
-
 interface BlotFormat {
     new(...args: any[]): any;
     create(value: any): HTMLElement;
@@ -61,8 +60,6 @@ class StyledImage extends ImageFormat {
         }
     }
 }
-
-Quill.register('formats/image', StyledImage, true);
 
 const Link = Quill.import('formats/link') as BlotFormat;
 
@@ -129,12 +126,38 @@ class YouTubeVideo extends VideoFormat {
     }
 }
 
+const BlockEmbed = Quill.import('blots/block/embed') as any;
+
+class GivebutterWidgetBlot extends BlockEmbed {
+    static blotName = 'givebutter';
+    static tagName = 'BUTTON'; 
+
+    static create(value: string) {
+        const widgetId = value && value.trim() !== "" ? value.trim() : 'gRGya8';
+        const node = createButton("Donate Now", "button", "", "action-link", "favorite");
+        node.setAttribute('data-id', widgetId);
+        
+        const idTag = document.createElement('span');
+        idTag.setAttribute('class', 'donate-id-tag');
+        idTag.innerText = ` (${widgetId})`;
+        node.appendChild(idTag);
+
+        return node;
+    }
+
+    static value(node: HTMLElement) {
+        return node.getAttribute('data-id');
+    }
+}
+
+Quill.register(GivebutterWidgetBlot);
+Quill.register(GivebutterWidgetBlot);
 Quill.register('formats/video', YouTubeVideo, true);
 Quill.register('formats/actionLink', ActionLink);
 Quill.register('formats/link', StandardLink, true);
+Quill.register('formats/image', StyledImage, true);
 
 // --- Main Editor Class ---
-
 export class TheEditor {
     public quill!: Quill;
     public currentPage: string | null = null;
@@ -158,7 +181,7 @@ export class TheEditor {
                         [{ header: [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        ['action-link', 'link', { 'nav-link': ALL_APP_PATHS }, 'mailto'],
+                        ['givebutter', 'action-link', 'link', { 'nav-link': ALL_APP_PATHS }, 'mailto'],
                         ['table', 'image', 'video'],
                         ['clean']
                     ],
@@ -166,6 +189,25 @@ export class TheEditor {
                         'link': async () => {
                             const url = await promptModal("Enter URL", "url...", "Insert url", false);
                             if (url) this.quill.format('link', url);
+                        },
+                        'givebutter': async () => {
+                            const range = this.quill.getSelection();
+                            const widgetId = await promptModal(
+                                "Enter Givebutter Widget ID",
+                                "e.g., gRGya8",
+                                "Insert Widget",
+                                false
+                            );
+
+                            if (widgetId !== null) {
+                                if (range) {
+                                    this.quill.insertEmbed(range.index, 'givebutter', widgetId, Quill.sources.USER);
+                                    this.quill.setSelection(range.index + 1);
+                                } else {
+                                    const length = this.quill.getLength();
+                                    this.quill.insertEmbed(length, 'givebutter', widgetId, Quill.sources.USER);
+                                }
+                            }
                         },
                         'action-link': async () => {
                             const url = await promptModal("Enter Action URL", "url...", "Add Action Button", false);
@@ -322,6 +364,19 @@ export class TheEditor {
     }
 
     private setupToolbarUI() {
+        const givebutterBtn = document.querySelector('.ql-givebutter');
+        if (givebutterBtn) {
+            givebutterBtn.setAttribute('data-title', "Insert Givebutter Widget");
+            givebutterBtn.innerHTML = `
+        <svg viewBox="0 0 18 18">
+            <rect class="ql-stroke" height="14" width="14" x="2" y="2" rx="2" ry="2" stroke="#a855f7" fill="none" stroke-width="2"></rect>
+            <path class="ql-fill" d="M6,7.5 A1.5,1.5 0 1,1 3,7.5 A1.5,1.5 0 1,1 6,7.5 Z" fill="#a855f7"></path>
+            <line class="ql-stroke" x1="8" x2="14" y1="7" y2="7" stroke="#a855f7" stroke-width="2"></line>
+            <line class="ql-stroke" x1="5" x2="13" y1="11" y2="11" stroke="#a855f7" stroke-width="2"></line>
+        </svg>
+    `;
+        }
+
         const navPicker = document.querySelector('.ql-nav-link');
         if (navPicker) {
             navPicker.setAttribute('data-label', 'App Pages');
@@ -350,7 +405,7 @@ export class TheEditor {
 
         const videoBtn = document.querySelector(".ql-video");
         if (videoBtn) videoBtn.setAttribute("data-title", "Insert a Youtube video");
-            
+
         const mailtoBtn = document.querySelector('.ql-mailto');
         if (mailtoBtn) {
             mailtoBtn.setAttribute('data-title', "Insert Email Link");
