@@ -131,6 +131,10 @@ table li {
   align-items: center;
 }
 
+.column {
+  flex-direction: column;
+}
+
 /* Profile buttons */
 .profile-actions {
   display: flex;

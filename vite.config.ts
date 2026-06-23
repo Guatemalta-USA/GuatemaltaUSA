@@ -21,7 +21,8 @@ export default defineConfig({
         '/financialtransparency',
         '/login',
         '/privatepolicy',
-        '/donate'
+        '/donate',
+        '/generate'
       ],
     }),
   ],
@@ -42,7 +43,8 @@ export default defineConfig({
         editproject: resolve(__dirname, 'impact/editproject.html'),
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
         privatepolicy: resolve(__dirname, 'privatepolicy.html'),
-        donate: resolve(__dirname, 'donate.html')
+        donate: resolve(__dirname, 'donate.html'),
+        generate: resolve(__dirname, 'generate.html')
       },
     },
   },

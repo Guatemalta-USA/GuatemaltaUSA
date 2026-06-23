@@ -728,4 +728,8 @@ textarea {
     max-width: 1000px;
     visibility: visible;
   }
+
+  footer ul {
+    flex-wrap: wrap;
+  }
 }
