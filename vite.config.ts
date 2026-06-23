@@ -6,54 +6,40 @@ export default defineConfig({
   base: '/',
   plugins: [
     sitemap({
-  hostname: 'https://guatemaltausa.org',
-  outDir: 'dist',
-  generateRobotsTxt: true,
-  
-  exclude: [
-    '/index',
-    '/about', 
-    '/mailinglist',
-    '/login',
-    '/blog/editpost',
-    '/blog',
-    '/blog/post',
-    '/impact/currentprojects',
-    '/impact/pastprojects',
-    '/impact/project',
-    '/impact/editproject',
-    '/financialtransparency',
-    '/privatepolicy',
-    '/donate',
-    '/generate',
-  ],
-  
-  dynamicRoutes: [
-    '/',
-    '/about',
-    '/mailinglist',
-    '/blog',
-    '/blog/post',
-    '/impact/currentprojects',
-    '/impact/pastprojects',
-    '/impact/project',
-    '/financialtransparency',
-    '/privatepolicy',
-    '/donate'
-  ],
-
-  robots: [
-    {
-      userAgent: '*',
-      disallow: [
+      hostname: 'https://guatemaltausa.org',
+      outDir: 'dist',
+      generateRobotsTxt: true,
+      exclude: [
+        '/index',
         '/login',
         '/generate',
         '/blog/editpost',
         '/impact/editproject'
       ],
-    }
-  ]
-}),
+      dynamicRoutes: [
+        '/',
+        '/about',
+        '/mailinglist',
+        '/blog',
+        '/blog/post',
+        '/impact/currentprojects',
+        '/impact/project',
+        '/financialtransparency',
+        '/privatepolicy',
+        '/donate'
+      ],
+      robots: [
+        {
+          userAgent: '*',
+          disallow: [
+            '/login',
+            '/generate',
+            '/blog/editpost',
+            '/impact/editproject'
+          ],
+        }
+      ]
+    }),
   ],
   build: {
     outDir: 'dist',
