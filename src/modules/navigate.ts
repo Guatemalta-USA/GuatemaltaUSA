@@ -7,6 +7,7 @@ export const ALL_APP_PATHS = [
   '/blog/post',
   '/blog/editpost',
   '/impact/currentprojects',
+  '/impact/pastprojects',
   '/impact/project',
   '/impact/editproject',
   '/financialtransparency',

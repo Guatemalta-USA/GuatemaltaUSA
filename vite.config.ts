@@ -6,25 +6,54 @@ export default defineConfig({
   base: '/',
   plugins: [
     sitemap({
-      hostname: 'https://guatemaltausa.org',
-      outDir: 'dist',
-      generateRobotsTxt: true,
-      dynamicRoutes: [
-        '/about',
-        '/mailinglist',
-        '/blog',
-        '/blog/post',
-        '/blog/editpost',
-        '/impact/currentprojects',
-        '/impact/project',
-        '/impact/editproject',
-        '/financialtransparency',
+  hostname: 'https://guatemaltausa.org',
+  outDir: 'dist',
+  generateRobotsTxt: true,
+  
+  exclude: [
+    '/index',
+    '/about', 
+    '/mailinglist',
+    '/login',
+    '/blog/editpost',
+    '/blog',
+    '/blog/post',
+    '/impact/currentprojects',
+    '/impact/pastprojects',
+    '/impact/project',
+    '/impact/editproject',
+    '/financialtransparency',
+    '/privatepolicy',
+    '/donate',
+    '/generate',
+  ],
+  
+  dynamicRoutes: [
+    '/',
+    '/about',
+    '/mailinglist',
+    '/blog',
+    '/blog/post',
+    '/impact/currentprojects',
+    '/impact/pastprojects',
+    '/impact/project',
+    '/financialtransparency',
+    '/privatepolicy',
+    '/donate'
+  ],
+
+  robots: [
+    {
+      userAgent: '*',
+      disallow: [
         '/login',
-        '/privatepolicy',
-        '/donate',
-        '/generate'
+        '/generate',
+        '/blog/editpost',
+        '/impact/editproject'
       ],
-    }),
+    }
+  ]
+}),
   ],
   build: {
     outDir: 'dist',
