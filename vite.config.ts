@@ -9,24 +9,12 @@ export default defineConfig({
       hostname: 'https://guatemaltausa.org',
       outDir: 'dist',
       generateRobotsTxt: true,
+      dynamicRoutes: [],
       exclude: [
-        '/index',
         '/login',
         '/generate',
         '/blog/editpost',
         '/impact/editproject'
-      ],
-      dynamicRoutes: [
-        '/',
-        '/about',
-        '/mailinglist',
-        '/blog',
-        '/blog/post',
-        '/impact/currentprojects',
-        '/impact/project',
-        '/financialtransparency',
-        '/privatepolicy',
-        '/donate'
       ],
       robots: [
         {
