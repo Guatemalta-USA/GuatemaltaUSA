@@ -12,6 +12,7 @@ const currentProjectsSection = document.getElementById("home-current") as HTMLEl
 const updatesSection = document.getElementById("home-updates") as HTMLElement;
 
 initializeApp("Home", "Home").then(async () => {
+    document.title = "Guatemalta USA | Sustainable Housing & Education Nonprofit";
     // Load image gallery
     const placeholderGallery = document.getElementById("placeholder-container") as HTMLElement;
     const imagesPaths = await getPhotosFromGithub("https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/homepage/");
