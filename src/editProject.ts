@@ -5,11 +5,35 @@ import { Project } from "./models";
 import type { TheEditor } from "./modules/editor";
 import { navigateTo } from "./modules/navigate";
 import { confirmDeleteModal, createMessage, storeMessage } from "./modules/utils";
+import { getAuthenticatedUser, getUserRole } from "./firebase/authService";
 
 async function setUpEditProjectPage() {
+    const loading = document.getElementById("loading");
+    
+        try {
+            const user = await getAuthenticatedUser();
+            
+            if (!user) {
+                storeMessage("Access denied. Admin privileges are required to manage projects.", "main-message", "error");
+                navigateTo('/blog');
+                return;
+            }
+            const role = await getUserRole(user.uid);
+    
+            if (role !== 'admin') {
+                storeMessage("Access denied. Admin privileges are required to manage projects.", "main-message", "error");
+                navigateTo('/blog');
+                return;
+            }
+        } catch (authError) {
+            console.error("Authorization check failed:", authError);
+            storeMessage("An error occurred verifying your permissions.", "main-message", "error");
+            navigateTo('/blog');
+            return;
+        }
+
     const params = new URLSearchParams(window.location.search);
     const projectId = params.get('id');
-    const loading = document.getElementById("loading");
     const editorSection = document.getElementById("edit-section") as HTMLElement;
 
     const pageDisplayTitle = projectId ? "Edit Project" : "New Project";

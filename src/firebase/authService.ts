@@ -78,4 +78,13 @@ export async function signInWithGooglePopup() {
   }
 }
 
+export function getAuthenticatedUser(): Promise<User | null> {
+    return new Promise((resolve) => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            unsubscribe();
+            resolve(user);
+        });
+    });
+}
+
 export type { User };
