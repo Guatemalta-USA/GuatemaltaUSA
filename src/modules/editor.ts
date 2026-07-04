@@ -151,7 +151,6 @@ class GivebutterWidgetBlot extends BlockEmbed {
 }
 
 Quill.register(GivebutterWidgetBlot);
-Quill.register(GivebutterWidgetBlot);
 Quill.register('formats/video', YouTubeVideo, true);
 Quill.register('formats/actionLink', ActionLink);
 Quill.register('formats/link', StandardLink, true);
