@@ -220,3 +220,27 @@ export class ImageMetadata {
         this.altText = altText;
     }
 }
+
+export class ChildSponsorship {
+    public name: string;
+    public year: number;
+    public bio: string;
+    photoURL: string;
+    public sponsor: string | null = null;
+
+    constructor(
+        name: string,
+        year: number,
+        bio: string,
+        photoURL: string,
+        sponsor: string | null
+    ) {
+        this.name = name;
+        this.year = year;
+        this.bio = bio;
+        this.photoURL = photoURL;
+        if (sponsor) {
+            this.sponsor = sponsor;
+        }
+    }
+}

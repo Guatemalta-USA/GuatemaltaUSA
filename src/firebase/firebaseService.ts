@@ -1,4 +1,4 @@
-import { PageContents, Post, Project, type Profile } from "../models";
+import { ChildSponsorship, PageContents, Post, Project, type Profile } from "../models";
 import {
     collection,
     deleteDoc,
@@ -80,6 +80,7 @@ export async function updatePageContents(pageName: string, updates: Partial<Page
     }, { merge: true });
 }
 
+// PROFILES
 export async function addProfile(data: Profile) {
     try {
         const docRef = doc(db, "profiles", data.name);
@@ -90,7 +91,6 @@ export async function addProfile(data: Profile) {
     }
 }
 
-// PROFILES
 export async function getAllProfiles(): Promise<Profile[]> {
     try {
         const profilesQuery = query(collection(db, "profiles"), orderBy("name", "asc"));
@@ -145,6 +145,57 @@ export async function deleteProfile(name: string) {
     } catch (error) {
         console.error("Error deleting profile: ", error);
         throw new Error("Failed to delete profile");
+    }
+}
+
+//ChildSponsorship
+export async function getAllChildSponsorshipsByYear(year: number): Promise<ChildSponsorship[]> {
+    try {
+        const SponsorshipQuery = query(
+            collection(db, "childSponsorships"),
+            where("year", "==", year),
+            orderBy("name", "asc")
+        );
+        const querySnapshot = await getDocs(SponsorshipQuery);
+
+        const sponsorships: ChildSponsorship[] = querySnapshot.docs.map(doc => ({
+            ...doc.data()
+        } as ChildSponsorship));
+
+        return sponsorships;
+    } catch (error) {
+        console.error(`Error fetching child sponsorships for ${year}: `, error);
+        throw new Error(`Failed to fetch sponsorships for ${year}`);
+    }
+}
+
+export async function addChildSponsorship(data: ChildSponsorship) {
+    try {
+        const docRef = doc(db, "childSponsorships", data.name);
+        await setDoc(docRef, data);
+    } catch (error) {
+        console.error("Error adding Sponsorship: ", error);
+        throw new Error("Failed to add child. Please try reloading the page");
+    }
+}
+
+export async function updateChildSponsorship(name: string, updates: Partial<ChildSponsorship>) {
+    try {
+        const docRef = doc(db, "childSponsorships", name);
+        await updateDoc(docRef, updates);
+    } catch (error) {
+        console.error("Error updating sponsorship: ", error);
+        throw new Error("Failed to update sponsorship. Please try reloading the page.");
+    }
+}
+
+export async function deleteChildSponsorship(name: string) {
+    try {
+        const docRef = doc(db, "childSponsorships", name);
+        await deleteDoc(docRef);
+    } catch (error) {
+        console.error("Error deleting sponsorship: ", error);
+        throw new Error("Failed to delete sponsorship");
     }
 }
 

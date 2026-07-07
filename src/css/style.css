@@ -681,7 +681,60 @@ textarea {
 }
 
 /* =========================================
-   11. RESPONSIVE QUERIES
+   11. child-sponsorship
+   ========================================= */
+.sponsor-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.child-sponsorship {
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  border: 1px solid var(--message-text);
+  border-radius: 10px;
+  margin: 10px;
+  padding: 10px;
+}
+
+.sponsorship-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.child-info {
+  flex-grow: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sponsored {
+  padding: 5px;
+  border-radius: 10px;
+  text-align: center;
+}
+.found {
+  background-color: var(--blue-accent);
+  color: white;
+}
+
+.not-found {
+  background-color: #e5e5e5;
+  color: black;
+}
+
+.child-sponsorship img {
+  width: 200px;
+  height: auto;
+}
+
+/* =========================================
+   12. RESPONSIVE QUERIES
    ========================================= */
 
 @media (min-width: 701px) {

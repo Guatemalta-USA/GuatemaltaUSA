@@ -317,3 +317,21 @@ export function createGiveButterWidget(id: string | null, type: string) {
   return widget;
 
 }
+
+export function createInputRow(labelText: string | null, inputType: string, placeholderText: string, id: string): HTMLElement {
+  const formRow = makeElement("div", null, "form-row", null);
+  if (labelText) {
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    label.setAttribute("for", id);
+    formRow.appendChild(label);
+  }
+  const input = document.createElement("input") as HTMLInputElement;
+  input.type = inputType;
+  input.placeholder = placeholderText;
+  input.id = id;
+  input.name = id;
+  formRow.appendChild(input);
+
+  return formRow;
+}

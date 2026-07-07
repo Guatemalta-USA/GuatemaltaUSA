@@ -47,8 +47,22 @@ export default defineConfig({
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
         privatepolicy: resolve(__dirname, 'privatepolicy.html'),
         donate: resolve(__dirname, 'donate.html'),
-        generate: resolve(__dirname, 'generate.html')
+        generate: resolve(__dirname, 'generate.html'),
+        sponsorachild: resolve(__dirname, 'sponsor-a-child.html')
       },
+      output: {
+        manualChunks(id) {
+          // If the asset path is inside node_modules, separate it
+          if (id.includes('node_modules')) {
+            // Group all firebase packages together into a 'firebase' chunk
+            if (id.includes('firebase')) {
+              return 'firebase';
+            }
+            // Group everything else into a general 'vendor' chunk
+            return 'vendor';
+          }
+        }
+      }
     },
   },
 });
