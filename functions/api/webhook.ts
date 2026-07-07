@@ -2,7 +2,8 @@ interface Env {
   FIREBASE_PROJECT_ID: string;
   FIREBASE_CLIENT_EMAIL: string;
   FIREBASE_PRIVATE_KEY: string;
-  BREVO_API_KEY: string; // Add your free Brevo API key to your Cloudflare Env Variables
+  BREVO_API_KEY: string;
+  GIVE_BUTTER_SPONSOR_CHILD_ID: string;
 }
 
 /**
@@ -87,7 +88,7 @@ async function getGoogleAuthToken(clientEmail: string, privateKey: string): Prom
   });
 
   const data: any = await response.json();
-  
+
   if (!response.ok) {
     throw new Error(`Google OAuth failed: ${data.error_description || data.error}`);
   }
@@ -100,7 +101,7 @@ async function getGoogleAuthToken(clientEmail: string, privateKey: string): Prom
  */
 async function sendSponsorshipEmail(apiKey: string, toEmail: string, firstName: string, refCode: string) {
   const sponsorLink = `https://guatemaltausa.org/sponsor.html?ref=${refCode}`;
-  
+
   const payload = {
     sender: { name: "Guatemalta USA", email: "info@guatemaltausa.org" }, // Adjust to your verified Brevo sender
     to: [{ email: toEmail, name: firstName }],
@@ -144,7 +145,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const event: any = await request.json();
 
-    // Ensure we are catching successful donation transaction payloads
     if (event && event.type === "transaction.succeeded") {
       const data = event.data;
       const amount = data.amount; // Givebutter standard float/integer
@@ -152,14 +152,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       const firstName = data.donor?.first_name || "Supporter";
 
       // Match the exact $175 sponsorship target amount
-      //if (amount === 175 && email) {
-      if (email) {
+      const incomingCampaignId = data.campaign_id?.toString();
+      const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
+      //if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
+      if (email && incomingCampaignId === targetCampaignId) {
         // Generate alphanumeric 6-character reference token
         const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
+
         // 1. Authenticate with Google API
         const authToken = await getGoogleAuthToken(env.FIREBASE_CLIENT_EMAIL, env.FIREBASE_PRIVATE_KEY);
-        
+
         // 2. Build the targeted REST Firestore document URL definition
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/referrals?documentId=${refCode}`;
 
@@ -190,7 +192,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
         // 5. Trigger the transactional email notification alert link
         await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
-        
+
         console.log(`Successfully generated and emailed code ${refCode} to ${email}`);
       }
     }
