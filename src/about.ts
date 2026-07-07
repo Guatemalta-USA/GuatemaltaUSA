@@ -16,7 +16,7 @@ const cancelButton = document.getElementById("close-modal");
 let editingProfileId: string | null = null;
 let isAdmin = false;
 const countries: string[] = ["usa", "guatemala"];
-
+const contactForm = document.getElementById("contact-form") as HTMLFormElement;
 
 async function handleSubmit() {
     const submitBtn = document.getElementById('save-profile') as HTMLButtonElement;
@@ -182,6 +182,55 @@ function handleEdit(profile: Profile) {
     modalRoot.style.display = 'flex';
 }
 
+function sendContactEmails(formData: FormData) {
+    const nameInput = formData.get("entry.1134764317");
+    if (!nameInput || nameInput.toString().trim() === "") {
+        createMessage("Please enter your name", "main-message", "error");
+        return;
+    }
+    const emailInput = formData.get("entry.1281748752");
+    if (!emailInput || emailInput.toString().trim() === "") {
+        createMessage("Please enter your email", "main-message", "error");
+        return;
+    }
+    if (!emailInput.toString().includes("@")) {
+        createMessage("Please enter a valid email", "main-message", "error");
+        return;
+    }
+    const commentsTextArea = formData.get("entry.1027877017");
+    if (!commentsTextArea || commentsTextArea.toString().trim() === "") {
+        createMessage("Please do not leave the comments field empty", "main-message", "error");
+        return;
+    }
+
+    const formAction: string =
+            "https://docs.google.com/forms/d/e/1FAIpQLSeqUlWUU4Zi7sMO5aYOInfRlX52iAIehrEGlFTzuqIHsa1BiA/formResponse";
+        fetch(formAction, {
+            method: "POST",
+            body: formData,
+            mode: "no-cors",
+        })
+            .then((response) => {
+                //Store the message to be displayed after redirected to the home page
+                console.log(response);
+                createMessage(
+                    "Your comments have been sent to our team",
+                    "main-message",
+                    "check_circle",
+                );
+                contactForm.reset();
+            })
+            .catch((error) => {
+                //Create an error message
+                console.error("Network Error:", error);
+                createMessage(
+                    "Error signing up. Please reload the page and try again",
+                    "main-message",
+                    "error",
+                );
+            });
+}
+
 await initializeApp('About Us', 'About Us', { type: 'page', pageName: 'About' });
 auth.onAuthStateChanged(async (user) => {
     if (user) {
@@ -210,3 +259,11 @@ cancelButton?.addEventListener('click', () => {
     modalRoot.style.display = 'none';
     addProfileForm.reset();
 });
+
+contactForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const formData = new FormData(contactForm);
+    sendContactEmails(formData);
+});
+
+contactForm.classList.remove("hide");
