@@ -28,7 +28,7 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
     "pkcs8",
     binaryDer.buffer,
     {
-      name: "RSASHA256",
+      name: "RSASSA-PKCS1-v1_5",
       hash: { name: "SHA-256" },
     },
     false,
@@ -66,7 +66,7 @@ async function getGoogleAuthToken(clientEmail: string, privateKey: string): Prom
 
   const encoder = new TextEncoder();
   const signatureBuffer = await crypto.subtle.sign(
-    "RSASHA256",
+    "RSASSA-PKCS1-v1_5",
     cryptoKey,
     encoder.encode(signatureInput)
   );
