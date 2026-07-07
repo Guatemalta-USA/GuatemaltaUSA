@@ -233,14 +233,27 @@ export class ChildSponsorship {
         year: number,
         bio: string,
         photoURL: string,
-        sponsor: string | null
     ) {
         this.name = name;
         this.year = year;
         this.bio = bio;
         this.photoURL = photoURL;
-        if (sponsor) {
-            this.sponsor = sponsor;
-        }
+    }
+}
+
+export class Donor {
+    public name: string;
+    public email: string;
+    public selectedChildName: string | null = null;
+    public year: number;
+
+    constructor(
+        name: string,
+        email: string,
+        year: number
+    ) {
+        this.name = name;
+        this.email = email;
+        this.year = year;
     }
 }

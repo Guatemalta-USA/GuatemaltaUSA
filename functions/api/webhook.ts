@@ -100,10 +100,10 @@ async function getGoogleAuthToken(clientEmail: string, privateKey: string): Prom
  * Sends a transactional email using Brevo's free API tier
  */
 async function sendSponsorshipEmail(apiKey: string, toEmail: string, firstName: string, refCode: string) {
-  const sponsorLink = `https://guatemaltausa.org/sponsor.html?ref=${refCode}`;
+  const sponsorLink = `https://guatemaltausa.org/sponsor-a-child?ref=${refCode}`;
 
   const payload = {
-    sender: { name: "Guatemalta USA", email: "info@guatemaltausa.org" }, // Adjust to your verified Brevo sender
+    sender: { name: "Guatemalta USA", email: "info@guatemaltausa.org" },
     to: [{ email: toEmail, name: firstName }],
     subject: "Thank you! Choose a child to sponsor",
     htmlContent: `
@@ -111,7 +111,7 @@ async function sendSponsorshipEmail(apiKey: string, toEmail: string, firstName: 
         <body>
           <h2>Thank you for your generous donation, ${firstName}!</h2>
           <p>Your contribution will make a massive impact. To complete your sponsorship, please click the link below to select your child:</p>
-          <p><a href="${sponsorLink}" style="padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Select Your Sponsored Child</a></p>
+          <p><a href="${sponsorLink}" style="padding: 10px 20px; background-color: #002E6C; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Select Your Sponsored Child</a></p>
           <p>If the button doesn't work, copy and paste this link into your browser:</p>
           <p>${sponsorLink}</p>
           <p>Your unique reference code is: <strong>${refCode}</strong></p>
@@ -154,8 +154,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       // Match the exact $175 sponsorship target amount
       const incomingCampaignId = data.campaign_id?.toString();
       const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
-      //if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
-      if (email && incomingCampaignId === targetCampaignId) {
+      if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
         // Generate alphanumeric 6-character reference token
         const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -165,13 +164,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         // 2. Build the targeted REST Firestore document URL definition
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/referrals?documentId=${refCode}`;
 
+        const year = new Date().getFullYear();
+
         // 3. Setup strict Firestore type mapping formatting rules
         const firestorePayload = {
           fields: {
+            donorName: { stringValue: firstName },
             donorEmail: { stringValue: email },
-            amount: { integerValue: amount.toString() },
-            status: { stringValue: "unused" },
-            selectedChildName: { nullValue: null }
+            selectedChildName: { nullValue: null },
+            year: {integerValue: year.toString() }
           }
         };
 

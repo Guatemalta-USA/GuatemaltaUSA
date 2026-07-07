@@ -1,4 +1,4 @@
-import { ChildSponsorship, PageContents, Post, Project, type Profile } from "../models";
+import { ChildSponsorship, Donor, PageContents, Post, Project, type Profile } from "../models";
 import {
     collection,
     deleteDoc,
@@ -198,6 +198,23 @@ export async function deleteChildSponsorship(name: string) {
         throw new Error("Failed to delete sponsorship");
     }
 }
+
+//Sponsorship Donors
+export async function getAllDonors() {
+    try {
+        const donorQuery = query(collection(db, "referrals"), orderBy("year", "desc"));
+        const querySnapshot = await getDocs(donorQuery);
+
+        const donors: Donor[] = querySnapshot.docs.map(doc => ({
+            ...doc.data()
+        } as Donor));
+        return donors;
+    } catch (error) {
+        console.error("Error fetching all profiles: ", error);
+        throw new Error("Failed to fetch profiles");
+    }
+}
+
 
 //POSTS
 export async function getAllPosts(): Promise<Post[]> {

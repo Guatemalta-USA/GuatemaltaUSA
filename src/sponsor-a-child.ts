@@ -24,9 +24,11 @@ auth.onAuthStateChanged(async (user) => {
         if (currentUserRole === "admin") {
             document.getElementById("new-child")?.remove(); 
             
-            const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child", "accent-button", "add");
+            const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child-btn", "accent-button", "add");
             newSponsorshipBtn.addEventListener("click", () => openSponsorshipModal());
-            adminButtons.appendChild(newSponsorshipBtn);
+            const donorListBtn = createButton("View Donor List", "button", "donor-list-btn", "accent-button");
+            donorListBtn.addEventListener("click", () => openDonorModal());
+            adminButtons.append(newSponsorshipBtn, donorListBtn);
             adminButtons.classList.remove("hide");
         }
     } else {
@@ -86,6 +88,46 @@ async function submitData(formData: FormData): Promise<boolean> {
             resolve(false);
         }
     });
+}
+
+async function openDonorModal() {
+    const modalRoot = makeElement("div", "modal-root", null, null);
+    const modalOverlay = makeElement("div", null, "modal-overlay", null);
+    const modalContent = makeElement("form", null, "modal-content", null) as HTMLFormElement;
+
+    const modalH2 = makeElement("h2", null, null, "Sponsorship Donors");
+    modalContent.appendChild(modalH2);
+
+    
+
+    const buttonRow = makeElement("div", null, "button-row", null);
+
+    const closeModal = () => {
+        window.removeEventListener("keydown", handleKeyDown);
+        document.body.removeChild(modalRoot);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+            closeModal();
+        }
+    };
+
+    const closeButton = createButton("Close", "button", "cancel-btn", "info button", "close") as HTMLButtonElement;
+    closeButton.onclick = function () {
+        modalContent.reset();
+        closeModal();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    buttonRow.append(closeButton);
+
+    modalContent.appendChild(buttonRow);
+    modalOverlay.appendChild(modalContent);
+    modalRoot.appendChild(modalOverlay);
+
+    modalRoot.style.display = 'flex';
+    document.body.appendChild(modalRoot);
 }
 
 async function updateSponsorshipSection() {
