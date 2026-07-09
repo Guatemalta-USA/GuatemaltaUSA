@@ -1,8 +1,8 @@
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
 import { initializeApp } from "./main.js";
-import { createButton, createInputRow, createMessage, createTableRow, makeElement } from "./modules/utils.js";
-import type { ChildSponsorship, Donor, refStatus } from "./models.js";
+import { confirmDeleteModal, createButton, createInputRow, createMessage, makeElement } from "./modules/utils.js";
+import type { ChildSponsorship, refStatus } from "./models.js";
 import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService.js";
 
@@ -23,29 +23,58 @@ if (refCode) {
 }
 
 let currentUserRole: string | null = null;
-
 const loading = document.getElementById("loading");
 const adminButtons = document.getElementById("admin-actions") as HTMLElement;
 const sponsorshipsSection = document.getElementById("sponsorships") as HTMLElement;
 const years: number[] = [2026];
+const tabContainer = makeElement("div", "tab-navigation", "tab-container hide", null);
+const sponsorshipTabBtn = createButton("Sponsorships", "button", "tab-sponsorships", "tab-btn active");
+const donorTabBtn = createButton("Donors", "button", "tab-donors", "tab-btn"); 
+
+tabContainer.append(sponsorshipTabBtn, donorTabBtn);
+sponsorshipsSection.before(tabContainer);
+const donorSection = makeElement("div", "donor-list-section", "hide", null);
+sponsorshipsSection.after(donorSection);
+
+sponsorshipTabBtn.addEventListener("click", () => {
+    sponsorshipTabBtn.classList.add("active");
+    donorTabBtn.classList.remove("active");
+    sponsorshipsSection.classList.remove("hide");
+    donorSection.classList.add("hide");
+});
+
+donorTabBtn.addEventListener("click", async () => {
+    donorTabBtn.classList.add("active");
+    sponsorshipTabBtn.classList.remove("active");
+    donorSection.classList.remove("hide");
+    sponsorshipsSection.classList.add("hide");
+    await updateDonorSection();
+});
 
 auth.onAuthStateChanged(async (user) => {
+    adminButtons.innerHTML = ""; 
+    tabContainer.classList.add("hide");
+
     if (user) {
         currentUserRole = await getUserRole(user.uid);
 
         if (currentUserRole === "admin") {
-            document.getElementById("new-child")?.remove();
+            tabContainer.classList.remove("hide");
 
+            document.getElementById("new-child")?.remove();
             const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child-btn", "accent-button", "add");
             newSponsorshipBtn.addEventListener("click", () => openSponsorshipModal());
-            const donorListBtn = createButton("View Donor List", "button", "donor-list-btn", "accent-button");
-            donorListBtn.addEventListener("click", () => openDonorModal());
-            adminButtons.append(newSponsorshipBtn, donorListBtn);
+            
+            adminButtons.append(newSponsorshipBtn);
             adminButtons.classList.remove("hide");
         }
     } else {
         currentUserRole = null;
         adminButtons.classList.add("hide");
+        sponsorshipTabBtn.classList.add("active");
+        donorTabBtn.classList.remove("active");
+        sponsorshipsSection.classList.remove("hide");
+        donorSection.classList.add("hide");
     }
 
     await updateSponsorshipSection();
@@ -102,64 +131,28 @@ async function submitData(formData: FormData): Promise<boolean> {
     });
 }
 
-async function openDonorModal() {
-    const modalRoot = makeElement("div", "modal-root", null, null);
-    const modalOverlay = makeElement("div", null, "modal-overlay", null);
-    const modalContent = makeElement("form", null, "modal-content", null) as HTMLFormElement;
-
-    const modalH2 = makeElement("h2", null, null, "Sponsorship Donors");
-    modalContent.appendChild(modalH2);
+async function updateDonorSection() {
+    donorSection.innerHTML = "";
 
     const donors = await getAllDonors();
     if (donors.length === 0) {
-        createMessage("No donors yet", "main-message", "info");
+        const noDonorsMsg = makeElement("p", null, "info-message", "No donors yet");
+        donorSection.appendChild(noDonorsMsg);
         return;
     }
-    const columnHeaders = ["Ref", "Year", "Name", "Email", "Selected Child"];
-    const donorTable = document.createElement("table") as HTMLTableElement;
-    const thead = donorTable.createTHead();
-    const headerRow = thead.insertRow();
-    const tbody = donorTable.createTBody();
 
-    columnHeaders.forEach(col => {
-        const th = document.createElement("th");
-        th.textContent = col;
-        headerRow.appendChild(th);
-    });
+    const donorContainer = makeElement("div", "donor-list", "sponsor-container", null)
 
-    donors.forEach((item: Donor) => {
-        const row = createTableRow([item.refCode, item.year, item.donorName, item.donorEmail, item.selectedChildName]);
-        tbody.appendChild(row);
-    });
-    modalContent.appendChild(donorTable)
-    const buttonRow = makeElement("div", null, "button-row", null);
-
-    const closeModal = () => {
-        window.removeEventListener("keydown", handleKeyDown);
-        document.body.removeChild(modalRoot);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") {
-            closeModal();
-        }
-    };
-
-    const closeButton = createButton("Close", "button", "cancel-btn", "info button", "close") as HTMLButtonElement;
-    closeButton.onclick = function () {
-        modalContent.reset();
-        closeModal();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    buttonRow.append(closeButton);
-
-    modalContent.appendChild(buttonRow);
-    modalOverlay.appendChild(modalContent);
-    modalRoot.appendChild(modalOverlay);
-
-    modalRoot.style.display = 'flex';
-    document.body.appendChild(modalRoot);
+    for (const donor of donors) {
+        const nextDonor = makeElement("article", donor["donorName"], "sponsor-card", null);
+        const name = makeElement("h3", null, null, `${donor["donorName"]} (${donor["year"]})`);
+        const donorInfo = document.createElement("p");
+        donorInfo.textContent = `Email: ${donor["donorEmail"]}\nReferral Code: Ref ${donor["refCode"]}\nSelected Child: ${donor["selectedChildName"]? donor["selectedChildName"] : "Not yet selected"}`;
+        donorInfo.style.whiteSpace = "pre-line";
+        nextDonor.append(name, donorInfo);
+        donorContainer.appendChild(nextDonor);
+    }
+    donorSection.appendChild(donorContainer);
 }
 
 async function updateSponsorshipSection() {
@@ -205,7 +198,8 @@ async function updateSponsorshipSection() {
             if (currentUserRole === "admin") {
                 const deleteBtn = createButton("Delete", "button", `delete-${child["name"]}`, "delete-button", "delete");
                 deleteBtn.onclick = async () => {
-                    if (confirm(`Are you sure you want to remove ${child["name"]}?`)) {
+                    const response = await confirmDeleteModal("Confirm Deletion", `Are you sure you want to remove ${child["name"]}?`)
+                    if (response) {
                         if (child["photoURL"]) {
                             await deleteImage(child["photoURL"]);
                         }

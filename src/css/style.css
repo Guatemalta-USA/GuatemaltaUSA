@@ -10,21 +10,21 @@
     --body-color: #ccc;
     --header-background-color: #000;
     --header-color: #fff;
-    --nav-background-color: #002E6C;
+    --nav-background-color: #002e6c;
     --nav-color: #fff;
     --main-background-color: #000;
     --profile-card-background: #2e2e2e;
     --link-color: #9a97f3;
     --link-hover: #b7b4ff;
-    --green-accent: #9CD500;
-    --blue-accent: #002E6C;
+    --green-accent: #9cd500;
+    --blue-accent: #002e6c;
     --message-text: #fff;
     --error-background: #b81f24;
     --error-hover: #a51b20;
     --success-background: green;
     --delete-background: #fc6a03;
     --info-background: #006270;
-    --loading: #9CD500;
+    --loading: #9cd500;
     --table-even-row: rgba(0, 0, 0, 0.25);
     --quill-border: #444444;
     --card-background: #1e293b;
@@ -38,21 +38,21 @@
     --body-color: #000;
     --header-background-color: #fff;
     --header-color: #000;
-    --nav-background-color: #002E6C;
+    --nav-background-color: #002e6c;
     --nav-color: #fff;
     --main-background-color: #fff;
     --profile-card-background: #fff;
     --link-color: #302ae6;
     --link-hover: #524cf5;
-    --green-accent: #9CD500;
-    --blue-accent: #002E6C;
+    --green-accent: #9cd500;
+    --blue-accent: #002e6c;
     --message-text: #fff;
     --error-background: #b81f24;
     --error-hover: #a51b20;
     --success-background: green;
     --delete-background: #fc6a03;
     --info-background: #006270;
-    --loading: #002E6C;
+    --loading: #002e6c;
     --table-even-row: rgba(0, 0, 0, 0.05);
     --quill-border: #cccccc;
     --card-background: #fff;
@@ -617,7 +617,8 @@ textarea {
   margin-bottom: 10px;
 }
 
-#gallery-container, #placeholder-container {
+#gallery-container,
+#placeholder-container {
   display: flex;
   width: max-content;
   animation: scroll-horizontal 100s linear infinite;
@@ -696,13 +697,13 @@ textarea {
 .sponsor-card {
   display: flex;
   flex-direction: column;
-  max-width: 500px;
   border-radius: 6px;
   padding: 24px;
   background-color: var(--card-background);
   border: 1px solid var(--card-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 
-              0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .sponsorship-header {
@@ -740,18 +741,53 @@ textarea {
 }
 
 /* =========================================
-   12. RESPONSIVE QUERIES
+   12. Tabs
+   ========================================= */
+
+.tab-container {
+  display: flex;
+  gap: 10px;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  cursor: pointer;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  font-weight: bold;
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  border-color: #ccc;
+  border-bottom: 2px solid #ffffff; /* Overlaps container border */
+  margin-bottom: -2px;
+  color: #000;
+}
+
+/* =========================================
+   13. RESPONSIVE QUERIES
    ========================================= */
 
 @media (min-width: 701px) {
   .flex-reverse {
     flex-direction: row-reverse;
   }
+  .sponsor-card {
+    max-width: 500px;
+  }
 }
 
 @media (max-width: 700px) {
   .profile-card {
     flex-direction: column;
+  }
+  .sponsor-card {
+    max-width: 500px;
   }
 }
 
@@ -786,6 +822,11 @@ textarea {
     right: 0;
     max-width: 1000px;
     visibility: visible;
+  }
+
+  .sponsor-card {
+    width: 100%;
+    margin: 2px 5px;
   }
 
   footer ul {
