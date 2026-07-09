@@ -159,7 +159,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
 
       // For testing any donation, you can temporarily change this check to just: if (email)
-      if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
+      //if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
+      if (email) {
         
         const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         const currentYear = new Date().getFullYear(); // Dynamic year for your Donor model
