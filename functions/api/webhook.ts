@@ -154,13 +154,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       const lastName = data.last_name || "";
       const fullName = `${firstName} ${lastName}`.trim();
 
-      // If you are currently testing any amount/campaign, adjust this line accordingly:
       const incomingCampaignId = data.campaign_id?.toString();
       const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
 
       // For testing any donation, you can temporarily change this check to just: if (email)
-      //if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
-      if (email) {
+      if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
         
         const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         const currentYear = new Date().getFullYear(); // Dynamic year for your Donor model

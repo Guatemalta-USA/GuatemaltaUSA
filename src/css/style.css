@@ -27,6 +27,8 @@
     --loading: #9CD500;
     --table-even-row: rgba(0, 0, 0, 0.25);
     --quill-border: #444444;
+    --card-background: #1e293b;
+    --card-border: #000;
   }
 }
 
@@ -53,6 +55,8 @@
     --loading: #002E6C;
     --table-even-row: rgba(0, 0, 0, 0.05);
     --quill-border: #cccccc;
+    --card-background: #fff;
+    --card-border: #eeeeee;
   }
 }
 
@@ -689,14 +693,16 @@ textarea {
   align-items: center;
   flex-wrap: wrap;
 }
-.child-sponsorship {
+.sponsor-card {
   display: flex;
   flex-direction: column;
   max-width: 500px;
-  border: 1px solid var(--message-text);
-  border-radius: 10px;
-  margin: 10px;
-  padding: 10px;
+  border-radius: 6px;
+  padding: 24px;
+  background-color: var(--card-background);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 
+              0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .sponsorship-header {
@@ -728,7 +734,7 @@ textarea {
   color: black;
 }
 
-.child-sponsorship img {
+.sponsor-card img {
   width: 200px;
   height: auto;
 }

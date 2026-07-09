@@ -176,7 +176,7 @@ async function updateSponsorshipSection() {
         const yearBlock = makeElement("div", `${year}-children`, "sponsor-container", null);
 
         for (const child of childrenForYear) {
-            const nextChild = makeElement("article", child["name"], "child-sponsorship", null);
+            const nextChild = makeElement("article", child["name"], "sponsor-card", null);
             const header = makeElement("div", null, "sponsorship-header", null);
 
             const photo = document.createElement("img") as HTMLImageElement;
