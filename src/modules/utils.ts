@@ -1,4 +1,4 @@
-import { Message, SOCIAL_DATA, type KeyValue } from "../models";
+import { Donor, Message, SOCIAL_DATA, type KeyValue } from "../models";
 import { Timestamp } from "firebase/firestore";
 
 export function createButton(
@@ -334,4 +334,19 @@ export function createInputRow(labelText: string | null, inputType: string, plac
   formRow.appendChild(input);
 
   return formRow;
+}
+
+export function createTableRow(dataRow: (string | number | null)[]): HTMLTableRowElement {
+  const tr = document.createElement("tr");
+  dataRow.forEach((value) => {
+    const td = document.createElement("td");
+    if (!value) {
+      td.textContent = "";
+    } else {
+      td.textContent = value.toString();
+    }
+    tr.appendChild(td);
+  });
+
+  return tr;
 }

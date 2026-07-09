@@ -1,4 +1,4 @@
-import { ChildSponsorship, Donor, PageContents, Post, Project, type Profile } from "../models";
+import { ChildSponsorship, Donor, PageContents, Post, Project, type Profile, type refStatus } from "../models";
 import {
     collection,
     deleteDoc,
@@ -8,6 +8,7 @@ import {
     orderBy,
     query,
     QueryDocumentSnapshot,
+    runTransaction,
     serverTimestamp,
     setDoc,
     updateDoc,
@@ -206,12 +207,95 @@ export async function getAllDonors() {
         const querySnapshot = await getDocs(donorQuery);
 
         const donors: Donor[] = querySnapshot.docs.map(doc => ({
-            ...doc.data()
+            ...doc.data(),
+            refCode: doc.id
         } as Donor));
         return donors;
     } catch (error) {
         console.error("Error fetching all profiles: ", error);
         throw new Error("Failed to fetch profiles");
+    }
+}
+
+export async function validateReferralCode(refCode: string): Promise<refStatus> {
+    const cleanCode = refCode.trim().toUpperCase();
+    try {
+        const docRef = doc(db, "referrals", cleanCode);
+        const docSnap = await getDoc(docRef);
+
+        const result: refStatus = {
+            isValid: true,
+            donorName: "",
+            hasClaimed: false
+        }
+
+        if (!docSnap.exists()) {
+            result["isValid"] = false;
+            result["error"] = "Invalid referral code. Please check the email or contact us for assistance";
+        }
+
+        const data = docSnap.data();
+        if (data) {
+            result["donorName"] = data.donorName;
+            if (data.selectedChildName) {
+                result["hasClaimed"] = true;
+                result["childName"] = data.selectedChildName;
+            }
+            return result;
+        } else {
+            result["isValid"] = false;
+            result["error"] = "Invalid referral code. Please check the email or contact us for assistance";
+            return result;
+        }
+    } catch (error) {
+        console.error("Error validating refCode: ", error);
+        return { isValid: false, donorName: "", hasClaimed: false, error: "Error. Please try reloading the page" }
+    }
+}
+
+export async function updateDonor(refCode: string, childName: string): Promise<boolean> {
+    const cleanRefCode = refCode.trim().toUpperCase();
+    const referralRef = doc(db, "referrals", cleanRefCode);
+    const childRef = doc(db, "childSponsorships", childName);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const referralDoc = await transaction.get(referralRef);
+            const childDoc = await transaction.get(childRef);
+
+            if (!referralDoc.exists()) {
+                throw new Error("This reference code does not exist.");
+            }
+
+            if (!childDoc.exists()) {
+                throw new Error("The selected child profile could not be found.");
+            }
+
+            const referralData = referralDoc.data();
+            const childData = childDoc.data();
+
+            if (referralData.selectedChildName) {
+                throw new Error("Error. You have already selected a child to sponsor. Please contact us with any questions")
+            }
+
+            if (childData.sponsor !== null) {
+                throw new Error("Error. This child is already sponsored. Please contact us with any questions");
+            }
+
+            transaction.update(referralRef, {
+                selectedChildName: childName,
+                claimedAt: new Date()
+            });
+
+            transaction.update(childRef, {
+                sponsor: referralData.donorName || "Sponsored"
+            });
+
+        });
+        return true;
+    } catch (error: any) {
+        console.error("Sponsorship transaction failed:", error.message);
+        throw error;
     }
 }
 

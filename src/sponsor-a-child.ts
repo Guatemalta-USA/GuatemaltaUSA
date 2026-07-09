@@ -1,15 +1,27 @@
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
 import { initializeApp } from "./main.js";
-import { createButton, createInputRow, createMessage, makeElement } from "./modules/utils.js";
-import type { ChildSponsorship } from "./models.js";
-import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear } from "./firebase/firebaseService.js";
+import { createButton, createInputRow, createMessage, createTableRow, makeElement } from "./modules/utils.js";
+import type { ChildSponsorship, Donor, refStatus } from "./models.js";
+import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService.js";
 
 await initializeApp("Donate", "Sponsor A Child");
 
 const params = new URLSearchParams(window.location.search);
 const refCode = params.get("ref");
+let validation: refStatus = { isValid: false, donorName: "", hasClaimed: false };
+if (refCode) {
+    validation = await validateReferralCode(refCode);
+    if (!validation.isValid) {
+        if (validation.error) createMessage(validation.error, "main-message", "error");
+    } else if (!validation.childName) {
+        createMessage(`Welcome ${validation.donorName}, Please select a child to sponsor`, "main-message", "info");
+    } else {
+        createMessage(`Welcome ${validation.donorName}`, "main-message", "info");
+    }
+}
+
 let currentUserRole: string | null = null;
 
 const loading = document.getElementById("loading");
@@ -20,10 +32,10 @@ const years: number[] = [2026];
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUserRole = await getUserRole(user.uid);
-        
+
         if (currentUserRole === "admin") {
-            document.getElementById("new-child")?.remove(); 
-            
+            document.getElementById("new-child")?.remove();
+
             const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child-btn", "accent-button", "add");
             newSponsorshipBtn.addEventListener("click", () => openSponsorshipModal());
             const donorListBtn = createButton("View Donor List", "button", "donor-list-btn", "accent-button");
@@ -98,8 +110,28 @@ async function openDonorModal() {
     const modalH2 = makeElement("h2", null, null, "Sponsorship Donors");
     modalContent.appendChild(modalH2);
 
-    
+    const donors = await getAllDonors();
+    if (donors.length === 0) {
+        createMessage("No donors yet", "main-message", "info");
+        return;
+    }
+    const columnHeaders = ["Ref", "Year", "Name", "Email", "Selected Child"];
+    const donorTable = document.createElement("table") as HTMLTableElement;
+    const thead = donorTable.createTHead();
+    const headerRow = thead.insertRow();
+    const tbody = donorTable.createTBody();
 
+    columnHeaders.forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        headerRow.appendChild(th);
+    });
+
+    donors.forEach((item: Donor) => {
+        const row = createTableRow([item.refCode, item.year, item.donorName, item.donorEmail, item.selectedChildName]);
+        tbody.appendChild(row);
+    });
+    modalContent.appendChild(donorTable)
     const buttonRow = makeElement("div", null, "button-row", null);
 
     const closeModal = () => {
@@ -132,28 +164,32 @@ async function openDonorModal() {
 
 async function updateSponsorshipSection() {
     sponsorshipsSection.innerHTML = "";
-    
+    if (validation.hasClaimed && validation.childName) {
+        const sponsorMessage = makeElement("h2", null, null, `Thank you for sponsoring ${validation.childName}`);
+        sponsorshipsSection.appendChild(sponsorMessage);
+    }
+
     for (const year of years) {
         const childrenForYear = await getAllChildSponsorshipsByYear(year);
-        
+
         const yearHeading = makeElement("h2", null, null, `${year} children`);
         const yearBlock = makeElement("div", `${year}-children`, "sponsor-container", null);
-        
+
         for (const child of childrenForYear) {
             const nextChild = makeElement("article", child["name"], "child-sponsorship", null);
             const header = makeElement("div", null, "sponsorship-header", null);
-            
+
             const photo = document.createElement("img") as HTMLImageElement;
             photo.src = child["photoURL"];
             photo.alt = child["name"];
-            
+
             const childInfo = makeElement("div", null, "child-info", null);
             const nameH3 = makeElement("h3", null, null, child["name"]);
             childInfo.append(nameH3);
-            
+
             if (child["sponsor"]) {
-                const statusText = currentUserRole === "admin" 
-                    ? `Sponsored: ${child["sponsor"]}` 
+                const statusText = currentUserRole === "admin"
+                    ? `Sponsored: ${child["sponsor"]}`
                     : "Sponsored";
 
                 const sponsored = makeElement("span", null, "sponsored found", statusText);
@@ -162,33 +198,44 @@ async function updateSponsorshipSection() {
                 const notSponsored = makeElement("span", null, "sponsored not-found", "Waiting for sponsor");
                 childInfo.appendChild(notSponsored);
             }
-            
+
             header.append(photo, childInfo);
             const bioP = makeElement("p", null, null, child["bio"]);
             nextChild.append(header, bioP);
             if (currentUserRole === "admin") {
-                    const deleteBtn = createButton("Delete", "button", `delete-${child["name"]}`, "delete-button", "delete");
-                    deleteBtn.onclick = async () => {
-                        if (confirm(`Are you sure you want to remove ${child["name"]}?`)) {
-                            if (child["photoURL"]) {
-                                await deleteImage(child["photoURL"]);  
-                            }
-                            await deleteChildSponsorship(child["name"]);
-                            await updateSponsorshipSection();
+                const deleteBtn = createButton("Delete", "button", `delete-${child["name"]}`, "delete-button", "delete");
+                deleteBtn.onclick = async () => {
+                    if (confirm(`Are you sure you want to remove ${child["name"]}?`)) {
+                        if (child["photoURL"]) {
+                            await deleteImage(child["photoURL"]);
                         }
-                    };
-                    nextChild.appendChild(deleteBtn);
-                }
-                if (refCode && !child["sponsor"]) {
-                    const selectBtn = createButton("Select child", "button", `select-${child["name"]}`, "accent-button", "check");
-                    selectBtn.onclick = () => {
-                        console.log(`Selected child: ${child["name"]} with referral: ${refCode}`);
-                    };
-                    nextChild.appendChild(selectBtn);
-                }
+                        await deleteChildSponsorship(child["name"]);
+                        await updateSponsorshipSection();
+                    }
+                };
+                nextChild.appendChild(deleteBtn);
+            }
+            if (validation.isValid && !validation.hasClaimed && !child["sponsor"]) {
+                const selectBtn = createButton("Select child", "button", `select-${child["name"]}`, "accent-button", "check");
+                selectBtn.onclick = async () => {
+                    try {
+                        if (refCode) {
+                            const result = await updateDonor(refCode, child["name"])
+                            if (result) {
+                                createMessage("Sponsorship successfully processed!", "main-message", "check_circle");
+                                window.location.reload();
+                            }
+                        }
+                            
+                    } catch (error: any) {
+                        createMessage(error, "main-message", "error");
+                    }
+                };
+                nextChild.appendChild(selectBtn);
+            }
             yearBlock.appendChild(nextChild);
         }
-        
+
         sponsorshipsSection.append(yearHeading, yearBlock);
     }
 }

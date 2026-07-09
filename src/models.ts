@@ -242,18 +242,29 @@ export class ChildSponsorship {
 }
 
 export class Donor {
-    public name: string;
-    public email: string;
+    public refCode: string;
+    public donorName: string;
+    public donorEmail: string;
     public selectedChildName: string | null = null;
     public year: number;
 
     constructor(
-        name: string,
-        email: string,
+        refCode: string,
+        donorName: string,
+        donorEmail: string,
         year: number
     ) {
-        this.name = name;
-        this.email = email;
+        this.refCode = refCode;
+        this.donorName = donorName;
+        this.donorEmail = donorEmail;
         this.year = year;
     }
+}
+
+export interface refStatus {
+    isValid: boolean;
+    donorName: string;
+    hasClaimed: boolean;
+    childName?: string;
+    error?: string
 }

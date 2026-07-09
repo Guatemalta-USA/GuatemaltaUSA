@@ -154,7 +154,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       // Match the exact $175 sponsorship target amount
       const incomingCampaignId = data.campaign_id?.toString();
       const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
-      if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
+      //if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
+      if (email) {
         // Generate alphanumeric 6-character reference token
         const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -172,7 +173,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             donorName: { stringValue: firstName },
             donorEmail: { stringValue: email },
             selectedChildName: { nullValue: null },
-            year: {integerValue: year.toString() }
+            year: {integerValue: year.toString() },
+            data: {stringValue: JSON.stringify(event)}
           }
         };
 
