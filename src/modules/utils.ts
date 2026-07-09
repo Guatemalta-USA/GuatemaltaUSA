@@ -1,4 +1,4 @@
-import { Donor, Message, SOCIAL_DATA, type KeyValue } from "../models";
+import { Message, SOCIAL_DATA, type KeyValue } from "../models";
 import { Timestamp } from "firebase/firestore";
 
 export function createButton(
