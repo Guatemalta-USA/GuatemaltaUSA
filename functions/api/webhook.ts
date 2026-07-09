@@ -145,40 +145,39 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const event: any = await request.json();
 
-    if (event && event.type === "transaction.succeeded") {
+    // 1. FIX: Givebutter uses event.event, not event.type
+    if (event && event.event === "transaction.succeeded") {
       const data = event.data;
-      const amount = data.amount; // Givebutter standard float/integer
-      const email = data.donor?.email;
-      const firstName = data.donor?.first_name || "Supporter";
+      
+      const amount = data.amount; 
+      const email = data.email; 
+      const firstName = data.first_name || "Supporter";
+      const lastName = data.last_name || "";
+      const fullName = `${firstName} ${lastName}`.trim();
 
-      // Match the exact $175 sponsorship target amount
+      // If you are currently testing any amount/campaign, adjust this line accordingly:
       const incomingCampaignId = data.campaign_id?.toString();
       const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
-      //if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
-      if (email) {
-        // Generate alphanumeric 6-character reference token
+
+      // For testing any donation, you can temporarily change this check to just: if (email)
+      if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
+        
         const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-        // 1. Authenticate with Google API
+        const currentYear = new Date().getFullYear(); // Dynamic year for your Donor model
+        
         const authToken = await getGoogleAuthToken(env.FIREBASE_CLIENT_EMAIL, env.FIREBASE_PRIVATE_KEY);
-
-        // 2. Build the targeted REST Firestore document URL definition
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/referrals?documentId=${refCode}`;
 
-        const year = new Date().getFullYear();
-
-        // 3. Setup strict Firestore type mapping formatting rules
         const firestorePayload = {
           fields: {
-            donorName: { stringValue: firstName },
+            refCode: { stringValue: refCode },
+            donorName: { stringValue: fullName },
             donorEmail: { stringValue: email },
             selectedChildName: { nullValue: null },
-            year: {integerValue: year.toString() },
-            data: {stringValue: JSON.stringify(event)}
+            year: { integerValue: currentYear.toString() }
           }
         };
 
-        // 4. Save directly into your free Firestore DB instance
         const dbResponse = await fetch(firestoreUrl, {
           method: "POST",
           headers: {
@@ -193,10 +192,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           throw new Error(`Firestore REST insertion failed: ${dbErr}`);
         }
 
-        // 5. Trigger the transactional email notification alert link
         await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
-
-        console.log(`Successfully generated and emailed code ${refCode} to ${email}`);
+        
+        console.log(`Successfully processed Donor ${fullName} (${refCode})`);
       }
     }
 
