@@ -5,7 +5,7 @@ import { TheEditor } from "./modules/editor.js";
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
 import { Timestamp } from 'firebase/firestore';
-import { getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
+import { getPageCampaignId, getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
 import { initGivebutter } from "./services/givebutter.service.js";
 
 let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
@@ -68,9 +68,15 @@ export async function initializeApp(
       resolve();
     }
   });
-  
+
+  const newId = await getPageCampaignId(currentPage);
+  if (newId) {
+    loadNav(parentPage, newId);
+  } else {
+    loadNav(parentPage);
+  }
+
   loadHeader();
-  loadNav(parentPage);
   loadFooter();
 
   const nav = document.querySelector("nav") as HTMLElement;

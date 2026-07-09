@@ -247,6 +247,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
     const modalContent = makeElement("div", null, "modal-content", null);
 
     const modalH2 = makeElement("h2", null, null, messageHeader);
+    modalH2.style.whiteSpace = "pre-line";
     modalContent.appendChild(modalH2);
 
     const formRow = makeElement("div", null, "form-row", null);
@@ -277,7 +278,6 @@ export async function promptModal(messageHeader: string, placeholderText: string
       closeModal();
       resolve(userInput.value);
     }
-    buttonRow.appendChild(submitBtn);
 
     const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
     cancelButton.onclick = function () {
@@ -287,7 +287,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
 
     if (!required) {
       window.addEventListener("keydown", handleKeyDown);
-      buttonRow.appendChild(cancelButton);
+      buttonRow.append(cancelButton, submitBtn);
     }
 
     modalContent.appendChild(buttonRow);

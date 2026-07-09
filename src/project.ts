@@ -1,10 +1,11 @@
 import Quill from "quill";
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
-import { getPostsWithLinkedProjectId, getProjectById } from "./firebase/firebaseService";
+import { getPostsWithLinkedProjectId, getProjectById, setPageCampaignId } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import { navigateTo } from "./modules/navigate";
-import { createButton, createGiveButterWidget, createLink, makeElement, storeMessage } from "./modules/utils";
+import { createButton, createGiveButterWidget, createLink, makeElement, promptModal, storeMessage } from "./modules/utils";
+import type { CampaignPageId } from "./models";
 
 async function setUpProjectView() {
     const params = new URLSearchParams(window.location.search);
@@ -39,7 +40,19 @@ async function setUpProjectView() {
                             console.error("Cannot edit a project without an ID");
                         }
                     });
-                    adminActions.appendChild(editButton);
+                    const updateCampaignIdBtn = createButton("Update nav donate button", "button", "update-campaign", "accent-button", "autorenew");
+                    updateCampaignIdBtn.addEventListener("click", async () => {
+                        const newId = await promptModal("Enter the updated campaign Id\n(found in the embed code of the button widget)", "Campaign ID", "update", false);
+                        if (newId.trim() !== "") {
+                            const update: CampaignPageId = {
+                                pageName: id,
+                                campaignId: newId
+                            }
+                            await setPageCampaignId(update);
+                            window.location.reload();
+                        }
+                    });
+                    adminActions.append(editButton, updateCampaignIdBtn);
                 }
             }
         });

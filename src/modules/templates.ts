@@ -16,7 +16,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Donate", path: "givebutter" }
 ] as const;
 
-export function loadNav(activeNavLink: string) {
+export function loadNav(activeNavLink: string, donateID: string | null = null) {
     const nav = document.querySelector("nav") as HTMLElement;
     if (!nav) return;
     
@@ -25,7 +25,7 @@ export function loadNav(activeNavLink: string) {
         
         NAV_ITEMS.forEach(({ label, path }) => {
             if (path === "givebutter") {
-                const widget = createGiveButterWidget(null, "button");
+                const widget = createGiveButterWidget(donateID, "button");
                 nav.appendChild(widget);
             } else {
                 const link = createLink(label, "", false);

@@ -268,3 +268,8 @@ export interface refStatus {
     childName?: string;
     error?: string
 }
+
+export interface CampaignPageId {
+    pageName: string;
+    campaignId: string;
+}

@@ -22,17 +22,10 @@
         <nav></nav>
         <section class="message-wrapper" id="main-message"></section>
         <main id="maincontent">
-            <section id="generate-qr-code" class="center-wrapper column hide">
-                <form id="qr-form">
-                    <h2>Generate a donate QR code for a campaign</h2>
-                    <div id="form-row">
-                        <label for="campaign-id">Campaign ID:</label>
-                        <input type="text" id="campaign-id" name="campaign-id">
-                        <button type="submit" class="accent-button">Generate QR Code</button>
-                    </div>
-                </form>
-
-            </section>
+            <div class="container">
+                <section id="buttons"></section>
+                <section id="qr-canvas"></section>
+            </div>
         </main>
         <footer></footer>
         <script type="module" src="src/generate"></script>

@@ -1,4 +1,4 @@
-import { ChildSponsorship, Donor, PageContents, Post, Project, type Profile, type refStatus } from "../models";
+import { ChildSponsorship, Donor, PageContents, Post, Project, type CampaignPageId, type Profile, type refStatus } from "../models";
 import {
     collection,
     deleteDoc,
@@ -390,4 +390,28 @@ export async function saveProject(project: Project): Promise<string> {
 export async function deleteProject(id: string): Promise<void> {
     const docRef = doc(db, 'projects', id);
     await deleteDoc(docRef);
+}
+
+//Page campaign id
+export async function setPageCampaignId(page: CampaignPageId) {
+    try {
+        const docRef = doc(db, "pageCampaignIds", page["pageName"]);
+        const updates: Partial<CampaignPageId> = page;
+        await updateDoc(docRef, updates);
+    } catch (error) {
+        console.error("Error updating campaign Id for page: ", error);
+        throw new Error("Failed to update campaign ID");
+    }
+}
+
+export async function getPageCampaignId(pageName: string): Promise<string | null> {
+    const docRef = doc(db, "pageCampaignIds", pageName);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return data ? data.campaignId : null;
+    }
+
+    return null;
 }

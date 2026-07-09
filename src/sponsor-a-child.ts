@@ -1,12 +1,13 @@
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
 import { initializeApp } from "./main.js";
-import { confirmDeleteModal, createButton, createInputRow, createMessage, makeElement } from "./modules/utils.js";
-import type { ChildSponsorship, refStatus } from "./models.js";
-import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
+import { confirmDeleteModal, createButton, createInputRow, createMessage, makeElement, promptModal } from "./modules/utils.js";
+import type { CampaignPageId, ChildSponsorship, refStatus } from "./models.js";
+import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, setPageCampaignId, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService.js";
 
 await initializeApp("Donate", "Sponsor A Child");
+
 
 const params = new URLSearchParams(window.location.search);
 const refCode = params.get("ref");
@@ -29,7 +30,7 @@ const sponsorshipsSection = document.getElementById("sponsorships") as HTMLEleme
 const years: number[] = [2026];
 const tabContainer = makeElement("div", "tab-navigation", "tab-container hide", null);
 const sponsorshipTabBtn = createButton("Sponsorships", "button", "tab-sponsorships", "tab-btn active");
-const donorTabBtn = createButton("Donors", "button", "tab-donors", "tab-btn"); 
+const donorTabBtn = createButton("Donors", "button", "tab-donors", "tab-btn");
 
 tabContainer.append(sponsorshipTabBtn, donorTabBtn);
 sponsorshipsSection.before(tabContainer);
@@ -52,7 +53,7 @@ donorTabBtn.addEventListener("click", async () => {
 });
 
 auth.onAuthStateChanged(async (user) => {
-    adminButtons.innerHTML = ""; 
+    adminButtons.innerHTML = "";
     tabContainer.classList.add("hide");
 
     if (user) {
@@ -64,8 +65,19 @@ auth.onAuthStateChanged(async (user) => {
             document.getElementById("new-child")?.remove();
             const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child-btn", "accent-button", "add");
             newSponsorshipBtn.addEventListener("click", () => openSponsorshipModal());
-            
-            adminButtons.append(newSponsorshipBtn);
+            const updateCampaignIdBtn = createButton("Update nav donate button", "button", "update-campaign", "accent-button", "autorenew");
+            updateCampaignIdBtn.addEventListener("click", async () => {
+                const newId = await promptModal("Enter the updated campaign Id\n(found in the embed code of the button widget)", "Campaign ID", "update", false);
+                if (newId.trim() !== "") {
+                    const update: CampaignPageId = {
+                        pageName: "Sponsor A Child",
+                        campaignId: newId
+                    }
+                    await setPageCampaignId(update);
+                    window.location.reload();
+                }
+            });
+            adminButtons.append(newSponsorshipBtn, updateCampaignIdBtn);
             adminButtons.classList.remove("hide");
         }
     } else {
@@ -147,7 +159,7 @@ async function updateDonorSection() {
         const nextDonor = makeElement("article", donor["donorName"], "sponsor-card", null);
         const name = makeElement("h3", null, null, `${donor["donorName"]} (${donor["year"]})`);
         const donorInfo = document.createElement("p");
-        donorInfo.textContent = `Email: ${donor["donorEmail"]}\nReferral Code: Ref ${donor["refCode"]}\nSelected Child: ${donor["selectedChildName"]? donor["selectedChildName"] : "Not yet selected"}`;
+        donorInfo.textContent = `Email: ${donor["donorEmail"]}\nReferral Code: ${donor["refCode"]}\nSelected Child: ${donor["selectedChildName"] ? donor["selectedChildName"] : "Not yet selected"}`;
         donorInfo.style.whiteSpace = "pre-line";
         nextDonor.append(name, donorInfo);
         donorContainer.appendChild(nextDonor);
@@ -220,7 +232,7 @@ async function updateSponsorshipSection() {
                                 window.location.reload();
                             }
                         }
-                            
+
                     } catch (error: any) {
                         createMessage(error, "main-message", "error");
                     }
