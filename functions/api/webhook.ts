@@ -145,7 +145,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const event: any = await request.json();
 
-    // 1. FIX: Givebutter uses event.event, not event.type
     if (event && event.event === "transaction.succeeded") {
       const data = event.data;
       
