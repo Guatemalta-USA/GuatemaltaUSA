@@ -5,6 +5,10 @@ import { initializeApp } from "./main";
 import type { Profile } from "./models";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService";
 import { confirmDeleteModal, createButton, createMessage, makeElement, makePBLock } from "./modules/utils";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 const loading = document.getElementById("loading");
 const viewSection = document.getElementById('content-display') as HTMLElement;

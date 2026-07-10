@@ -5,6 +5,10 @@ import { confirmDeleteModal, createButton, createInputRow, createMessage, makeEl
 import type { CampaignPageId, ChildSponsorship, refStatus } from "./models.js";
 import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, setPageCampaignId, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService.js";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 await initializeApp("Donate", "Sponsor A Child");
 

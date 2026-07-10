@@ -5,6 +5,10 @@ import { initializeApp } from "./main.js";
 import type { Project } from "./models.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createButton, createLink, makeElement } from "./modules/utils.js";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 async function setUpCurrentProjectsPage() {
     await initializeApp("Impact", "Current Projects", null);

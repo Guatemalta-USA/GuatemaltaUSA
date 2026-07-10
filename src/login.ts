@@ -1,6 +1,10 @@
 import { signInWithGooglePopup } from "./firebase/authService";
 import { createMessage, storeMessage } from "./modules/utils";
 import { navigateTo } from "./modules/navigate";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 createMessage("Opening Google sign-in window", "main-message", "info");
 try {

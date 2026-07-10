@@ -5,6 +5,10 @@ import { Post } from './models';
 import { createButton, createLink, makeElement } from './modules/utils';
 import { auth } from './firebase/firebase';
 import { getUserRole } from './firebase/authService';
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 async function setupBlogPage() {
     await initializeApp('Blog', 'Blog', null);

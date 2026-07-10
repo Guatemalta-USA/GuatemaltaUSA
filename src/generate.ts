@@ -4,6 +4,10 @@ import { initializeApp } from "./main.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createButton, createMessage, makeElement, promptModal, storeMessage } from "./modules/utils.js";
 import { createQRCodeWithLogo, createDonateQRCodeWithLogo } from "./services/givebutter.service.js";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 const buttonsSection = document.getElementById("buttons") as HTMLElement;
 const qrCanvasSection = document.getElementById("qr-canvas") as HTMLElement;

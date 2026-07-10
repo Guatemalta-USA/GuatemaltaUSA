@@ -6,6 +6,10 @@ import type { TheEditor } from "./modules/editor";
 import { navigateTo } from "./modules/navigate";
 import { confirmDeleteModal, createMessage, storeMessage } from "./modules/utils";
 import { getAuthenticatedUser, getUserRole } from "./firebase/authService";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 let goalBarID: string | null = null;
 

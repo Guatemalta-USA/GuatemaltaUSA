@@ -6,6 +6,10 @@ import { getUserRole } from './firebase/authService';
 import { navigateTo } from './modules/navigate';
 import { createButton, createGiveButterWidget, promptModal, storeMessage } from './modules/utils';
 import type { CampaignPageId } from './models';
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 async function setupPostView() {
     const params = new URLSearchParams(window.location.search);

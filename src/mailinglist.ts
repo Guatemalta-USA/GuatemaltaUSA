@@ -1,6 +1,10 @@
 import { initializeApp } from "./main.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createMessage, storeMessage } from "./modules/utils.js";
+import './css/style.css';
+import './css/grid.css';
+import './css/form.css';
+import './css/quill.css';
 
 //https://stefano.brilli.me/google-forms-html-exporter/
 
