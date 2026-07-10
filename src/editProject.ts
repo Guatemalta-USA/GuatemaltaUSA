@@ -50,9 +50,14 @@ async function setUpEditProjectPage() {
     editorSection.classList.remove("hide");
     const titleInput = document.getElementById('project-title-input') as HTMLInputElement;
     const projectStatusInput = document.getElementById('project-status-toggle') as HTMLInputElement;
-    const statusLabel = document.getElementById('status-label') as HTMLElement;
+    const statusLabel = document.getElementById('current-status-label') as HTMLElement;
     projectStatusInput.addEventListener("change", () => {
         statusLabel.innerText = projectStatusInput.checked ? "Current Project" : "Past Project";
+    });
+    const publishedCheckbox = document.getElementById("published-toggle") as HTMLInputElement;
+    const publishedLabel = document.getElementById("published-label") as HTMLElement;
+    publishedLabel.addEventListener("change", () => {
+        publishedLabel.innerText = publishedCheckbox.checked ? "Published" : "Unpublished";
     });
     const saveBtn = document.getElementById('save-btn');
     const deleteBtn = document.getElementById('delete-post-btn');
@@ -66,6 +71,10 @@ async function setUpEditProjectPage() {
                 if (projectStatusInput) {
                     projectStatusInput.checked = project.currentProject;
                     statusLabel.innerText = project.currentProject ? "Current Project" : "Past Project";
+                }
+                if (publishedCheckbox) {
+                    publishedCheckbox.checked = project.published;
+                    publishedLabel.innerText = publishedCheckbox.checked ? "Published" : "Unpublished";
                 }
                 editorInstance.quill.setContents(project.content);
 
@@ -118,7 +127,7 @@ async function setUpEditProjectPage() {
             }
 
             try {
-                saveBtn.innerText = "Publishing...";
+                saveBtn.innerText = "Saving...";
                 (saveBtn as HTMLButtonElement).disabled = true;
                 const cleanContent = await editorInstance.prepareContentForSave();
 
@@ -130,6 +139,7 @@ async function setUpEditProjectPage() {
                 const projectToSave = new Project(
                     titleInput.value,
                     projectStatusInput.checked,
+                    publishedCheckbox.checked,
                     Timestamp.now(),
                     cleanContent,
                     goalBarID
@@ -143,7 +153,7 @@ async function setUpEditProjectPage() {
             } catch (err: any) {
                 console.error("Save failed:", err);
                 createMessage(err, "main-message", "error");
-                saveBtn.innerText = "Publish Post";
+                saveBtn.innerText = "Save Project";
                 (saveBtn as HTMLButtonElement).disabled = false;
             }
         });

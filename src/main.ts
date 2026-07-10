@@ -111,6 +111,7 @@ export async function initializeApp(
     const authorInput = document.getElementById('author-input') as HTMLInputElement;
     const projectTitleInput = document.getElementById('project-title-input') as HTMLInputElement;
     const projectStatusInput = document.getElementById('project-status-toggle') as HTMLInputElement;
+    const publishedInput = document.getElementById("published-toggle") as HTMLInputElement;
     if (viewSection && cancelButton) {
 
       // Load Initial Data
@@ -172,6 +173,7 @@ export async function initializeApp(
                   const projectToSave = new Project(
                     projectTitle,
                     projectStatusInput.checked,
+                    publishedInput.checked,
                     Timestamp.now(),
                     content,
                     goalBarID

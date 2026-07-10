@@ -22,6 +22,7 @@ export default defineConfig({
           disallow: [
             '/login',
             '/generate',
+            '/admin',
             '/blog/editpost',
             '/impact/editproject'
           ],
@@ -38,6 +39,7 @@ export default defineConfig({
         about: resolve(__dirname, 'about.html'),
         mailinglist: resolve(__dirname, 'mailinglist.html'),
         login: resolve(__dirname, 'login.html'),
+        admain: resolve(__dirname, 'admin.html'),
         editpost: resolve(__dirname, 'blog/editpost.html'),
         posts: resolve(__dirname, 'blog.html'),
         post: resolve(__dirname, 'blog/post.html'),

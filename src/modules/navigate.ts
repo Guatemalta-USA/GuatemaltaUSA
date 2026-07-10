@@ -12,6 +12,7 @@ export const ALL_APP_PATHS = [
   '/impact/editproject',
   '/financialtransparency',
   '/login',
+  '/admin',
   '/privatepolicy',
   '/donate',
   '/sponsor-a-child'

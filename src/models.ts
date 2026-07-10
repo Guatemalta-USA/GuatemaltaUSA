@@ -152,6 +152,7 @@ export class Project {
     public id?: string;
     public projectTitle: string;
     public currentProject: boolean;
+    public published: boolean;
     public lastUpdated: Timestamp;
     public content: any;
     public goalBar: string | null = null;
@@ -159,12 +160,14 @@ export class Project {
     constructor(
         projectTitle: string,
         currentProject: boolean,
+        published: boolean,
         lastUpdated: Timestamp,
         content: any,
         goalBar: string | null
     ) {
         this.projectTitle = projectTitle;
         this.currentProject = currentProject;
+        this.published = published;
         this.lastUpdated = lastUpdated;
         this.content = content;
         this.goalBar = goalBar;
@@ -174,6 +177,7 @@ export class Project {
         const project = new Project(
             data.projectTitle,
             data.currentProject,
+            data.published,
             data.lastUpdated,
             data.content,
             data.goalBar
@@ -186,6 +190,7 @@ export class Project {
         return {
             projectTitle: this.projectTitle,
             currentProject: this.currentProject,
+            published: this.published,
             lastUpdated: serverTimestamp(),
             content: this.content,
             goalBar: this.goalBar

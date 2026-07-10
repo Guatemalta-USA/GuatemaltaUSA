@@ -1,7 +1,7 @@
 import { navigateTo, type AppPath } from "./navigate.js";
 import { createGiveButterWidget, createLink, createSocialLink, makeElement } from "./utils.js";
 import { auth } from "../firebase/firebase.js";
-import { signOutUser } from "../firebase/authService.js";
+import { getUserRole, signOutUser } from "../firebase/authService.js";
 
 type NavItem = {
     label: string;
@@ -39,6 +39,12 @@ export function loadNav(activeNavLink: string, donateID: string | null = null) {
         });
         
         if (user) {
+            const userRole = await getUserRole(user.uid);
+            if (userRole === "admin") {
+                const admin = makeElement("a", "admin", "", "Admin");
+                admin.addEventListener("click", () => navigateTo("/admin"));
+                nav.appendChild(admin);
+            }
             const logout = makeElement("a", "logout", "", "Log Out");
             logout.addEventListener('click', (e) => {
                 e.preventDefault();

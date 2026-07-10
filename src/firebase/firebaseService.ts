@@ -360,7 +360,13 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]> {
-    const q = query(projectsCol, where("currentProject", "==", isCurrent));
+    const q = query(projectsCol, where("currentProject", "==", isCurrent), where("published", "==", true));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data());
+}
+
+export async function getUnpublishedProjects(): Promise<Project[]> {
+    const q = query(projectsCol,  where("published", "==", false));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data());
 }
