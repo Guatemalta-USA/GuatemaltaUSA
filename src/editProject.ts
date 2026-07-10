@@ -7,6 +7,8 @@ import { navigateTo } from "./modules/navigate";
 import { confirmDeleteModal, createMessage, storeMessage } from "./modules/utils";
 import { getAuthenticatedUser, getUserRole } from "./firebase/authService";
 
+let goalBarID: string | null = null;
+
 async function setUpEditProjectPage() {
     const loading = document.getElementById("loading");
     
@@ -60,6 +62,7 @@ async function setUpEditProjectPage() {
             const project = await getProjectById(projectId);
             if (project) {
                 if (titleInput) titleInput.value = project.projectTitle;
+                goalBarID = project["goalBar"];
                 if (projectStatusInput) {
                     projectStatusInput.checked = project.currentProject;
                     statusLabel.innerText = project.currentProject ? "Current Project" : "Past Project";
@@ -128,7 +131,8 @@ async function setUpEditProjectPage() {
                     titleInput.value,
                     projectStatusInput.checked,
                     Timestamp.now(),
-                    cleanContent
+                    cleanContent,
+                    goalBarID
                 );
 
                 if (projectId) projectToSave.id = projectId;

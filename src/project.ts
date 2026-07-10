@@ -1,7 +1,7 @@
 import Quill from "quill";
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
-import { getPostsWithLinkedProjectId, getProjectById, setPageCampaignId } from "./firebase/firebaseService";
+import { getPostsWithLinkedProjectId, getProjectById, saveProject, setPageCampaignId } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import { navigateTo } from "./modules/navigate";
 import { createButton, createGiveButterWidget, createLink, makeElement, promptModal, storeMessage } from "./modules/utils";
@@ -42,7 +42,7 @@ async function setUpProjectView() {
                     });
                     const updateCampaignIdBtn = createButton("Update nav donate button", "button", "update-campaign", "accent-button", "autorenew");
                     updateCampaignIdBtn.addEventListener("click", async () => {
-                        const newId = await promptModal("Enter the updated campaign Id\n(found in the embed code of the button widget)", "Campaign ID", "update", false);
+                        const newId = await promptModal("Enter the updated widget Id of the button\n(found in the embed code of the button widget)", "Campaign ID", "update", false);
                         if (newId.trim() !== "") {
                             const update: CampaignPageId = {
                                 pageName: id,
@@ -52,13 +52,33 @@ async function setUpProjectView() {
                             window.location.reload();
                         }
                     });
-                    adminActions.append(editButton, updateCampaignIdBtn);
+                    const addGoalBarBtn = createButton("Add Goal Bar", "button", "goal-bar", "accent-button", "add");
+                    addGoalBarBtn.addEventListener("click", async () => {
+                        const goalBarId = await promptModal("Enter the widget ID of the goal bar\n(found in the enbed code of the Goal bar widget)", "Widget ID", "add", false);
+                        if (goalBarId.trim() !== "") {
+                            project.setGoalBarId(goalBarId);
+                            try {
+                                await saveProject(project);
+                                storeMessage("Goal Bar added", "main-message", "check_circle");
+                                window.location.reload();
+                            } catch (error: any) {
+                                storeMessage(error, "main-message", "error");
+                            }
+                            
+                        }
+                    });
+                    adminActions.append(editButton, updateCampaignIdBtn, addGoalBarBtn);
                 }
             }
         });
 
         // Update UI
         document.title = `${project.projectTitle} - Guatemalta USA`;
+        if (project.goalBar) {
+            const goalBarContainer = document.getElementById("goal-bar-container") as HTMLElement;
+            const goalBar = createGiveButterWidget(project.goalBar, "goal bar");
+            goalBarContainer.appendChild(goalBar);
+        }
         const titleElem = document.getElementById('display-title');
         const projectContainer = document.getElementById("project-container") as HTMLElement;
         const loading = document.getElementById("loading");

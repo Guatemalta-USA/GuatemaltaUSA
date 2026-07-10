@@ -373,17 +373,22 @@ export async function getProjectById(id: string): Promise<Project | null> {
 }
 
 export async function saveProject(project: Project): Promise<string> {
-    if (project.id) {
-        // Update existing
-        const docRef = doc(db, 'projects', project.id).withConverter(projectConverter);
-        await setDoc(docRef, project);
-        return project.id;
-    } else {
-        // Create new
-        const customId = slugify(project.projectTitle);
-        const docRef = doc(db, 'projects', customId);
-        await setDoc(docRef, project.toFirestore());
-        return customId;
+    try {
+        if (project.id) {
+            // Update existing
+            const docRef = doc(db, 'projects', project.id).withConverter(projectConverter);
+            await setDoc(docRef, project);
+            return project.id;
+        } else {
+            // Create new
+            const customId = slugify(project.projectTitle);
+            const docRef = doc(db, 'projects', customId);
+            await setDoc(docRef, project.toFirestore());
+            return customId;
+        }
+    } catch (error) {
+        console.log("Error saving project: ", error);
+        throw new Error("Error saving project. Please try reloading the page.");
     }
 }
 
@@ -396,11 +401,11 @@ export async function deleteProject(id: string): Promise<void> {
 export async function setPageCampaignId(page: CampaignPageId) {
     try {
         const docRef = doc(db, "pageCampaignIds", page["pageName"]);
-        const updates: Partial<CampaignPageId> = page;
-        await updateDoc(docRef, updates);
+        await setDoc(docRef, page, { merge: true });
+
     } catch (error) {
-        console.error("Error updating campaign Id for page: ", error);
-        throw new Error("Failed to update campaign ID");
+        console.error("Error setting campaign Id for page: ", error);
+        throw new Error("Failed to set campaign ID");
     }
 }
 

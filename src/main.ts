@@ -15,6 +15,8 @@ const editSection = document.getElementById('edit-section');
 const adminControls = document.getElementById('admin-controls');
 const cancelButton = document.getElementById('cancel-btn');
 
+let goalBarID: string | null = null;
+
 initGivebutter()
 
 function toggleMode(editor: TheEditor, isEditing: boolean) {
@@ -122,6 +124,7 @@ export async function initializeApp(
         }
       } else if (editorConfig.type === 'project' && editorConfig.projectId) {
         const project = await getProjectById(editorConfig.projectId);
+        if (project) goalBarID = project.goalBar;
         if (project) {
           if (projectTitleInput) projectTitleInput.value = project.projectTitle;
           editor.quill.setContents(project.content);
@@ -170,7 +173,8 @@ export async function initializeApp(
                     projectTitle,
                     projectStatusInput.checked,
                     Timestamp.now(),
-                    content
+                    content,
+                    goalBarID
                   );
 
                   if (editorConfig.projectId) projectToSave.id = editorConfig.projectId;

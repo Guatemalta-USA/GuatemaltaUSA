@@ -154,17 +154,20 @@ export class Project {
     public currentProject: boolean;
     public lastUpdated: Timestamp;
     public content: any;
+    public goalBar: string | null = null;
 
     constructor(
         projectTitle: string,
         currentProject: boolean,
         lastUpdated: Timestamp,
-        content: any
+        content: any,
+        goalBar: string | null
     ) {
         this.projectTitle = projectTitle;
         this.currentProject = currentProject;
         this.lastUpdated = lastUpdated;
         this.content = content;
+        this.goalBar = goalBar;
     }
 
     static fromFirestore(id: string, data: any): Project {
@@ -172,7 +175,8 @@ export class Project {
             data.projectTitle,
             data.currentProject,
             data.lastUpdated,
-            data.content
+            data.content,
+            data.goalBar
         );
         project.id = id;
         return project;
@@ -183,7 +187,8 @@ export class Project {
             projectTitle: this.projectTitle,
             currentProject: this.currentProject,
             lastUpdated: serverTimestamp(),
-            content: this.content
+            content: this.content,
+            goalBar: this.goalBar
         };
     }
 
@@ -205,6 +210,10 @@ export class Project {
             }
         }
         return firstParagraph.trim();
+    }
+
+    setGoalBarId(id: string) {
+        this.goalBar = id;
     }
 }
 
