@@ -134,7 +134,7 @@ class GivebutterWidgetBlot extends BlockEmbed {
 
     static create(value: string) {
         const widgetId = value && value.trim() !== "" ? value.trim() : 'gRGya8';
-        const node = createButton("Donate Now", "button", "", "action-link", "favorite");
+        const node = createButton(" Donate Now", "button", "", "action-link", "favorite");
         node.setAttribute('data-id', widgetId);
         
         const idTag = document.createElement('span');
@@ -192,7 +192,7 @@ export class TheEditor {
                         'givebutter': async () => {
                             const range = this.quill.getSelection();
                             const widgetId = await promptModal(
-                                "Enter Givebutter Widget ID",
+                                "Enter Givebutter Widget ID\n(Found in the embed code of the form widget)",
                                 "e.g., gRGya8",
                                 "Insert Widget",
                                 false

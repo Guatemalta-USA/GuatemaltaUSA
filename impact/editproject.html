@@ -46,21 +46,22 @@
                     <div id="project-details">
                         <input type="text" placeholder="Project Title" name="project-title-input"
                             id="project-title-input" />
-                        <label class="switch">
-                            <input type="checkbox" id="project-status-toggle" checked>
-                            <span class="slider round"></span>
-                        </label>
-                        <span id="current-status-label">Current Project</span>
-
-                        <label class="switch">
-                            <input type="checkbox" id="published-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                        <span id="published-label">Unpublished</span>
-
-
-
-                        
+                        <div id="toggles">
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" id="project-status-toggle" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                                <span id="current-status-label">Current Project</span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" id="published-toggle">
+                                    <span class="slider round"></span>
+                                </label>
+                                <span id="published-label">Unpublished</span>
+                            </div>
+                        </div>
                     </div>
                     <div id="editor-container" style="height: 300px;"></div>
                     <div class="actions">
