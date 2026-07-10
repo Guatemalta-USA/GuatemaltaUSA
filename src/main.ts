@@ -69,7 +69,14 @@ export async function initializeApp(
     }
   });
 
-  const newId = await getPageCampaignId(currentPage);
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  let newId: string | null = null;
+  if (id) {
+    newId = await getPageCampaignId(id);
+  } else {
+    newId = await getPageCampaignId(currentPage);
+  }
   if (newId) {
     loadNav(parentPage, newId);
   } else {
