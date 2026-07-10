@@ -147,14 +147,19 @@ a {
 
 header {
   flex-shrink: 0;
-  height: 180px;
+  min-height: 180px; /* Changed from height to min-height so content never overflows vertically */
+  height: auto;      /* Allows content to dictate fluid sizing */
   width: 100%;
-  padding: 0 20px;
+  padding: 20px;
   background-color: var(--header-background-color);
   color: var(--header-color);
+  
+  /* Flexbox setup to group items */
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;   /* Crucial: lets the paragraph wrap below the logo/button row */
+  gap: 15px;
 }
 
 header .logo {
@@ -162,6 +167,15 @@ header .logo {
   width: auto;
   display: block;
   object-fit: contain;
+}
+
+/* Style the new mission statement explicitly */
+header #mission {
+  width: 100%;       /* Forces this item to claim an entire horizontal line by itself */
+  font-size: 1.05rem;
+  line-height: 1.5;
+  margin: 0;
+  opacity: 0.9;
 }
 
 nav {
@@ -198,6 +212,12 @@ nav a:hover {
   color: #fff;
   text-decoration: none;
 }
+
+[aria-current]:not([aria-current="false"]) {
+  border-bottom: 3px solid var(--green-accent);
+  font-weight: 900;
+}
+
 
 [aria-current]:not([aria-current="false"]) {
   border-bottom: 3px solid var(--green-accent);
@@ -248,7 +268,7 @@ main a:hover {
   color: #fff;
 }
 
-.blue-background .accent-button {
+.blue-background {
   background-color: white;
   color: black !important;
   transition:
@@ -262,7 +282,7 @@ hr {
   margin: 10px 0;
 }
 
-.blue-background .accent-button:hover {
+.blue-background {
   background-color: white;
   transform: translateY(-2px);
 }
@@ -380,7 +400,7 @@ footer .link:hover {
    5. MOBILE NAV TOGGLE
    ========================================= */
 #mobile-nav-toggle {
-  display: none;
+  display: none;      /* Hidden on desktop naturally */
   background: transparent;
   border: none;
   color: var(--header-color);
@@ -389,7 +409,6 @@ footer .link:hover {
   padding: 10px;
   transition: transform 0.2s ease;
   z-index: 1001;
-  cursor: pointer;
 }
 
 #mobile-nav-toggle:hover {
@@ -398,19 +417,6 @@ footer .link:hover {
 
 #mobile-nav-toggle:active {
   transform: scale(0.9);
-}
-
-@media (max-width: 850px) {
-  #mobile-nav-toggle {
-    display: block;
-    position: absolute;
-    right: 20px;
-    top: 65px;
-  }
-
-  nav.open + #mobile-nav-toggle {
-    color: var(--nav-color);
-  }
 }
 
 /* =========================================
@@ -504,10 +510,11 @@ footer .link:hover {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
-  display: none;
+  z-index: 9999;
+  display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  padding: 16px; 
 }
 
 .modal-content {
@@ -515,10 +522,25 @@ footer .link:hover {
   color: var(--body-color);
   padding: 24px;
   border-radius: 12px;
-  width: 700px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  width: 100%;
+  max-width: 700px;
+  max-height: calc(100vh - 32px); 
+  overflow-y: auto;
+  animation: modalScaleIn 0.2s ease-out;
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 form {
@@ -658,10 +680,15 @@ textarea {
    ========================================= */
 
 .card {
-  border: 5px solid var(--blue-accent);
-  margin: 10px;
-  padding: 10px;
-  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  padding: 24px;
+  margin: 5px;
+  background-color: var(--card-background);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* =========================================
@@ -795,34 +822,49 @@ textarea {
 @media (max-width: 850px) {
   header {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 25px 10px 0 10px;
-    height: auto;
+    flex-direction: row;       /* Keeps logo and button on the same line row layout */
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 15px;
   }
 
-  header img {
-    width: 90vw;
+  header .logo {
+    width: auto;               /* Stops the full-width stretching bug */
+    max-width: 65vw;           /* Safely contains logo scale on compact screens */
+    height: 80px;              /* Slightly scaled down for mobile balance */
+    order: 1;                  /* Pins logo to left edge */
   }
 
+  #mobile-nav-toggle {
+    display: block;            /* Reveals your toggle button */
+    order: 2;                  /* Pins button to right edge */
+  }
+
+  header #mission {
+    width: 100%;               /* Spans full width, breaking down onto row 2 */
+    order: 3;                  /* Positions text underneath logo/button row safely */
+    text-align: center;        /* Centers text content cleanly on mobile layouts */
+    font-size: 0.95rem;        /* Snug layout sizing */
+    margin-top: 10px;
+  }
+
+  /* Fixed Nav Drawer Configuration */
   nav {
+    position: fixed; 
+    top: 0;
+    right: -100%;   
+    width: 80%;
+    height: 100vh;
     padding-top: 110px;
     flex-direction: column;
     background-color: var(--blue-accent);
-    width: 80%;
-    height: 100vh;
-    max-width: 0;
-    visibility: hidden;
-    overflow: hidden;
+    transition: right 0.3s ease; 
+    z-index: 1000;
   }
 
   nav.open {
     display: flex;
-    position: fixed;
-    top: 0;
-    right: 0;
-    max-width: 1000px;
-    visibility: visible;
+    right: 0; 
   }
 
   .sponsor-card {
@@ -833,4 +875,23 @@ textarea {
   footer ul {
     flex-wrap: wrap;
   }
+}
+
+@media (max-width: 576px) {
+  #modal-root {
+    align-items: flex-end; /* Push modal content to the bottom */
+    padding: 0; /* Flush to screen edge */
+  }
+
+  .modal-content {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0; /* Round only top corners */
+    max-height: 85vh; /* Don't let it completely take over the status bar */
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }

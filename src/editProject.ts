@@ -64,7 +64,7 @@ async function setUpEditProjectPage() {
         publishedLabel.innerText = publishedCheckbox.checked ? "Published" : "Unpublished";
     });
     const saveBtn = document.getElementById('save-btn');
-    const deleteBtn = document.getElementById('delete-post-btn');
+    const deleteBtn = document.getElementById('delete-btn');
 
     if (projectId && editorInstance) {
         try {

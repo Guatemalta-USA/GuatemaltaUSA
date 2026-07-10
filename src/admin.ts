@@ -115,16 +115,16 @@ async function setUpAdminPage() {
         }
     });
     generateButtons.append(linkGenerateH3, linkP, generateLinkBtn);
-
+    
     const unpublishedH2 = makeElement("h2", null, null, "Unpublished Projects");
 
     unpublishedSection.append(unpublishedH2);
     const unpublishedProjects = await getUnpublishedProjects();
     const unpublishedProjectsList = unpublishedProjects.reduce((acc: HTMLElement, project: Project) => {
-        const article = makeElement("article", project["id"] ? project["id"] : "", null, null);
+        const article = makeElement("article", project["id"] ? project["id"] : "", "card", null);
         const projectLink = makeElement("a", null, "post-link", null);
         const projectId = project["id"] ? project["id"] : "";
-        projectLink.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
+        projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
         const titleH2 = makeElement("h2", null, null, project["projectTitle"]);
         projectLink.appendChild(titleH2);
         const lastUpdatedDate = project["lastUpdated"].toDate();
@@ -136,7 +136,13 @@ async function setUpAdminPage() {
             minute: '2-digit'
         });
         const lastUpdated = makeElement("p", null, null, `Last updated: ${lastUpdatedStr}`);
-        article.append(projectLink, lastUpdated);
+        const btnRow = makeElement("div", null, "button-row left", null);
+        const viewButton = createButton("View", "button", "view-project", "accent-button", "visibility");
+        viewButton.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
+        const editButton = createButton("Edit", "button", "edit-project", "accent-button", "edit");
+        editButton.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
+        btnRow.append(viewButton, editButton);
+        article.append(projectLink, lastUpdated, btnRow);
         acc.appendChild(article);
         return acc;
     }, makeElement("div", "unpublished-projects", null, null));

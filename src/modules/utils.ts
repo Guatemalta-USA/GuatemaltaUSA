@@ -217,19 +217,18 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
 
     window.addEventListener("keydown", handleKeyDown);
 
-    const deleteButton = createButton("Delete", "button", "delete-btn", "error button", "delete");
+    const deleteButton = createButton("Delete", "button", "delete-button", "delete-button", "delete");
     deleteButton.onclick = function () {
       closeModal();
       resolve(true);
     };
-    formRow.appendChild(deleteButton);
 
-    const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
+    const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
     cancelButton.onclick = function () {
       closeModal();
       resolve(false);
     };
-    formRow.appendChild(cancelButton);
+    formRow.append(cancelButton, deleteButton);
 
     modalContent.appendChild(formRow);
     modalOverlay.appendChild(modalContent);
@@ -279,7 +278,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
       resolve(userInput.value);
     }
 
-    const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close");
+    const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
     cancelButton.onclick = function () {
       closeModal();
       resolve("");

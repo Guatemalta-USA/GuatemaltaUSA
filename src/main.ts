@@ -8,8 +8,6 @@ import { Timestamp } from 'firebase/firestore';
 import { getPageCampaignId, getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
 import { initGivebutter } from "./services/givebutter.service.js";
 
-let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
-
 const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
 const adminControls = document.getElementById('admin-controls');
@@ -87,7 +85,7 @@ export async function initializeApp(
 
   loadHeader();
   loadFooter();
-
+  let mobileNavToggle = document.getElementById("mobile-nav-toggle") as HTMLElement;
   const nav = document.querySelector("nav") as HTMLElement;
   mobileNavToggle.addEventListener("click", () => {
     nav.classList.toggle("open");

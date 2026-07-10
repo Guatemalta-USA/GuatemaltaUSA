@@ -1,4 +1,6 @@
-/* 1. GLOBAL THEME & TOOLBAR COLORS */
+/* =========================================
+   1. GLOBAL THEME & TOOLBAR COLORS
+   ========================================= */
 .ql-snow .ql-stroke, 
 .ql-snow .ql-picker-canvas { stroke: var(--body-color) !important; }
 .ql-snow .ql-fill, 
@@ -7,13 +9,14 @@
 
 /* 2. TOOLBAR STRUCTURE */
 .ql-toolbar.ql-snow {
-  border: 1px solid var(--body-color) !important;
+  border: 1px solid var(--quill-border) !important;
   background-color: var(--main-background-color);
   position: sticky;
-  top: 0;
+  top: 70px; /* Offset to stack below the sticky main nav */
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
+  padding: 8px;
 }
 
 .ql-toolbar.ql-snow svg {
@@ -33,26 +36,26 @@
 .ql-snow.ql-toolbar button.ql-active .ql-stroke,
 .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
 .ql-snow.ql-toolbar .ql-picker-item:hover {
-  stroke: #007bff !important;
-  color: #007bff !important;
+  stroke: var(--link-color) !important;
+  color: var(--link-color) !important;
 }
 
 .ql-snow.ql-toolbar button:hover .ql-fill,
 .ql-snow.ql-toolbar button.ql-active .ql-fill {
-  fill: #007bff !important;
+  fill: var(--link-color) !important;
 }
 
 /* 4. EDITOR & DISPLAY CONTAINERS */
 .ql-editor {
-    font-size: inherit !important; 
-    font-family: inherit !important;
-    line-height: 1.6;
-    padding: 0;
+  font-size: inherit !important; 
+  font-family: inherit !important;
+  line-height: 1.7;
+  padding: 0;
 }
 
 .ql-editor p {
-    font-size: 1rem; /* Adjust this to match your page's <p> tag size */
-    margin-bottom: 1.2em;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .ql-container.ql-snow,
@@ -64,11 +67,12 @@
 }
 
 .ql-container.ql-snow {
-  border: 1px solid var(--body-color) !important;
+  border: 1px solid var(--quill-border) !important;
   background-color: var(--main-background-color);
   color: var(--body-color);
   font-size: 1rem;
   overflow-y: auto;
+  padding: 20px;
 }
 
 /* 5. LINKS (Action Buttons & External) */
@@ -80,7 +84,11 @@
   margin: 5px 0;
   display: inline-block;
   text-decoration: none !important;
-  font-weight: 900;
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   border-radius: 4px;
   text-align: center;
   cursor: pointer;
@@ -102,7 +110,7 @@
 .ql-editor a[target="_blank"]:hover::after,
 #content-display a[target="_blank"]:hover::after { transform: translate(2px, -2px); }
 
-/* 6. LISTS (Cleaning up Quill's internal list markers) */
+/* 6. LISTS */
 .ql-editor ol li, .ql-editor ul li { list-style-type: none !important; }
 .ql-editor li::marker { content: none !important; }
 
@@ -124,13 +132,13 @@
 .ql-editor img[style*="float: left;"],
 #content-display img[style*="float: left;"] {
   float: left !important;
-  margin: 0 15px 10px 0 !important;
+  margin: 0 20px 15px 0 !important;
 }
 
 .ql-editor img[style*="float: right;"],
 #content-display img[style*="float: right;"] {
   float: right !important;
-  margin: 0 0 10px 15px !important;
+  margin: 0 0 15px 20px !important;
 }
 
 /* 8. CUSTOM TOOLBARS & OVERLAYS */
@@ -151,8 +159,8 @@ div[style*="border: 1px dashed"] > div,
 }
 
 .ql-snow .ql-tooltip {
-  background-color: #333 !important;
-  color: #fff !important;
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
   border-radius: 4px;
   z-index: 20;
 }
@@ -173,127 +181,95 @@ div[style*="border: 1px dashed"] > div,
         margin-bottom: 20px !important;
     }
 
-    .ql-editor, #content-display {
-        word-break: break-word;
-    }
+    .ql-editor, #content-display { word-break: break-word; }
 }
 
 .ql-editor::after {
-    content: "";
-    clear: both;
-    display: table;
+  content: "";
+  clear: both;
+  display: table;
 }
 
 .ql-video {
-    display: block;
-    max-width: 100%;
-    margin: 10px 0;
+  display: block;
+  max-width: 100%;
+  margin: 15px 0;
 }
 
 iframe.ql-video {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-    height: auto;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
 }
 
-.post-link {
-  cursor: pointer;
-}
-
-#editor-container .ql-editor {
-    min-height: 200px;
-    height: auto !important;
-    overflow-y: visible !important;
-}
-
-#editor-container {
-    height: auto !important;
-    border-bottom: 1px solid #ccc;
-}
-
-#project-details {
-  margin-bottom: 10px;
-}
 #post-title-input, #project-title-input {
   width: 100%;
-  font-size: 25px;
-}
-
-#author-input {
-  font-size: 20px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 /* ==========================================================================
    Quill Responsive 2-Column Layout (Using Table Elements)
    ========================================================================== */
-
 .ql-container table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    border: none !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: none !important;
 }
 
 .ql-container table tr {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    gap: 10px;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  gap: 15px;
 }
 
 .ql-container td {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    height: auto !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  height: auto !important;
 }
 
 .ql-container td img,
 .ql-container td .ql-video {
-    max-width: 100% !important;
-    height: auto !important;
-    display: block;
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
 }
 
 /* Editor mode */
 .ql-snow td {
-    padding: 1.25rem !important;
-    border: 1px dashed #a855f7 !important;
-    border-radius: 6px !important;
-    background-color: rgba(168, 85, 247, 0.02) !important;
+  padding: 1.5rem !important;
+  border: 1px dashed var(--quill-border) !important;
+  background-color: var(--table-even-row) !important;
+  border-radius: 4px !important;
 }
-
 
 /* live view mode (.ql-disabled) */
 .ql-disabled td {
-    padding: 0 !important;
-    border: none !important;
-    background-color: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
 }
 
 @media (min-width: 768px) {
-    .ql-container table tr {
-        flex-direction: row !important;
-        align-items: center !important;
-    }
-    .ql-container td {
-        flex: 1 1 0% !important;
-        width: 50% !important;
-        min-width: 0 !important;
-    }
-}
-
-.ql-container img {
-  cursor: pointer;
-}
-
-/* Container positioning for the custom tooltip */
-.ql-toolbar button[data-title],
-.ql-toolbar .ql-picker[data-title] {
-  position: relative;
+  .ql-container table tr {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  .ql-container td {
+    flex: 1 1 0% !important;
+    width: 50% !important;
+    min-width: 0 !important;
+  }
 }
 
 /* Tooltip baseline style */
+.ql-toolbar button[data-title],
+.ql-toolbar .ql-picker[data-title] { position: relative; }
+
 .ql-toolbar button[data-title]::after,
 .ql-toolbar .ql-picker[data-title]::after {
   content: attr(data-title);
@@ -306,7 +282,6 @@ iframe.ql-video {
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid #a855f7;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -314,25 +289,8 @@ iframe.ql-video {
   z-index: 10005;
 }
 
-/* Display tooltip on hover */
 .ql-toolbar button[data-title]:hover::after,
 .ql-toolbar .ql-picker[data-title]:hover::after {
   opacity: 1;
   transform: translateX(-50%) scale(1);
-}
-
-#viewer-container button.action-link[data-id],
-.ql-editor button.action-link[data-id] {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-/* Subtle background tag text for the ID parameter inside the editor */
-.ql-editor button.action-link .donate-id-tag {
-    font-size: 0.8em;
-    opacity: 0.7;
-    font-weight: normal;
-    padding-left: 2px;
 }

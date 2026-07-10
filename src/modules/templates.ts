@@ -10,7 +10,7 @@ type NavItem = {
 //{ label: "About Us", path: "/about" },
 const NAV_ITEMS: NavItem[] = [
     { label: "Home", path: "/" },
-    { label: "Impact", path: "/impact/currentprojects" }, 
+    { label: "Impact", path: "/impact/currentprojects" },
     { label: "Blog", path: "/blog" },
     { label: "Mailing List", path: "/mailinglist" },
     { label: "Donate", path: "givebutter" }
@@ -19,10 +19,10 @@ const NAV_ITEMS: NavItem[] = [
 export function loadNav(activeNavLink: string, donateID: string | null = null) {
     const nav = document.querySelector("nav") as HTMLElement;
     if (!nav) return;
-    
+
     auth.onAuthStateChanged(async (user) => {
         nav.innerHTML = "";
-        
+
         NAV_ITEMS.forEach(({ label, path }) => {
             if (path === "givebutter") {
                 const widget = createGiveButterWidget(donateID, "button");
@@ -30,14 +30,14 @@ export function loadNav(activeNavLink: string, donateID: string | null = null) {
             } else {
                 const link = createLink(label, "", false);
                 link.addEventListener('click', () => navigateTo(path as any));
-                
+
                 if (activeNavLink === label) {
                     link.setAttribute("aria-current", "page");
                 }
                 nav.appendChild(link);
             }
         });
-        
+
         if (user) {
             const userRole = await getUserRole(user.uid);
             if (userRole === "admin") {
@@ -67,6 +67,12 @@ export function loadHeader() {
     const italics = makeElement("i", null, null, "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.");
     mission.appendChild(italics);
     headerElement.appendChild(mission);
+
+    const mobileNavToggleBtn = document.createElement("button") as HTMLButtonElement;
+    mobileNavToggleBtn.id = "mobile-nav-toggle";
+    mobileNavToggleBtn.classList.add("material-symbols-outlined");
+    mobileNavToggleBtn.textContent = "menu";
+    headerElement.appendChild(mobileNavToggleBtn);
 }
 
 export function loadFooter() {
@@ -81,7 +87,7 @@ export function loadFooter() {
     const privatePolicy = document.createElement("a");
     privatePolicy.textContent = "Privacy Policy";
     privatePolicy.className = "link";
-    privatePolicy.onclick = function() {
+    privatePolicy.onclick = function () {
         navigateTo("/privatepolicy");
     }
     ul.appendChild(privatePolicy);

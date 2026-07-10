@@ -21,7 +21,6 @@ export default defineConfig({
           userAgent: '*',
           disallow: [
             '/login',
-            '/generate',
             '/admin',
             '/blog/editpost',
             '/impact/editproject'
@@ -49,7 +48,6 @@ export default defineConfig({
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
         privatepolicy: resolve(__dirname, 'privatepolicy.html'),
         donate: resolve(__dirname, 'donate.html'),
-        generate: resolve(__dirname, 'generate.html'),
         sponsorachild: resolve(__dirname, 'sponsor-a-child.html')
       },
       output: {

@@ -10,7 +10,7 @@ import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
 
-await initializeApp("Donate", "Sponsor A Child");
+await initializeApp("Impact", "Sponsor A Child");
 
 
 const params = new URLSearchParams(window.location.search);
@@ -39,6 +39,7 @@ const donorTabBtn = createButton("Donors", "button", "tab-donors", "tab-btn");
 tabContainer.append(sponsorshipTabBtn, donorTabBtn);
 sponsorshipsSection.before(tabContainer);
 const donorSection = makeElement("div", "donor-list-section", "hide", null);
+donorSection.style.textAlign = "canter";
 sponsorshipsSection.after(donorSection);
 
 sponsorshipTabBtn.addEventListener("click", () => {
@@ -182,6 +183,7 @@ async function updateSponsorshipSection() {
         const childrenForYear = await getAllChildSponsorshipsByYear(year);
 
         const yearHeading = makeElement("h2", null, null, `${year} children`);
+        yearHeading.style.textAlign = "center";
         const yearBlock = makeElement("div", `${year}-children`, "sponsor-container", null);
 
         for (const child of childrenForYear) {
@@ -294,7 +296,7 @@ async function openSponsorshipModal() {
         }
     }
 
-    const cancelButton = createButton("Cancel", "button", "cancel-btn", "info button", "close") as HTMLButtonElement;
+    const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close") as HTMLButtonElement;
     cancelButton.onclick = function () {
         modalContent.reset();
         closeModal();
