@@ -17,6 +17,7 @@
     --link-color: #9a97f3;
     --link-hover: #b7b4ff;
     --green-accent: #9cd500;
+    --green-accent-text: #1a1a1a;
     --blue-accent: #002e6c;
     --message-text: #fff;
     --error-background: #b81f24;
@@ -45,6 +46,7 @@
     --link-color: #302ae6;
     --link-hover: #524cf5;
     --green-accent: #9cd500;
+    --green-accent-text: #1a1a1a;
     --blue-accent: #002e6c;
     --message-text: #fff;
     --error-background: #b81f24;
@@ -73,6 +75,7 @@ html,
 body {
   height: 100%;
   margin: 0;
+  background-color: var(--body-background-color);
 }
 
 body {
@@ -239,41 +242,28 @@ main a:hover {
 }
 
 .blue-background {
-  background-color: var(--blue-accent);
-  background:
-    linear-gradient(30deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
-    linear-gradient(150deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
-    linear-gradient(30deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
-    linear-gradient(150deg, #1a3a6d 12%, transparent 12.5%, transparent 87%, #1a3a6d 87.5%, #1a3a6d),
-    linear-gradient(60deg, #244a85 25%, transparent 25.5%, transparent 75%, #244a85 75%, #244a85),
-    linear-gradient(60deg, #244a85 25%, transparent 25.5%, transparent 75%, #244a85 75%, #244a85);
-  background-size: 80px 140px;
-  background-position:
-    0 0,
-    0 0,
-    40px 70px,
-    40px 70px,
-    0 0,
-    40px 70px;
-  background-color: var(--blue-accent);
-  border-top: 5px solid var(--green-accent);
-  border-bottom: 5px solid var(--green-accent);
-  padding: 60px 0;
-  width: 100vw;
+  --background: linear-gradient(
+                  45deg, 
+                  #002e6c, 
+                  #004bb1, 
+                  #00214f
+                );
+
+  background: var(--background);
+  color: white;
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  color: #fff;
+  padding-top: 75px;
+  padding-bottom: 75px;
+  clip-path: polygon(0 5.2vw, 100% 0, 100% calc(100% - 5.2vw), 0 100%);
 }
 
-.blue-background {
-  background-color: white;
-  color: black !important;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+.blue-background .accent-button {
+  background-color: var(--green-accent);
+  color: var(--green-accent-text) !important;
+}
+
+.blue-background .accent-button:hover {
+  background-color: #83b300;
 }
 
 hr {
