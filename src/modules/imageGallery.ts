@@ -83,6 +83,7 @@ export function displayGallery(imageData: ImageMetadata[]) {
 export const setupControls = () => {
   const container = document.querySelector<HTMLDivElement>('#gallery-container');
   const toggleBtn = document.querySelector<HTMLButtonElement>('#gallery-toggle');
+  const spanText = toggleBtn?.querySelector<HTMLButtonElement>("span");
 
   if (!container || !toggleBtn) return;
 
@@ -91,10 +92,10 @@ export const setupControls = () => {
 
     if (isPaused) {
       container.style.animationPlayState = 'running';
-      toggleBtn.textContent = 'pause';
+      if (spanText) spanText.textContent = 'pause';
     } else {
       container.style.animationPlayState = 'paused';
-      toggleBtn.textContent = 'play_arrow';
+      if(spanText) spanText.textContent = 'play_arrow';
     }
   });
 };

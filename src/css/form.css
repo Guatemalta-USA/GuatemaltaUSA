@@ -29,6 +29,10 @@
   border: 1px solid var(--card-border);
 }
 
+.no-padding {
+  padding: 5px !important;
+}
+
 .accent-button {
   background-color: var(--blue-accent);
   color: #fff;

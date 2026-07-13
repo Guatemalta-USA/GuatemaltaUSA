@@ -782,7 +782,7 @@ textarea {
 .tab-btn.active {
   background: #ffffff;
   border-color: #ccc;
-  border-bottom: 2px solid #ffffff; /* Overlaps container border */
+  border-bottom: 2px solid #ffffff;
   margin-bottom: -2px;
   color: #000;
 }
@@ -790,6 +790,21 @@ textarea {
 /* =========================================
    13. RESPONSIVE QUERIES
    ========================================= */
+
+@media (max-width: 600px) {
+  footer {
+    padding: 30px 15px; 
+  }
+
+  footer ul {
+    flex-direction: column; 
+    gap: 20px; 
+  }
+
+  footer .link {
+    padding: 5px 10px; 
+  }
+}
 
 @media (min-width: 701px) {
   .flex-reverse {
@@ -812,33 +827,32 @@ textarea {
 @media (max-width: 850px) {
   header {
     display: flex;
-    flex-direction: row;       /* Keeps logo and button on the same line row layout */
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     padding: 20px 15px;
   }
 
   header .logo {
-    width: auto;               /* Stops the full-width stretching bug */
-    max-width: 65vw;           /* Safely contains logo scale on compact screens */
-    height: 80px;              /* Slightly scaled down for mobile balance */
-    order: 1;                  /* Pins logo to left edge */
+    width: auto;
+    max-width: 65vw;
+    height: 80px;
+    order: 1;
   }
 
   #mobile-nav-toggle {
-    display: block;            /* Reveals your toggle button */
-    order: 2;                  /* Pins button to right edge */
+    display: block;
+    order: 2;
   }
 
   header #mission {
-    width: 100%;               /* Spans full width, breaking down onto row 2 */
-    order: 3;                  /* Positions text underneath logo/button row safely */
-    text-align: center;        /* Centers text content cleanly on mobile layouts */
-    font-size: 0.95rem;        /* Snug layout sizing */
+    width: 100%;
+    order: 3;
+    text-align: center;
+    font-size: 0.95rem;
     margin-top: 10px;
   }
 
-  /* Fixed Nav Drawer Configuration */
   nav {
     position: fixed; 
     top: 0;
@@ -869,14 +883,14 @@ textarea {
 
 @media (max-width: 576px) {
   #modal-root {
-    align-items: flex-end; /* Push modal content to the bottom */
-    padding: 0; /* Flush to screen edge */
+    align-items: flex-end;
+    padding: 0;
   }
 
   .modal-content {
     max-width: 100%;
-    border-radius: 16px 16px 0 0; /* Round only top corners */
-    max-height: 85vh; /* Don't let it completely take over the status bar */
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
     animation: slideUp 0.3s ease-out;
   }
 }

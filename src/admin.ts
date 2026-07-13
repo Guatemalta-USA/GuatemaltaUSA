@@ -70,7 +70,9 @@ async function setUpAdminPage() {
                     qrCanvasSection.classList.add("hide");
                     generateButtons.classList.remove("hide");
                 }
-                qrCanvasSection.append(downloadBtn, newBtn);
+                const btnRow = makeElement("div", null, "button-row left", null);
+                btnRow.append(downloadBtn, newBtn);
+                qrCanvasSection.appendChild(btnRow);
             } catch (error) {
                 console.error('Error generating QR code:', error);
             }
@@ -108,7 +110,9 @@ async function setUpAdminPage() {
                     qrCanvasSection.classList.add("hide");
                     generateButtons.classList.remove("hide");
                 }
-                qrCanvasSection.append(downloadBtn, newBtn);
+                const btnRow = makeElement("div", null, "button-row left", null);
+                btnRow.append(downloadBtn, newBtn);
+                qrCanvasSection.appendChild(btnRow);
             } catch (error) {
                 console.error('Error generating QR code:', error);
             }
