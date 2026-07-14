@@ -151,17 +151,17 @@ a {
 header {
   flex-shrink: 0;
   min-height: 180px; /* Changed from height to min-height so content never overflows vertically */
-  height: auto;      /* Allows content to dictate fluid sizing */
+  height: auto; /* Allows content to dictate fluid sizing */
   width: 100%;
   padding: 20px;
   background-color: var(--header-background-color);
   color: var(--header-color);
-  
+
   /* Flexbox setup to group items */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;   /* Crucial: lets the paragraph wrap below the logo/button row */
+  flex-wrap: wrap; /* Crucial: lets the paragraph wrap below the logo/button row */
   gap: 15px;
 }
 
@@ -174,7 +174,7 @@ header .logo {
 
 /* Style the new mission statement explicitly */
 header #mission {
-  width: 100%;       /* Forces this item to claim an entire horizontal line by itself */
+  width: 100%; /* Forces this item to claim an entire horizontal line by itself */
   font-size: 1.05rem;
   line-height: 1.5;
   margin: 0;
@@ -221,7 +221,6 @@ nav a:hover {
   font-weight: 900;
 }
 
-
 [aria-current]:not([aria-current="false"]) {
   border-bottom: 3px solid var(--green-accent);
   font-weight: 900;
@@ -242,39 +241,20 @@ main a:hover {
 }
 
 .blue-background {
-  --background: linear-gradient(
-                  45deg, 
-                  #002e6c, 
-                  #004bb1, 
-                  #00214f
-                );
-
-  background: var(--background);
+  min-height: 80vh;
+  padding: 60px 20px;
+  margin: 10px 0;
+  background-image: url("https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/blue-triangles.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: white;
-  position: relative;
-  padding-top: 75px;
-  padding-bottom: 75px;
-  clip-path: polygon(0 5.2vw, 100% 0, 100% calc(100% - 5.2vw), 0 100%);
-}
-
-.blue-background .accent-button {
-  background-color: var(--green-accent);
-  color: var(--green-accent-text) !important;
-}
-
-.blue-background .accent-button:hover {
-  background-color: #83b300;
 }
 
 hr {
   border: 5px solid var(--blue-accent);
   border-radius: 5px;
   margin: 10px 0;
-}
-
-.blue-background {
-  background-color: white;
-  transform: translateY(-2px);
 }
 
 footer {
@@ -390,7 +370,7 @@ footer .link:hover {
    5. MOBILE NAV TOGGLE
    ========================================= */
 #mobile-nav-toggle {
-  display: none;      /* Hidden on desktop naturally */
+  display: none; /* Hidden on desktop naturally */
   background: transparent;
   border: none;
   color: var(--header-color);
@@ -504,7 +484,7 @@ footer .link:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px; 
+  padding: 16px;
 }
 
 .modal-content {
@@ -517,7 +497,7 @@ footer .link:hover {
   gap: 15px;
   width: 100%;
   max-width: 700px;
-  max-height: calc(100vh - 32px); 
+  max-height: calc(100vh - 32px);
   overflow-y: auto;
   animation: modalScaleIn 0.2s ease-out;
 }
@@ -677,8 +657,9 @@ textarea {
   margin: 5px;
   background-color: var(--card-background);
   border: 1px solid var(--card-border);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* =========================================
@@ -793,16 +774,16 @@ textarea {
 
 @media (max-width: 600px) {
   footer {
-    padding: 30px 15px; 
+    padding: 30px 15px;
   }
 
   footer ul {
-    flex-direction: column; 
-    gap: 20px; 
+    flex-direction: column;
+    gap: 20px;
   }
 
   footer .link {
-    padding: 5px 10px; 
+    padding: 5px 10px;
   }
 }
 
@@ -854,21 +835,21 @@ textarea {
   }
 
   nav {
-    position: fixed; 
+    position: fixed;
     top: 0;
-    right: -100%;   
+    right: -100%;
     width: 80%;
     height: 100vh;
     padding-top: 110px;
     flex-direction: column;
     background-color: var(--blue-accent);
-    transition: right 0.3s ease; 
+    transition: right 0.3s ease;
     z-index: 1000;
   }
 
   nav.open {
     display: flex;
-    right: 0; 
+    right: 0;
   }
 
   .sponsor-card {
@@ -896,6 +877,10 @@ textarea {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
