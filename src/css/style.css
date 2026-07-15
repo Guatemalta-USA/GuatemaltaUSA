@@ -244,11 +244,19 @@ main a:hover {
   min-height: 80vh;
   padding: 60px 20px;
   margin: 10px 0;
-  background-image: url("https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/blue-triangles.svg");
+  background-image: url("https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/blue-poly.svg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   color: white;
+}
+
+.blue-background button {
+  background-color: var(--green-accent) !important;
+  color: var(--green-accent-text) !important;
+}
+.blue-background button:hover {
+  background-color: #5e8000 !important;
 }
 
 hr {
