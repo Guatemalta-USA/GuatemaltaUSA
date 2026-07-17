@@ -268,8 +268,12 @@ hr {
 footer {
   flex-shrink: 0;
   background-color: var(--blue-accent);
-  padding: 20px 0;
+  padding: 30px 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 footer ul {
@@ -278,6 +282,9 @@ footer ul {
   justify-content: center;
   align-items: center;
   gap: 15px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 footer .link {
@@ -294,6 +301,18 @@ footer .link {
 
 footer .link:hover {
   color: var(--green-accent);
+}
+
+footer .footer-legal {
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+footer .footer-legal p {
+  margin: 4px 0;
 }
 
 /* =========================================

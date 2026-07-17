@@ -93,4 +93,12 @@ export function loadFooter() {
     ul.appendChild(privatePolicy);
     footerElement.appendChild(ul);
 
+    const footerLegal = makeElement("div", null, "footer-legal", null);
+    const nameP = makeElement("p", null, null, "© 2026 Guatemalta USA, INC. All rights reserved.");
+    const addressP = makeElement("p", null, null, "18928 Rivers Edge Dr. E. Chagrin Falls, OH 44023");
+    const registeredP = makeElement("p", null, null, "Registered 501(c)(3) Nonprofit Organization | EIN: 41-4897982")
+    footerLegal.append(nameP, addressP, registeredP);
+    footerElement.appendChild(footerLegal);
+
+
 }
