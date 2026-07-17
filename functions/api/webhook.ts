@@ -136,6 +136,39 @@ async function sendSponsorshipEmail(apiKey: string, toEmail: string, firstName: 
   }
 }
 
+async function sendDataEmail(apiKey: string, dataStr: string) {
+  const payload = {
+    sender: { name: "Guatemalta USA", email: "info@guatemaltausa.org" },
+    to: [{ email: "ryan@guatemaltausa.org", name: "Ryan" }],
+    subject: "Sponsor a child webhook data",
+    htmlContent: `
+      <html>
+        <body>
+          <p>A donation has been made to Sponsor A Child.</p>
+          <br>
+          <p>${dataStr}</p>
+        </body>
+      </html>
+    `
+  };
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("Failed to send email via Brevo:", errText);
+  }
+}
+
+
 /**
  * Main Cloudflare Pages Function Webhook Route Handler
  */
@@ -147,9 +180,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     if (event && event.event === "transaction.succeeded") {
       const data = event.data;
-      
-      const amount = data.amount; 
-      const email = data.email; 
+
+      const donationAmount = data.amount;
+      const email = data.email;
       const firstName = data.first_name || "Supporter";
       const lastName = data.last_name || "";
       const fullName = `${firstName} ${lastName}`.trim();
@@ -157,43 +190,80 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       const incomingCampaignId = data.campaign_id?.toString();
       const targetCampaignId = env.GIVE_BUTTER_SPONSOR_CHILD_ID?.toString();
 
-      // For testing any donation, you can temporarily change this check to just: if (email)
-      if (amount === 175 && email && incomingCampaignId === targetCampaignId) {
-        
-        const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const currentYear = new Date().getFullYear(); // Dynamic year for your Donor model
-        
-        const authToken = await getGoogleAuthToken(env.FIREBASE_CLIENT_EMAIL, env.FIREBASE_PRIVATE_KEY);
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/referrals?documentId=${refCode}`;
+      const authToken = await getGoogleAuthToken(env.FIREBASE_CLIENT_EMAIL, env.FIREBASE_PRIVATE_KEY);
 
-        const firestorePayload = {
-          fields: {
-            refCode: { stringValue: refCode },
-            donorName: { stringValue: fullName },
-            donorEmail: { stringValue: email },
-            selectedChildName: { nullValue: null },
-            year: { integerValue: currentYear.toString() }
+      if (incomingCampaignId === targetCampaignId) {
+        if (donationAmount === 175 && email) {
+
+          const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+          const currentYear = new Date().getFullYear();
+
+          const firestorePayload = {
+            fields: {
+              refCode: { stringValue: refCode },
+              donorName: { stringValue: fullName },
+              donorEmail: { stringValue: email },
+              selectedChildName: { nullValue: null },
+              year: { integerValue: currentYear.toString() }
+            }
+          };
+          const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/referrals?documentId=${refCode}`;
+          const dbResponse = await fetch(firestoreUrl, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${authToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(firestorePayload)
+          });
+
+          if (!dbResponse.ok) {
+            const dbErr = await dbResponse.text();
+            throw new Error(`Firestore REST insertion failed: ${dbErr}`);
           }
+          await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
+          console.log(`Successfully processed Donor ${fullName} (${refCode})`);
+        } else if (donationAmount === 10) {
+          await sendDataEmail(env.BREVO_API_KEY, JSON.stringify(event.data));
+        }
+      } else {
+        const commitUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents:commit`;
+
+        const incomingChange = donationAmount;
+
+        const commitPayload = {
+          writes: [
+            {
+              transform: {
+                document: `projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/campaignTotals/${incomingCampaignId}`,
+                fieldTransforms: [
+                  {
+                    fieldPath: "amount",
+                    increment: {
+                      integerValue: incomingChange
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         };
 
-        const dbResponse = await fetch(firestoreUrl, {
+        const dbResponse = await fetch(commitUrl, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${authToken}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(firestorePayload)
+          body: JSON.stringify(commitPayload)
         });
 
         if (!dbResponse.ok) {
           const dbErr = await dbResponse.text();
-          throw new Error(`Firestore REST insertion failed: ${dbErr}`);
+          throw new Error(`Firestore REST atomic increment failed: ${dbErr}`);
         }
-
-        await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
-        
-        console.log(`Successfully processed Donor ${fullName} (${refCode})`);
       }
+
     }
 
     return new Response(JSON.stringify({ received: true }), {
