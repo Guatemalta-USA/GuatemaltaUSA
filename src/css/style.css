@@ -136,10 +136,11 @@ a {
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
+  position: relative;
 }
 
 /* =========================================
-   3. LAYOUT UTILITIES
+   3. LAYOUT UTILITIES & NAVIGATION
    ========================================= */
 .container {
   max-width: 900px;
@@ -150,47 +151,47 @@ a {
 
 header {
   flex-shrink: 0;
-  min-height: 180px; /* Changed from height to min-height so content never overflows vertically */
-  height: auto; /* Allows content to dictate fluid sizing */
+  min-height: 120px;
+  height: auto;
   width: 100%;
   padding: 20px;
   background-color: var(--header-background-color);
   color: var(--header-color);
-
-  /* Flexbox setup to group items */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Crucial: lets the paragraph wrap below the logo/button row */
+  flex-wrap: wrap;
   gap: 15px;
 }
 
 header .logo {
-  height: 110px;
+  height: 100px;
   width: auto;
   display: block;
   object-fit: contain;
 }
 
-/* Style the new mission statement explicitly */
 header #mission {
-  width: 100%; /* Forces this item to claim an entire horizontal line by itself */
+  width: 100%;
   font-size: 1.05rem;
   line-height: 1.5;
   margin: 0;
   opacity: 0.9;
 }
 
+/* MAIN DESKTOP <NAV> BAR */
 nav {
   width: 100%;
-  height: 60px;
+  min-height: 60px;
+  height: auto;
   display: flex;
+  flex-direction: row;
   justify-content: flex-start;
   align-items: center;
   gap: 10px;
   background-color: var(--nav-background-color);
   color: var(--nav-color);
-  padding: 0;
+  padding: 0 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -203,10 +204,14 @@ nav a {
   font-family: "Roboto", sans-serif;
   font-weight: 400;
   font-size: 1.1rem;
-  padding: 15px 20px;
+  padding: 0 20px;
   transition: all 0.2s ease;
   border-bottom: 3px solid transparent;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  height: 60px;
+  box-sizing: border-box;
 }
 
 nav a:hover {
@@ -216,14 +221,78 @@ nav a:hover {
   text-decoration: none;
 }
 
-[aria-current]:not([aria-current="false"]) {
+nav [aria-current]:not([aria-current="false"]),
+nav a.active {
   border-bottom: 3px solid var(--green-accent);
   font-weight: 900;
 }
 
-[aria-current]:not([aria-current="false"]) {
-  border-bottom: 3px solid var(--green-accent);
-  font-weight: 900;
+/* Dropdown Navigation Setup */
+.nav-dropdown-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 60px;
+}
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.dropdown-header-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.dropdown-arrow-btn {
+  display: none !important; /* Hidden on desktop */
+}
+
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0;
+  background-color: var(--nav-background-color);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 0;
+  min-width: 180px;
+  z-index: 150;
+  list-style: none;
+  margin: 0;
+}
+
+/* Desktop Hover Toggle */
+@media (min-width: 851px) {
+  .nav-dropdown-container:hover .nav-dropdown-menu {
+    display: block;
+  }
+}
+
+.nav-dropdown-item {
+  list-style: none;
+  width: 100%;
+}
+
+.nav-dropdown-item a {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  color: #fff;
+  text-decoration: none;
+  font-family: "Roboto", sans-serif;
+  font-size: 0.95rem;
+  height: auto;
+  border-bottom: none;
+}
+
+.nav-dropdown-item a:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-bottom: none;
 }
 
 main {
@@ -255,6 +324,7 @@ main a:hover {
   background-color: var(--green-accent) !important;
   color: var(--green-accent-text) !important;
 }
+
 .blue-background button:hover {
   background-color: #5e8000 !important;
 }
@@ -318,13 +388,11 @@ footer .footer-legal p {
 /* =========================================
    4. PROFILE SECTION
    ========================================= */
-
 .profile-card {
   margin: 10px 0;
   display: flex;
-  align-items: center !important;
-  gap: 10px;
   align-items: flex-start;
+  gap: 10px;
   background: var(--profile-card-background);
   color: var(--body-color);
   border-radius: 12px;
@@ -394,10 +462,11 @@ footer .footer-legal p {
 }
 
 /* =========================================
-   5. MOBILE NAV TOGGLE
+   5. MOBILE NAV TOGGLE (Targeting ID and Class)
    ========================================= */
-#mobile-nav-toggle {
-  display: none; /* Hidden on desktop naturally */
+#mobile-nav-toggle,
+.mobile-nav-toggle {
+  display: none !important; /* Strictly hidden on desktop */
   background: transparent;
   border: none;
   color: var(--header-color);
@@ -408,11 +477,13 @@ footer .footer-legal p {
   z-index: 1001;
 }
 
-#mobile-nav-toggle:hover {
+#mobile-nav-toggle:hover,
+.mobile-nav-toggle:hover {
   opacity: 0.8;
 }
 
-#mobile-nav-toggle:active {
+#mobile-nav-toggle:active,
+.mobile-nav-toggle:active {
   transform: scale(0.9);
 }
 
@@ -627,7 +698,6 @@ textarea {
 /* =========================================
    9. HOMEPAGE PHOTOS
    ========================================= */
-
 #home-photos {
   width: 100%;
   overflow: hidden;
@@ -673,9 +743,8 @@ textarea {
 }
 
 /* =========================================
-   10. Cards
+   10. CARDS
    ========================================= */
-
 .card {
   display: flex;
   flex-direction: column;
@@ -690,10 +759,8 @@ textarea {
 }
 
 /* =========================================
-   11. Skeleton placeholders
+   11. SKELETON PLACEHOLDERS
    ========================================= */
-
-/* Skeleton Base */
 .image-skeleton-loader {
   min-width: 300px;
   height: 300px;
@@ -712,7 +779,7 @@ textarea {
 }
 
 /* =========================================
-   11. child-sponsorship
+   12. CHILD SPONSORSHIP
    ========================================= */
 .sponsor-container {
   display: flex;
@@ -720,6 +787,7 @@ textarea {
   align-items: center;
   flex-wrap: wrap;
 }
+
 .sponsor-card {
   display: flex;
   flex-direction: column;
@@ -751,6 +819,7 @@ textarea {
   border-radius: 10px;
   text-align: center;
 }
+
 .found {
   background-color: var(--blue-accent);
   color: white;
@@ -767,9 +836,8 @@ textarea {
 }
 
 /* =========================================
-   12. Tabs
+   13. TABS
    ========================================= */
-
 .tab-container {
   display: flex;
   gap: 10px;
@@ -796,21 +864,156 @@ textarea {
 }
 
 /* =========================================
-   13. RESPONSIVE QUERIES
+   14. RESPONSIVE QUERIES & MOBILE NAVIGATION
    ========================================= */
-
-@media (max-width: 600px) {
-  footer {
-    padding: 30px 15px;
+@media (max-width: 850px) {
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 15px;
   }
 
-  footer ul {
+  header .logo {
+    width: auto;
+    max-width: 65vw;
+    height: 80px;
+    order: 1;
+  }
+
+  #mobile-nav-toggle,
+  .mobile-nav-toggle {
+    display: block !important;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.8rem;
+    cursor: pointer;
+  }
+
+  header #mission {
+    width: 100%;
+    order: 3;
+    text-align: center;
+    font-size: 0.95rem;
+    margin-top: 10px;
+  }
+
+  nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    height: 100vh;
+    padding: 60px 0 30px 0;
+    display: flex;
     flex-direction: column;
-    gap: 20px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0;
+    background-color: var(--blue-accent);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    box-sizing: border-box;
   }
 
-  footer .link {
-    padding: 5px 10px;
+  nav.mobile-open {
+    right: 0;
+  }
+
+  nav > a,
+  nav .givebutter-widget-button {
+    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center;
+    padding: 8px 20px;
+    height: auto;
+    box-sizing: border-box;
+    font-weight: 400;
+  }
+
+  .nav-dropdown-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: static;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .dropdown-arrow-btn {
+    display: none !important;
+  }
+
+  .dropdown-header {
+    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: static;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .dropdown-header a,
+  .dropdown-header a.dropdown-toggle {
+    font-weight: 400;
+    padding: 8px 20px;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+    height: auto !important;
+    box-sizing: border-box;
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  .nav-dropdown-menu {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    list-style: none;
+    padding: 0 0 10px 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .nav-dropdown-item {
+    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .nav-dropdown-item a {
+    padding: 6px 20px;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center !important;
+    margin: 0 !important;
   }
 }
 
@@ -832,60 +1035,18 @@ textarea {
   }
 }
 
-@media (max-width: 850px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 15px;
-  }
-
-  header .logo {
-    width: auto;
-    max-width: 65vw;
-    height: 80px;
-    order: 1;
-  }
-
-  #mobile-nav-toggle {
-    display: block;
-    order: 2;
-  }
-
-  header #mission {
-    width: 100%;
-    order: 3;
-    text-align: center;
-    font-size: 0.95rem;
-    margin-top: 10px;
-  }
-
-  nav {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 80%;
-    height: 100vh;
-    padding-top: 110px;
-    flex-direction: column;
-    background-color: var(--blue-accent);
-    transition: right 0.3s ease;
-    z-index: 1000;
-  }
-
-  nav.open {
-    display: flex;
-    right: 0;
-  }
-
-  .sponsor-card {
-    width: 100%;
-    margin: 2px 5px;
+@media (max-width: 600px) {
+  footer {
+    padding: 30px 15px;
   }
 
   footer ul {
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  footer .link {
+    padding: 5px 10px;
   }
 }
 

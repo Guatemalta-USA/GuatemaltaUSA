@@ -1,21 +1,34 @@
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
-import { addProfile, deleteProfile, getAllProfiles, getProfilesByCountry, updateProfile } from "./firebase/firebaseService";
+import {
+  addProfile,
+  deleteProfile,
+  getAllProfiles,
+  getProfilesByCountry,
+  updateProfile,
+} from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import type { Profile } from "./models";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService";
-import { confirmDeleteModal, createButton, createMessage, makeElement, makePBLock } from "./modules/utils";
-import './css/style.css';
-import './css/grid.css';
-import './css/form.css';
-import './css/quill.css';
+import {
+  confirmDeleteModal,
+  createButton,
+  createMessage,
+  makeElement,
+  makePBLock,
+} from "./modules/utils";
+
+import "./css/style.css";
+import "./css/grid.css";
+import "./css/form.css";
+import "./css/quill.css";
 
 const loading = document.getElementById("loading");
-const viewSection = document.getElementById('content-display') as HTMLElement;
-const profilesSection = document.getElementById('profiles-section') as HTMLElement;
-const modalRoot = document.getElementById('modal-root') as HTMLElement;
-const adminControls = document.getElementById('admin-controls') as HTMLElement;
-const addProfileForm = document.getElementById('add-profile-form') as HTMLFormElement;
+const viewSection = document.getElementById("content-display") as HTMLElement;
+const profilesSection = document.getElementById("profiles-section") as HTMLElement;
+const modalRoot = document.getElementById("modal-root") as HTMLElement;
+const adminControls = document.getElementById("admin-controls") as HTMLElement;
+const addProfileForm = document.getElementById("add-profile-form") as HTMLFormElement;
 const cancelButton = document.getElementById("close-modal");
 let editingProfileId: string | null = null;
 let isAdmin = false;
@@ -23,251 +36,283 @@ const countries: string[] = ["usa", "guatemala"];
 const contactForm = document.getElementById("contact-form") as HTMLFormElement;
 
 async function handleSubmit() {
-    const submitBtn = document.getElementById('save-profile') as HTMLButtonElement;
-    const fileInput = document.getElementById('p-image') as HTMLInputElement;
-    const file = fileInput.files?.[0];
+  const submitBtn = document.getElementById("save-profile") as HTMLButtonElement;
+  const fileInput = document.getElementById("p-image") as HTMLInputElement;
+  const file = fileInput.files?.[0];
 
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Processing...";
+  try {
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Processing...";
 
-        const allProfiles = await getAllProfiles();
-        const existingProfile = allProfiles.find(p => p.name === editingProfileId);
+    const allProfiles = await getAllProfiles();
+    const existingProfile = allProfiles.find((p) => p.name === editingProfileId);
 
-        let photoURL = "";
+    let photoURL = "";
 
-        if (file) {
-            if (editingProfileId && existingProfile?.photoURL) {
-                await deleteImage(existingProfile.photoURL);
-            }
+    if (file) {
+      if (editingProfileId && existingProfile?.photoURL) {
+        await deleteImage(existingProfile.photoURL);
+      }
 
-            const resizedBlob = await resizeImage(file, 800, 800);
-            photoURL = await uploadImage(resizedBlob as File);
-        } else if (editingProfileId && existingProfile) {
-            photoURL = existingProfile.photoURL;
-        }
-        const selectElement = document.getElementById("country") as HTMLSelectElement;
-        const profileData: Profile = {
-            name: (document.getElementById('p-name') as HTMLInputElement).value,
-            position: (document.getElementById('p-position') as HTMLInputElement).value,
-            email: (document.getElementById('p-email') as HTMLInputElement).value,
-            about: (document.getElementById('p-about') as HTMLTextAreaElement).value,
-            country: selectElement.value,
-            photoURL: photoURL
-        };
+      const resizedBlob = await resizeImage(file, 800, 800);
+      photoURL = await uploadImage(resizedBlob as File);
+    } else if (editingProfileId && existingProfile) {
+      photoURL = existingProfile.photoURL;
+    }
 
-        if (editingProfileId) {
-            await updateProfile(editingProfileId, profileData);
-            createMessage("Profile updated!", "main-message", "edit");
-        } else {
-            if (!file) {
-                createMessage("Please select an image for a new profile", "main-message", "error");
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Save Profile";
-                return;
-            }
-            await addProfile(profileData);
-            createMessage("Profile added!", "main-message", "check_circle");
-        }
+    const selectElement = document.getElementById("country") as HTMLSelectElement;
+    const profileData: Profile = {
+      name: (document.getElementById("p-name") as HTMLInputElement).value,
+      position: (document.getElementById("p-position") as HTMLInputElement).value,
+      email: (document.getElementById("p-email") as HTMLInputElement).value,
+      about: (document.getElementById("p-about") as HTMLTextAreaElement).value,
+      country: selectElement.value,
+      photoURL: photoURL,
+    };
 
-        modalRoot.classList.add("hide");
-        modalRoot.style.display = 'none';
-        addProfileForm.reset();
-        editingProfileId = null;
-
-        await loadProfiles();
-
-    } catch (error) {
-        console.error("Error in handleSubmit:", error);
-        createMessage("An error occurred while saving the profile.", "main-message", "error");
-    } finally {
+    if (editingProfileId) {
+      await updateProfile(editingProfileId, profileData);
+      createMessage("Profile updated!", "main-message", "edit");
+    } else {
+      if (!file) {
+        createMessage("Please select an image for a new profile", "main-message", "error");
         submitBtn.disabled = false;
         submitBtn.innerText = "Save Profile";
+        return;
+      }
+      await addProfile(profileData);
+      createMessage("Profile added!", "main-message", "check_circle");
     }
+
+    modalRoot.classList.add("hide");
+    modalRoot.style.display = "none";
+    addProfileForm.reset();
+    editingProfileId = null;
+
+    await loadProfiles();
+  } catch (error) {
+    console.error("Error in handleSubmit:", error);
+    createMessage("An error occurred while saving the profile.", "main-message", "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = "Save Profile";
+  }
 }
 
 async function loadProfiles() {
-    profilesSection.innerHTML = "";
-    countries.forEach(async (country: string) => {
-        let profilesForCountry: Profile[] = await getProfilesByCountry(country);
-        if (profilesForCountry.length !== 0) {
-            profilesSection.classList.add("blue-background");
+  profilesSection.innerHTML = "";
 
-            const profilesContainer = makeElement("div", null, "container", null);
+  // Using for...of so async operations are properly awaited sequentially
+  for (const country of countries) {
+    const profilesForCountry: Profile[] = await getProfilesByCountry(country);
 
-            const titleText = country.charAt(0).toUpperCase() + country.slice(1);
-            if (country === "usa") {
-                const countryH2 = makeElement("h2", "", "", `Our USA Team`);
-                profilesContainer.appendChild(countryH2);
-            } else {
-                const countryH2 = makeElement("h2", "", "", `Our ${titleText} Team`);
-                profilesContainer.appendChild(countryH2);
-            }
+    if (profilesForCountry.length !== 0) {
+      profilesSection.classList.add("blue-background");
 
+      const profilesContainer = makeElement("div", null, "container", null);
 
-            const profilesDiv = profilesForCountry.reduce((acc: HTMLElement, currentProfile: Profile, index) => {
-                const profileArticle = makeElement("article", null, "profile-card", null);
-                if (index % 2 !== 0) profileArticle.classList.add("flex-reverse");
-                const imgContainer = makeElement("div", null, "image-container", null);
-                const profilePicture = document.createElement("img");
-                profilePicture.src = currentProfile.photoURL;
-                imgContainer.appendChild(profilePicture);
-                profileArticle.appendChild(imgContainer);
+      const titleText = country.charAt(0).toUpperCase() + country.slice(1);
+      const countryH2 = makeElement(
+        "h2",
+        "",
+        "",
+        country === "usa" ? "Our USA Team" : `Our ${titleText} Team`
+      );
+      profilesContainer.appendChild(countryH2);
 
-                const detailsContainer = makeElement("div", null, "profile-info", null);
-                const profileName = makeElement("h3", null, null, currentProfile.name);
-                detailsContainer.appendChild(profileName);
+      const profilesDiv = profilesForCountry.reduce(
+        (acc: HTMLElement, currentProfile: Profile, index) => {
+          const profileArticle = makeElement("article", null, "profile-card", null);
+          if (index % 2 !== 0) profileArticle.classList.add("flex-reverse");
 
-                const about = makePBLock([
-                    ["b", currentProfile.position],
-                    ["br", ""],
-                    ["span", currentProfile.about]
-                ]);
-                detailsContainer.appendChild(about);
-                if (isAdmin) {
-                    const actionsDiv = makeElement("div", null, "profile-actions", null);
+          const imgContainer = makeElement("div", null, "image-container", null);
+          const profilePicture = document.createElement("img");
+          profilePicture.src = currentProfile.photoURL;
+          imgContainer.appendChild(profilePicture);
+          profileArticle.appendChild(imgContainer);
 
-                    const editBtn = createButton("Edit", "button", `edit-${index}`, "edit-btn", "edit");
-                    editBtn.onclick = () => handleEdit(currentProfile);
+          const detailsContainer = makeElement("div", null, "profile-info", null);
+          const profileName = makeElement("h3", null, null, currentProfile.name);
+          detailsContainer.appendChild(profileName);
 
-                    const deleteBtn = createButton("Delete", "button", `del-${index}`, "delete-btn", "delete");
-                    deleteBtn.onclick = async () => {
-                        const confirmed = await confirmDeleteModal(`Delete ${currentProfile.name}'s profile?`, "Deleting this profile will also delete their photo. This action cannot be undone.");
-                        if (confirmed) {
-                            try {
-                                if (currentProfile.photoURL) {
-                                    await deleteImage(currentProfile.photoURL);
-                                }
-                                await deleteProfile(currentProfile.name);
-                                await loadProfiles();
-                                createMessage("Profile and image deleted successfully.", "main-message", "delete");
-                            } catch (err) {
-                                console.error("Delete failed:", err);
-                                createMessage("Failed to fully delete the profile. Please try reloading the page", "main-message", "error");
-                            }
-                        }
-                    };
+          const about = makePBLock([
+            ["b", currentProfile.position],
+            ["br", ""],
+            ["span", currentProfile.about],
+          ]);
+          detailsContainer.appendChild(about);
 
-                    actionsDiv.appendChild(editBtn);
-                    actionsDiv.appendChild(deleteBtn);
-                    detailsContainer.appendChild(actionsDiv);
+          if (isAdmin) {
+            const actionsDiv = makeElement("div", null, "profile-actions", null);
+
+            const editBtn = createButton("Edit", "button", `edit-${index}`, "edit-btn", "edit");
+            editBtn.onclick = () => handleEdit(currentProfile);
+
+            const deleteBtn = createButton("Delete", "button", `del-${index}`, "delete-btn", "delete");
+            deleteBtn.onclick = async () => {
+              const confirmed = await confirmDeleteModal(
+                `Delete ${currentProfile.name}'s profile?`,
+                "Deleting this profile will also delete their photo. This action cannot be undone."
+              );
+              if (confirmed) {
+                try {
+                  if (currentProfile.photoURL) {
+                    await deleteImage(currentProfile.photoURL);
+                  }
+                  await deleteProfile(currentProfile.name);
+                  await loadProfiles();
+                  createMessage("Profile and image deleted successfully.", "main-message", "delete");
+                } catch (err) {
+                  console.error("Delete failed:", err);
+                  createMessage(
+                    "Failed to fully delete the profile. Please try reloading the page",
+                    "main-message",
+                    "error"
+                  );
                 }
+              }
+            };
 
-                profileArticle.appendChild(detailsContainer);
-                acc.appendChild(profileArticle);
-                return acc;
-            }, document.createElement("div"));
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(deleteBtn);
+            detailsContainer.appendChild(actionsDiv);
+          }
 
-            profilesDiv.setAttribute("id", "team-grid");
-            profilesContainer.appendChild(profilesDiv);
-            profilesSection.appendChild(profilesContainer);
-        }
-    });
+          profileArticle.appendChild(detailsContainer);
+          acc.appendChild(profileArticle);
+          return acc;
+        },
+        document.createElement("div")
+      );
+
+      profilesDiv.setAttribute("id", "team-grid");
+      profilesContainer.appendChild(profilesDiv);
+      profilesSection.appendChild(profilesContainer);
+    }
+  }
 }
 
 function handleEdit(profile: Profile) {
-    editingProfileId = profile.name || null;
-    const nameInput = document.getElementById('p-name') as HTMLInputElement;
-    nameInput.value = profile.name;
-    (document.getElementById('p-position') as HTMLInputElement).value = profile.position;
-    (document.getElementById('p-email') as HTMLInputElement).value = profile.email;
-    (document.getElementById('p-about') as HTMLTextAreaElement).value = profile.about;
-    (document.getElementById("country") as HTMLSelectElement).value = profile.country;
-    nameInput.readOnly = true;
-    nameInput.style.backgroundColor = "var(--table-even-row)";
-    nameInput.style.cursor = "not-allowed";
-    const submitBtn = document.getElementById('save-profile') as HTMLButtonElement;
-    const modalTitle = modalRoot.querySelector('h2');
+  editingProfileId = profile.name || null;
+  const nameInput = document.getElementById("p-name") as HTMLInputElement;
+  nameInput.value = profile.name;
+  (document.getElementById("p-position") as HTMLInputElement).value = profile.position;
+  (document.getElementById("p-email") as HTMLInputElement).value = profile.email;
+  (document.getElementById("p-about") as HTMLTextAreaElement).value = profile.about;
+  (document.getElementById("country") as HTMLSelectElement).value = profile.country;
 
-    if (modalTitle) modalTitle.innerText = `Editing: ${profile.name}`;
-    submitBtn.innerText = "Update Profile";
+  nameInput.readOnly = true;
+  nameInput.style.backgroundColor = "var(--table-even-row)";
+  nameInput.style.cursor = "not-allowed";
 
-    modalRoot.classList.remove("hide");
-    modalRoot.style.display = 'flex';
+  const submitBtn = document.getElementById("save-profile") as HTMLButtonElement;
+  const modalTitle = modalRoot.querySelector("h2");
+
+  if (modalTitle) modalTitle.innerText = `Editing: ${profile.name}`;
+  submitBtn.innerText = "Update Profile";
+
+  modalRoot.classList.remove("hide");
+  modalRoot.style.display = "flex";
 }
 
 function sendContactEmails(formData: FormData) {
-    const nameInput = formData.get("entry.1134764317");
-    if (!nameInput || nameInput.toString().trim() === "") {
-        createMessage("Please enter your name", "main-message", "error");
-        return;
-    }
-    const emailInput = formData.get("entry.1281748752");
-    if (!emailInput || emailInput.toString().trim() === "") {
-        createMessage("Please enter your email", "main-message", "error");
-        return;
-    }
-    if (!emailInput.toString().includes("@")) {
-        createMessage("Please enter a valid email", "main-message", "error");
-        return;
-    }
-    const commentsTextArea = formData.get("entry.1027877017");
-    if (!commentsTextArea || commentsTextArea.toString().trim() === "") {
-        createMessage("Please do not leave the comments field empty", "main-message", "error");
-        return;
-    }
+  const nameInput = formData.get("entry.1134764317");
+  if (!nameInput || nameInput.toString().trim() === "") {
+    createMessage("Please enter your name", "main-message", "error");
+    return;
+  }
+  const emailInput = formData.get("entry.1281748752");
+  if (!emailInput || emailInput.toString().trim() === "") {
+    createMessage("Please enter your email", "main-message", "error");
+    return;
+  }
+  if (!emailInput.toString().includes("@")) {
+    createMessage("Please enter a valid email", "main-message", "error");
+    return;
+  }
+  const commentsTextArea = formData.get("entry.1027877017");
+  if (!commentsTextArea || commentsTextArea.toString().trim() === "") {
+    createMessage("Please do not leave the comments field empty", "main-message", "error");
+    return;
+  }
 
-    const formAction: string =
-            "https://docs.google.com/forms/d/e/1FAIpQLSeqUlWUU4Zi7sMO5aYOInfRlX52iAIehrEGlFTzuqIHsa1BiA/formResponse";
-        fetch(formAction, {
-            method: "POST",
-            body: formData,
-            mode: "no-cors",
-        })
-            .then((response) => {
-                //Store the message to be displayed after redirected to the home page
-                console.log(response);
-                createMessage(
-                    "Your comments have been sent to our team",
-                    "main-message",
-                    "check_circle",
-                );
-                contactForm.reset();
-            })
-            .catch((error) => {
-                //Create an error message
-                console.error("Network Error:", error);
-                createMessage(
-                    "Error signing up. Please reload the page and try again",
-                    "main-message",
-                    "error",
-                );
-            });
+  const formAction =
+    "https://docs.google.com/forms/d/e/1FAIpQLSeqUlWUU4Zi7sMO5aYOInfRlX52iAIehrEGlFTzuqIHsa1BiA/formResponse";
+
+  fetch(formAction, {
+    method: "POST",
+    body: formData,
+    mode: "no-cors",
+  })
+    .then((response) => {
+      console.log(response);
+      createMessage(
+        "Your comments have been sent to our team",
+        "main-message",
+        "check_circle"
+      );
+      contactForm.reset();
+    })
+    .catch((error) => {
+      console.error("Network Error:", error);
+      createMessage(
+        "Error signing up. Please reload the page and try again",
+        "main-message",
+        "error"
+      );
+    });
 }
 
-await initializeApp('About Us', 'About Us', { type: 'page', pageName: 'About' });
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        const role = await getUserRole(user.uid);
-        isAdmin = (role === "admin");
+// Page Initialization
+await initializeApp("About Us", "About Us", { type: "page", pageName: "About" });
 
-        if (isAdmin) {
-            const addBtn = createButton("Add new member", "button", "addNew", "accent-button", "add");
-            addBtn.onclick = () => {
-                modalRoot.classList.remove("hide");
-                modalRoot.style.display = 'flex';
-            };
-            adminControls.appendChild(addBtn);
-        }
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    const role = await getUserRole(user.uid);
+    isAdmin = role === "admin";
+
+    if (isAdmin) {
+      const addBtn = createButton("Add new member", "button", "addNew", "accent-button", "add");
+      addBtn.onclick = () => {
+        modalRoot.classList.remove("hide");
+        modalRoot.style.display = "flex";
+      };
+      adminControls.appendChild(addBtn);
     }
-    await loadProfiles();
-    addProfileForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        handleSubmit();
-    })
-    if (loading) loading.remove();
-    viewSection.classList.remove("hide");
+  }
+
+  // 1. Fully load profiles asynchronously
+  await loadProfiles();
+
+  addProfileForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    handleSubmit();
+  });
+
+  if (loading) loading.remove();
+  viewSection.classList.remove("hide");
+
+  // 2. Scroll to section hash after DOM elements finish rendering
+  if (window.location.hash) {
+    const targetEl = document.querySelector(window.location.hash);
+    if (targetEl) {
+      setTimeout(() => {
+        targetEl.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    }
+  }
 });
-cancelButton?.addEventListener('click', () => {
-    modalRoot.classList.add("hide");
-    modalRoot.style.display = 'none';
-    addProfileForm.reset();
+
+cancelButton?.addEventListener("click", () => {
+  modalRoot.classList.add("hide");
+  modalRoot.style.display = "none";
+  addProfileForm.reset();
 });
 
 contactForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const formData = new FormData(contactForm);
-    sendContactEmails(formData);
+  e.preventDefault();
+  const formData = new FormData(contactForm);
+  sendContactEmails(formData);
 });
 
 contactForm.classList.remove("hide");
