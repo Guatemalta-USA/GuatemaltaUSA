@@ -239,7 +239,12 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
   });
 }
 
-export async function promptModal(messageHeader: string, placeholderText: string, buttonText: string, required: boolean): Promise<string> {
+export async function promptModal(
+  messageHeader: string, 
+  placeholderText: string, 
+  buttonText: string, 
+  required: boolean
+): Promise<string> {
   return new Promise((resolve) => {
     const modalRoot = makeElement("div", "modal-root", null, null);
     const modalOverlay = makeElement("div", null, "modal-overlay", null);
@@ -251,7 +256,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
 
     const formRow = makeElement("div", null, "form-row", null);
     const userInput = document.createElement("input") as HTMLInputElement;
-    userInput.type = "Text";
+    userInput.type = "text";
     userInput.placeholder = placeholderText;
     userInput.id = "userInput";
     userInput.name = "userInput";
@@ -266,7 +271,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !required) {
         closeModal();
         resolve("");
       }
@@ -274,20 +279,25 @@ export async function promptModal(messageHeader: string, placeholderText: string
 
     const submitBtn = createButton(buttonText, "button", "submit-btn", "accent-button", "add");
     submitBtn.onclick = function () {
+      if (required && !userInput.value.trim()) {
+        userInput.reportValidity?.();
+        return;
+      }
       closeModal();
       resolve(userInput.value);
-    }
-
-    const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
-    cancelButton.onclick = function () {
-      closeModal();
-      resolve("");
     };
 
     if (!required) {
       window.addEventListener("keydown", handleKeyDown);
-      buttonRow.append(cancelButton, submitBtn);
+      const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
+      cancelButton.onclick = function () {
+        closeModal();
+        resolve("");
+      };
+      buttonRow.appendChild(cancelButton);
     }
+
+    buttonRow.appendChild(submitBtn);
 
     modalContent.appendChild(buttonRow);
     modalOverlay.appendChild(modalContent);
@@ -295,6 +305,7 @@ export async function promptModal(messageHeader: string, placeholderText: string
 
     modalRoot.style.display = 'flex';
     document.body.appendChild(modalRoot);
+    userInput.focus();
   });
 }
 
