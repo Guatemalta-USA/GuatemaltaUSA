@@ -437,20 +437,21 @@ footer .footer-legal p {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
 .profile-info h3 {
   margin: 0;
+  padding: 0;
   font-size: 1.5rem;
 }
 
 .profile-position {
   font-weight: 600;
-  color: var(--link-color);
   text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0;
 }
 
 .profile-email {
@@ -458,7 +459,27 @@ footer .footer-legal p {
   color: var(--body-color);
   opacity: 0.8;
   text-decoration: none;
+  margin-top: 4px;
   margin-bottom: 8px;
+}
+
+.profile-bio {
+  margin: 0;
+  padding: 0;
+}
+
+.profile-bio p {
+  margin-top: 0;
+  margin-bottom: 0.5rem !important; /* Space between bio paragraphs */
+  line-height: 1.6;
+}
+
+.profile-bio p:first-child {
+  margin-top: 0 !important; /* Zero top space before first paragraph */
+}
+
+.profile-bio p:last-child {
+  margin-bottom: 0 !important; /* Zero trailing space after last paragraph */
 }
 
 /* =========================================

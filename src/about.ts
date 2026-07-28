@@ -15,7 +15,6 @@ import {
   createButton,
   createMessage,
   makeElement,
-  makePBLock,
 } from "./modules/utils";
 
 import "./css/style.css";
@@ -102,7 +101,6 @@ async function handleSubmit() {
 async function loadProfiles() {
   profilesSection.innerHTML = "";
 
-  // Using for...of so async operations are properly awaited sequentially
   for (const country of countries) {
     const profilesForCountry: Profile[] = await getProfilesByCountry(country);
 
@@ -135,12 +133,31 @@ async function loadProfiles() {
           const profileName = makeElement("h3", null, null, currentProfile.name);
           detailsContainer.appendChild(profileName);
 
-          const about = makePBLock([
-            ["b", currentProfile.position],
-            ["br", ""],
-            ["span", currentProfile.about],
-          ]);
-          detailsContainer.appendChild(about);
+          const positionEl = makeElement("p", null, "profile-position", null);
+          const positionBold = document.createElement("b");
+          positionBold.textContent = currentProfile.position;
+          positionEl.appendChild(positionBold);
+          detailsContainer.appendChild(positionEl);
+
+          // Bio paragraph container
+          const aboutEl = makeElement("div", null, "profile-bio", null);
+
+          // Split by ANY newline character (\n or \r\n)
+          const paragraphs = currentProfile.about
+            .split(/\r?\n/)
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
+
+          paragraphs.forEach((paragraphText) => {
+            // Replace **bold** syntax with <b> tags
+            const formattedText = paragraphText.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+
+            const p = document.createElement("p");
+            p.innerHTML = formattedText;
+            aboutEl.appendChild(p);
+          });
+
+          detailsContainer.appendChild(aboutEl);
 
           if (isAdmin) {
             const actionsDiv = makeElement("div", null, "profile-actions", null);
@@ -281,7 +298,6 @@ auth.onAuthStateChanged(async (user) => {
     }
   }
 
-  // 1. Fully load profiles asynchronously
   await loadProfiles();
 
   addProfileForm.addEventListener("submit", (e) => {
@@ -292,7 +308,6 @@ auth.onAuthStateChanged(async (user) => {
   if (loading) loading.remove();
   viewSection.classList.remove("hide");
 
-  // 2. Scroll to section hash after DOM elements finish rendering
   if (window.location.hash) {
     const targetEl = document.querySelector(window.location.hash);
     if (targetEl) {
