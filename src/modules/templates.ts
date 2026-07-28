@@ -135,6 +135,9 @@ export function loadHeader() {
     logo.src = "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png";
     logo.alt = "Guatemalta USA";
     logo.classList.add("logo");
+    logo.onclick = function () {
+      navigateTo("/");
+    }
     headerElement.appendChild(logo);
 
     const mission = makeElement("p", "mission", null, null);

@@ -161,7 +161,7 @@ header {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 5px;
 }
 
 header .logo {
@@ -169,10 +169,10 @@ header .logo {
   width: auto;
   display: block;
   object-fit: contain;
+  cursor: pointer;
 }
 
 header #mission {
-  width: 100%;
   font-size: 1.05rem;
   line-height: 1.5;
   margin: 0;
@@ -462,14 +462,14 @@ footer .footer-legal p {
 }
 
 /* =========================================
-   5. MOBILE NAV TOGGLE (Targeting ID and Class)
+   5. MOBILE NAV TOGGLE
    ========================================= */
 #mobile-nav-toggle,
 .mobile-nav-toggle {
-  display: none !important; /* Strictly hidden on desktop */
+  display: none !important;
   background: transparent;
   border: none;
-  color: var(--header-color);
+  color: var(--body-color);
   font-size: 36px;
   cursor: pointer;
   padding: 10px;
@@ -894,7 +894,6 @@ textarea {
     right: 20px;
     background: none;
     border: none;
-    color: #fff;
     font-size: 1.8rem;
     cursor: pointer;
   }
