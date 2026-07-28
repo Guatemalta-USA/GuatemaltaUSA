@@ -176,6 +176,14 @@ export function loadFooter() {
         navigateTo("/privatepolicy");
     }
     ul.appendChild(privatePolicy);
+
+    const Financial = document.createElement("a");
+    Financial.textContent = "Financial Transparency";
+    Financial.className = "link";
+    Financial.onclick = function () {
+      navigateTo("/financialtransparency");
+    }
+    ul.appendChild(Financial);
     footerElement.appendChild(ul);
 
     const footerLegal = makeElement("div", null, "footer-legal", null);
