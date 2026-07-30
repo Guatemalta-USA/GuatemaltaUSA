@@ -1,5 +1,3 @@
-import { getUserRole } from "./firebase/authService.js";
-import { auth } from "./firebase/firebase.js";
 import { getProjectsByStatus } from "./firebase/firebaseService.js";
 import { initializeApp } from "./main.js";
 import type { Project } from "./models.js";
@@ -15,18 +13,13 @@ async function setUpCurrentProjectsPage() {
 
     const container = document.getElementById("projects-container");
     const loading = document.getElementById("loading");
-    const adminActions = document.getElementById("admin-actions") as HTMLElement;
+    const buttons = document.getElementById("buttons");
 
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            const role = await getUserRole(user.uid);
-            if (role === "admin") {
-                const newProjectButton = createButton("Start New Project", "button", "new-project", "accent-button", "add");
-                newProjectButton.addEventListener("click", () => navigateTo("/impact/editproject"));
-                adminActions.appendChild(newProjectButton);
-            }
-        }
-    });
+    if (buttons) {
+        const currentButton = createButton("Current Projects", "button", "current", "accent-button");
+        currentButton.addEventListener("click", () => navigateTo("/impact/currentprojects"));
+        buttons.appendChild(currentButton);
+    }
 
     if (!container) return;
 

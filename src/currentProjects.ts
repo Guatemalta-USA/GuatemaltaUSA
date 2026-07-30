@@ -15,7 +15,7 @@ async function setUpCurrentProjectsPage() {
 
     const container = document.getElementById("projects-container");
     const loading = document.getElementById("loading");
-    const adminActions = document.getElementById("admin-actions") as HTMLElement;
+    const actionButtons = document.getElementById("action-buttons") as HTMLElement;
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
@@ -23,10 +23,13 @@ async function setUpCurrentProjectsPage() {
             if (role === "admin") {
                 const newProjectButton = createButton("Start New Project", "button", "new-project", "accent-button", "add");
                 newProjectButton.addEventListener("click", () => navigateTo("/impact/editproject"));
-                adminActions.appendChild(newProjectButton);
+                actionButtons.appendChild(newProjectButton);
             }
         }
     });
+    const pastProjectsButton = createButton("Past Projects", "button", "past", "accent-button");
+    pastProjectsButton.addEventListener("click", () => navigateTo("/impact/pastprojects"));
+    actionButtons.appendChild(pastProjectsButton);
 
     if (!container) return;
 

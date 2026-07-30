@@ -139,17 +139,13 @@ async function loadProfiles() {
           positionEl.appendChild(positionBold);
           detailsContainer.appendChild(positionEl);
 
-          // Bio paragraph container
           const aboutEl = makeElement("div", null, "profile-bio", null);
-
-          // Split by ANY newline character (\n or \r\n)
           const paragraphs = currentProfile.about
             .split(/\r?\n/)
             .map((p) => p.trim())
             .filter((p) => p.length > 0);
 
           paragraphs.forEach((paragraphText) => {
-            // Replace **bold** syntax with <b> tags
             const formattedText = paragraphText.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
 
             const p = document.createElement("p");

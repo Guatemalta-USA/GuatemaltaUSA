@@ -43,6 +43,7 @@ export default defineConfig({
         posts: resolve(__dirname, 'blog.html'),
         post: resolve(__dirname, 'blog/post.html'),
         currentprojects: resolve(__dirname, 'impact/currentprojects.html'),
+        pastprojects: resolve(__dirname, 'impact/pastprojects.html'),
         project: resolve(__dirname, 'impact/project.html'),
         editproject: resolve(__dirname, 'impact/editproject.html'),
         financialtransparency: resolve(__dirname, 'financialtransparency.html'),
