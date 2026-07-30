@@ -60,7 +60,7 @@ async function setUpEditProjectPage() {
     });
     const publishedCheckbox = document.getElementById("published-toggle") as HTMLInputElement;
     const publishedLabel = document.getElementById("published-label") as HTMLElement;
-    publishedLabel.addEventListener("change", () => {
+    publishedCheckbox.addEventListener("change", () => {
         publishedLabel.innerText = publishedCheckbox.checked ? "Published" : "Unpublished";
     });
     const saveBtn = document.getElementById('save-btn');
