@@ -221,7 +221,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             const dbErr = await dbResponse.text();
             throw new Error(`Firestore REST insertion failed: ${dbErr}`);
           }
-          await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
+          // Change to sendSponsorshipEmail
+          //await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
+          await sendDataEmail(env.BREVO_API_KEY, JSON.stringify(event.data))
           console.log(`Successfully processed Donor ${fullName} (${refCode})`);
         } else if (donationAmount === 10) {
           await sendDataEmail(env.BREVO_API_KEY, JSON.stringify(event.data));

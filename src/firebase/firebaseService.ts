@@ -38,8 +38,8 @@ function slugify(text: string): string {
     return text
         .toLowerCase()
         .trim()
-        .replace(/[^\w ]+/g, '') // Remove special characters
-        .replace(/ +/g, '-');    // Replace spaces with hyphens
+        .replace(/[^\w ]+/g, '')
+        .replace(/ +/g, '-');
 }
 
 export async function addPage(pageData: PageContents): Promise<void> {
@@ -360,7 +360,7 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]> {
-    const q = query(projectsCol, where("currentProject", "==", isCurrent), where("published", "==", true));
+    const q = query(projectsCol, where("currentProject", "==", isCurrent), where("published", "==", true), orderBy("projectTitle", "asc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data());
 }
