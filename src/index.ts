@@ -15,32 +15,32 @@ const photosSection = document.getElementById("home-photos") as HTMLElement;
 const currentProjectsSection = document.getElementById("home-current") as HTMLElement;
 const updatesSection = document.getElementById("home-updates") as HTMLElement;
 
-initializeApp("Home", "Home").then(async () => {
-  document.title = "Guatemalta USA | Sustainable Housing & Education Nonprofit";
-
-  const [photosResult, projectsResult, postsResult] = await Promise.allSettled([
-    getPhotosFromGithub("https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/homepage/"),
-    getProjectsByStatus(true),
-    getAllPosts(),
-  ]);
-
+async function loadPhotos() {
   const placeholderGallery = document.getElementById("placeholder-container") as HTMLElement;
-  if (photosResult.status === "fulfilled") {
-    const photos = displayGallery(photosResult.value);
+  try {
+    const imagesPaths = await getPhotosFromGithub(
+      "https://raw.githubusercontent.com/Guatemalta-USA/photos/refs/heads/main/homepage/"
+    );
+    const photos = displayGallery(imagesPaths);
     photosSection.appendChild(photos);
     setupControls();
-  } else {
-    console.error("Error loading gallery photos:", photosResult.reason);
+  } catch (err) {
+    console.error("Error loading gallery photos:", err);
+  } finally {
+    if (placeholderGallery) {
+      placeholderGallery.remove();
+    }
   }
-  if (placeholderGallery) {
-    placeholderGallery.remove();
-  }
+}
 
+async function loadProjects() {
   const projectsHeading = makeElement("h1", null, null, "Current Projects");
-  if (projectsResult.status === "fulfilled") {
-    const currentProjects: Project[] = projectsResult.value;
+  try {
+    const currentProjects: Project[] = await getProjectsByStatus(true);
 
-    if (loadingProjects) loadingProjects.remove();
+    if (loadingProjects) {
+      loadingProjects.remove();
+    }
 
     if (currentProjects.length === 0) {
       currentProjectsSection.innerHTML = "<p>No projects yet. Check back soon!</p>";
@@ -76,16 +76,21 @@ initializeApp("Home", "Home").then(async () => {
 
       currentProjectsSection.appendChild(fragment);
     }
-  } else {
-    console.error("Error loading projects:", projectsResult.reason);
+  } catch (err) {
+    console.error("Error loading projects:", err);
     currentProjectsSection.innerHTML = "<p>Error loading projects.</p>";
   }
   currentProjectsSection.prepend(projectsHeading);
-  const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts");
-  if (postsResult.status === "fulfilled") {
-    const posts: Post[] = postsResult.value;
+}
 
-    if (loadingUpdates) loadingUpdates.remove();
+async function loadPosts() {
+  const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts");
+  try {
+    const posts: Post[] = await getAllPosts();
+
+    if (loadingUpdates) {
+      loadingUpdates.remove();
+    }
 
     if (posts.length === 0) {
       updatesSection.innerHTML = "<p>No posts yet. Check back soon!</p>";
@@ -129,9 +134,16 @@ initializeApp("Home", "Home").then(async () => {
 
       updatesSection.appendChild(fragment);
     }
-  } else {
-    console.error("Error loading posts:", postsResult.reason);
+  } catch (err) {
+    console.error("Error loading posts:", err);
     updatesSection.innerHTML = "<p>Error loading posts.</p>";
   }
   updatesSection.prepend(updatesHeading);
+}
+
+initializeApp("Home", "Home").then(() => {
+  document.title = "Guatemalta USA | Sustainable Housing & Education Nonprofit";
+  loadPhotos();
+  loadProjects();
+  loadPosts();
 });
