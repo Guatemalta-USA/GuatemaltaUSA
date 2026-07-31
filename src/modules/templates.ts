@@ -5,32 +5,32 @@ import { getUserRole, signOutUser } from "../firebase/authService.js";
 import { getDonateButtonList } from "../firebase/firebaseService.js";
 
 type SubNavItem = {
-    label: string;
-    path: AppPath;
-    hash: string;
+  label: string;
+  path: AppPath;
+  hash: string;
 };
 
 type NavItem = {
-    label: string;
-    path: AppPath | "donate";
-    children?: SubNavItem[];
+  label: string;
+  path: AppPath | "donate";
+  children?: SubNavItem[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-    { label: "Home", path: "/" },
-    { label: "Impact", path: "/impact/currentprojects" },
-    { label: "Blog", path: "/blog" },
-    {
-        label: "About Us",
-        path: "/about",
-        children: [
-            { label: "Our Story", path: "/about", hash: "#story" },
-            { label: "Our Team", path: "/about", hash: "#team" },
-            { label: "Contact Us", path: "/about", hash: "#contact" },
-        ],
-    },
-    { label: "Mailing List", path: "/mailinglist" },
-    { label: "Donate", path: "donate" },
+  { label: "Home", path: "/" },
+  { label: "Impact", path: "/impact/currentprojects" },
+  { label: "Blog", path: "/blog" },
+  {
+    label: "About Us",
+    path: "/about",
+    children: [
+      { label: "Our Story", path: "/about", hash: "#story" },
+      { label: "Our Team", path: "/about", hash: "#team" },
+      { label: "Contact Us", path: "/about", hash: "#contact" },
+    ],
+  },
+  { label: "Mailing List", path: "/mailinglist" },
+  { label: "Donate", path: "donate" },
 ];
 
 let unsubscribeAuth: (() => void) | null = null;
@@ -176,73 +176,99 @@ export function loadNav(activeNavLink: string) {
 }
 
 export function loadHeader() {
-    const headerElement = document.querySelector("header") as HTMLElement;
-    if (!headerElement) return;
+  const headerElement = document.querySelector("header") as HTMLElement;
+  if (!headerElement) return;
 
-    const logo: HTMLImageElement = document.createElement("img");
-    logo.src = "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png";
-    logo.alt = "Guatemalta USA";
-    logo.classList.add("logo");
-    logo.onclick = function () {
-      navigateTo("/");
-    }
-    headerElement.appendChild(logo);
+  headerElement.innerHTML = "";
 
-    const mission = makeElement("p", "mission", null, null);
-    const italics = makeElement("i", null, null, "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.");
-    mission.appendChild(italics);
-    headerElement.appendChild(mission);
+  const logo: HTMLImageElement = document.createElement("img");
+  logo.src = "https://raw.githubusercontent.com/Guatemalta-USA/GuatemaltaUSA/refs/heads/main/images/logo.png";
+  logo.alt = "Guatemalta USA";
+  logo.classList.add("logo");
+  logo.onclick = function () {
+    navigateTo("/");
+  };
+  headerElement.appendChild(logo);
 
-    const mobileNavToggleBtn = document.createElement("button") as HTMLButtonElement;
-    mobileNavToggleBtn.id = "mobile-nav-toggle";
-    mobileNavToggleBtn.classList.add("material-symbols-outlined");
-    mobileNavToggleBtn.textContent = "menu";
-    mobileNavToggleBtn.setAttribute("aria-label", "Toggle navigation");
-    mobileNavToggleBtn.setAttribute("aria-expanded", "false");
-    mobileNavToggleBtn.addEventListener("click", () => {
-        const nav = document.querySelector("nav");
-        if (!nav) return;
+  const mission = makeElement("p", "mission", null, null);
+  const italics = makeElement(
+    "i",
+    null,
+    null,
+    "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities."
+  );
+  mission.appendChild(italics);
+  headerElement.appendChild(mission);
 
-        const isOpen = nav.classList.toggle("mobile-open");
-        mobileNavToggleBtn.setAttribute("aria-expanded", String(isOpen));
-        mobileNavToggleBtn.textContent = isOpen ? "close" : "menu";
-    });
+  const mobileNavToggleBtn = document.createElement("button") as HTMLButtonElement;
+  mobileNavToggleBtn.id = "mobile-nav-toggle";
+  mobileNavToggleBtn.classList.add("material-symbols-outlined");
+  mobileNavToggleBtn.textContent = "menu";
+  mobileNavToggleBtn.setAttribute("aria-label", "Toggle navigation");
+  mobileNavToggleBtn.setAttribute("aria-expanded", "false");
 
-    headerElement.appendChild(mobileNavToggleBtn);
+  mobileNavToggleBtn.addEventListener("click", () => {
+    const nav = document.querySelector("nav");
+    if (!nav) return;
+
+    const isOpen = nav.classList.toggle("mobile-open");
+    mobileNavToggleBtn.setAttribute("aria-expanded", String(isOpen));
+    mobileNavToggleBtn.textContent = isOpen ? "close" : "menu";
+  });
+
+  headerElement.appendChild(mobileNavToggleBtn);
 }
 
 export function loadFooter() {
-    const footerElement = document.querySelector("footer") as HTMLElement;
-    const ul = document.createElement("ul");
-    const guatemalta = createSocialLink("guatemalta", 20);
-    if (guatemalta) ul.appendChild(guatemalta);
-    const facebook = createSocialLink("facebook", 20);
-    if (facebook) ul.appendChild(facebook);
-    const instagram = createSocialLink("instagram", 20);
-    if (instagram) ul.appendChild(instagram);
-    const privatePolicy = document.createElement("a");
-    privatePolicy.textContent = "Privacy Policy";
-    privatePolicy.className = "link";
-    privatePolicy.onclick = function () {
-        navigateTo("/privatepolicy");
-    }
-    ul.appendChild(privatePolicy);
+  const footerElement = document.querySelector("footer") as HTMLElement;
+  if (!footerElement) return;
 
-    const Financial = document.createElement("a");
-    Financial.textContent = "Financial Transparency";
-    Financial.className = "link";
-    Financial.onclick = function () {
-      navigateTo("/financialtransparency");
-    }
-    ul.appendChild(Financial);
-    footerElement.appendChild(ul);
+  footerElement.innerHTML = "";
 
-    const footerLegal = makeElement("div", null, "footer-legal", null);
-    const nameP = makeElement("p", null, null, `©${new Date().getFullYear()} Guatemalta USA, INC. All rights reserved.`);
-    const addressP = makeElement("p", null, null, "18928 Rivers Edge Dr. E. Chagrin Falls, OH 44023");
-    const registeredP = makeElement("p", null, null, "Registered 501(c)(3) Nonprofit Organization | EIN: 41-4897982")
-    footerLegal.append(nameP, addressP, registeredP);
-    footerElement.appendChild(footerLegal);
+  const ul = document.createElement("ul");
+  const guatemalta = createSocialLink("guatemalta", 20);
+  if (guatemalta) ul.appendChild(guatemalta);
+  const facebook = createSocialLink("facebook", 20);
+  if (facebook) ul.appendChild(facebook);
+  const instagram = createSocialLink("instagram", 20);
+  if (instagram) ul.appendChild(instagram);
 
+  const privatePolicy = document.createElement("a");
+  privatePolicy.textContent = "Privacy Policy";
+  privatePolicy.className = "link";
+  privatePolicy.onclick = function () {
+    navigateTo("/privatepolicy");
+  };
+  ul.appendChild(privatePolicy);
 
+  const financial = document.createElement("a");
+  financial.textContent = "Financial Transparency";
+  financial.className = "link";
+  financial.onclick = function () {
+    navigateTo("/financialtransparency");
+  };
+  ul.appendChild(financial);
+  footerElement.appendChild(ul);
+
+  const footerLegal = makeElement("div", null, "footer-legal", null);
+  const nameP = makeElement(
+    "p",
+    null,
+    null,
+    `©${new Date().getFullYear()} Guatemalta USA, INC. All rights reserved.`
+  );
+  const addressP = makeElement(
+    "p",
+    null,
+    null,
+    "18928 Rivers Edge Dr. E. Chagrin Falls, OH 44023"
+  );
+  const registeredP = makeElement(
+    "p",
+    null,
+    null,
+    "Registered 501(c)(3) Nonprofit Organization | EIN: 41-4897982"
+  );
+  footerLegal.append(nameP, addressP, registeredP);
+  footerElement.appendChild(footerLegal);
 }
