@@ -33,6 +33,8 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Donate", path: "donate" },
 ];
 
+let unsubscribeAuth: (() => void) | null = null;
+
 export function loadNav(activeNavLink: string) {
   const nav = document.querySelector("nav") as HTMLElement;
   if (!nav) return;
@@ -46,117 +48,129 @@ export function loadNav(activeNavLink: string) {
     }
   };
 
-const handleDonateClick = async (e: MouseEvent) => {
-  e.preventDefault();
-  closeMobileNav();
+  const handleDonateClick = async (e: MouseEvent) => {
+    e.preventDefault();
+    closeMobileNav();
 
-  try {
-    const donateButtonLinks = await getDonateButtonList();
+    try {
+      const donateButtonLinks = await getDonateButtonList();
 
-    if (!donateButtonLinks || donateButtonLinks.length === 0) {
-      navigateTo("/donate" as any);
-      return;
+      if (!donateButtonLinks || donateButtonLinks.length === 0) {
+        navigateTo("/donate" as any);
+        return;
+      }
+
+      const selectedProject = await donateListModal(
+        "Select a project to support",
+        donateButtonLinks
+      );
+
+      if (selectedProject) {
+        navigateTo(`/donate?id=${selectedProject.formId}` as any);
+      }
+    } catch (error) {
+      console.error("Error opening donate list modal:", error);
     }
+  };
 
-    const selectedProject = await donateListModal(
-      "Select a project to support",
-      donateButtonLinks
-    );
+  nav.innerHTML = "";
 
-    if (selectedProject) {
-      navigateTo(`/donate?id=${selectedProject.formId}` as any);
-    }
-  } catch (error) {
-    console.error("Error opening donate list modal:", error);
-  }
-};
+  NAV_ITEMS.forEach(({ label, path, children }) => {
+    if (path === "donate") {
+      const donateLink = createLink(label, "donate-nav-btn", false);
+      donateLink.addEventListener("click", handleDonateClick);
+      donateLink.classList.add("donate-button");
 
-  auth.onAuthStateChanged(async (user) => {
-    nav.innerHTML = "";
+      if (activeNavLink === label) {
+        donateLink.setAttribute("aria-current", "page");
+      }
 
-    NAV_ITEMS.forEach(({ label, path, children }) => {
-      if (path === "donate") {
-        const donateLink = createLink(label, "donate-nav-btn", false);
-        donateLink.addEventListener("click", handleDonateClick);
-        donateLink.classList.add("donate-button");
+      nav.appendChild(donateLink);
+    } else if (children && children.length > 0) {
+      const dropdownContainer = document.createElement("div");
+      dropdownContainer.className = "nav-dropdown-container";
 
-        if (activeNavLink === label) {
-          donateLink.setAttribute("aria-current", "page");
-        }
+      const dropdownHeader = document.createElement("div");
+      dropdownHeader.className = "dropdown-header";
 
-        nav.appendChild(donateLink);
-      } else if (children && children.length > 0) {
-        const dropdownContainer = document.createElement("div");
-        dropdownContainer.className = "nav-dropdown-container";
+      const parentLink = createLink(label, "dropdown-toggle", false);
+      parentLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeMobileNav();
+        navigateTo(path as any);
+      });
 
-        const dropdownHeader = document.createElement("div");
-        dropdownHeader.className = "dropdown-header";
+      if (activeNavLink === label) {
+        parentLink.setAttribute("aria-current", "page");
+      }
 
-        const parentLink = createLink(label, "dropdown-toggle", false);
-        parentLink.addEventListener("click", (e) => {
+      dropdownHeader.appendChild(parentLink);
+      dropdownContainer.appendChild(dropdownHeader);
+
+      const dropdownMenu = document.createElement("ul");
+      dropdownMenu.className = "nav-dropdown-menu";
+
+      children.forEach((subItem) => {
+        const li = document.createElement("li");
+        li.className = "nav-dropdown-item";
+
+        const subLink = createLink(subItem.label, "", false);
+        subLink.addEventListener("click", (e) => {
           e.preventDefault();
           closeMobileNav();
-          navigateTo(path as any);
+          navigateTo((subItem.path + subItem.hash) as any);
         });
 
-        if (activeNavLink === label) {
-          parentLink.setAttribute("aria-current", "page");
-        }
+        li.appendChild(subLink);
+        dropdownMenu.appendChild(li);
+      });
 
-        dropdownHeader.appendChild(parentLink);
-        dropdownContainer.appendChild(dropdownHeader);
+      dropdownContainer.appendChild(dropdownMenu);
+      nav.appendChild(dropdownContainer);
+    } else {
+      const link = createLink(label, "", false);
+      link.addEventListener("click", () => {
+        closeMobileNav();
+        navigateTo(path as any);
+      });
 
-        const dropdownMenu = document.createElement("ul");
-        dropdownMenu.className = "nav-dropdown-menu";
-
-        children.forEach((subItem) => {
-          const li = document.createElement("li");
-          li.className = "nav-dropdown-item";
-
-          const subLink = createLink(subItem.label, "", false);
-          subLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            closeMobileNav();
-            navigateTo((subItem.path + subItem.hash) as any);
-          });
-
-          li.appendChild(subLink);
-          dropdownMenu.appendChild(li);
-        });
-
-        dropdownContainer.appendChild(dropdownMenu);
-        nav.appendChild(dropdownContainer);
-      } else {
-        const link = createLink(label, "", false);
-        link.addEventListener("click", () => {
-          closeMobileNav();
-          navigateTo(path as any);
-        });
-
-        if (activeNavLink === label) {
-          link.setAttribute("aria-current", "page");
-        }
-        nav.appendChild(link);
+      if (activeNavLink === label) {
+        link.setAttribute("aria-current", "page");
       }
-    });
+      nav.appendChild(link);
+    }
+  });
+
+  const authLinksContainer = document.createElement("div");
+  authLinksContainer.className = "auth-links";
+  nav.appendChild(authLinksContainer);
+
+  if (unsubscribeAuth) {
+    unsubscribeAuth();
+  }
+
+  unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+    authLinksContainer.innerHTML = "";
 
     if (user) {
       const userRole = await getUserRole(user.uid);
+
       if (userRole === "admin") {
         const admin = makeElement("a", "admin", "", "Admin");
         admin.addEventListener("click", () => {
           closeMobileNav();
           navigateTo("/admin");
         });
-        nav.appendChild(admin);
+        authLinksContainer.appendChild(admin);
       }
+
       const logout = makeElement("a", "logout", "", "Log Out");
       logout.addEventListener("click", (e) => {
         e.preventDefault();
         closeMobileNav();
         signOutUser();
       });
-      nav.appendChild(logout);
+      authLinksContainer.appendChild(logout);
     }
   });
 }
