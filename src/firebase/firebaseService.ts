@@ -1,4 +1,4 @@
-import { ChildSponsorship, Donor, PageContents, Post, Project, type CampaignPageId, type Profile, type refStatus } from "../models";
+import { ChildSponsorship, Donor, PageContents, Post, Project, type ProjectInfo, type Profile, type refStatus } from "../models";
 import {
     collection,
     deleteDoc,
@@ -314,18 +314,13 @@ export async function getPostsWithLinkedProjectId(projectId: string): Promise<Po
 }
 
 export async function savePost(post: Post): Promise<string> {
-    // If the post already has an ID (e.g., editing an existing post)
     if (post.id) {
         const docRef = doc(db, POSTS_PATH, post.id);
         await updateDoc(docRef, post.toFirestore());
         return post.id;
     }
-
-    // For NEW posts: generate ID from title
     const customId = slugify(post.postTitle);
     const docRef = doc(db, POSTS_PATH, customId);
-
-    // We use setDoc because we are specifying the ID manually
     await setDoc(docRef, post.toFirestore());
 
     return customId;
@@ -366,7 +361,7 @@ export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]
 }
 
 export async function getUnpublishedProjects(): Promise<Project[]> {
-    const q = query(projectsCol,  where("published", "==", false));
+    const q = query(projectsCol, where("published", "==", false));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data());
 }
@@ -403,26 +398,68 @@ export async function deleteProject(id: string): Promise<void> {
     await deleteDoc(docRef);
 }
 
-//Page campaign id
-export async function setPageCampaignId(page: CampaignPageId) {
+// Donate Button List
+export async function setProjectLink(project: ProjectInfo) {
     try {
-        const docRef = doc(db, "pageCampaignIds", page["pageName"]);
-        await setDoc(docRef, page, { merge: true });
+        const collectionRef = collection(db, "donateButtonList");
+        const docRef = project.id ? doc(collectionRef, project.id) : doc(collectionRef);
 
+        const projectData = {
+            ...project,
+            id: docRef.id,
+        };
+
+        await setDoc(docRef, projectData, { merge: true });
+        return docRef.id;
     } catch (error) {
-        console.error("Error setting campaign Id for page: ", error);
-        throw new Error("Failed to set campaign ID");
+        console.error("Error setting project link: ", error);
+        throw new Error("Failed to set project in Donate Button List");
     }
 }
 
-export async function getPageCampaignId(pageName: string): Promise<string | null> {
-    const docRef = doc(db, "pageCampaignIds", pageName);
-    const docSnap = await getDoc(docRef);
+export async function getDonateButtonList() {
+    try {
+        const q = query(collection(db, "donateButtonList"), orderBy("projectName", "asc"));
+        const querySnapshot = await getDocs(q);
 
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        return data ? data.campaignId : null;
+        const donateList: ProjectInfo[] = querySnapshot.docs.map(doc => ({
+            ...doc.data()
+        } as ProjectInfo));
+        return donateList;
+    } catch (error: any) {
+        console.error("Error fetching Donate Button List", error);
+        throw new Error("Failed to fetch Donate Button List");
     }
+}
 
-    return null;
+export async function getProjectLinkByFormId(formId: string): Promise<ProjectInfo | null> {
+    try {
+        const donateListRef = collection(db, "donateButtonList");
+        const q = query(donateListRef, where("formId", "==", formId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
+            return {
+                id: docSnap.id,
+                ...docSnap.data()
+            } as ProjectInfo;
+        }
+
+        console.warn(`No project found with formId: ${formId}`);
+        return null;
+    } catch (error) {
+        console.error("Error fetching project link by formId:", error);
+        throw new Error("Failed to retrieve project link");
+    }
+}
+
+export async function deleteProjectFromDonateList(docId: string) {
+    try {
+        const docRef = doc(db, "donateButtonList", docId);
+        await deleteDoc(docRef);
+    } catch (error: any) {
+        console.error("Error deleting project from Donate Button List:", error);
+        throw new Error("Failed to delete project from Donate Button List");
+    }
 }

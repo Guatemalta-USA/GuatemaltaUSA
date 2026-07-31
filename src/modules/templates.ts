@@ -1,7 +1,8 @@
 import { navigateTo, type AppPath } from "./navigate.js";
-import { createGiveButterWidget, createLink, createSocialLink, makeElement } from "./utils.js";
+import { createLink, createSocialLink, donateListModal, makeElement } from "./utils.js";
 import { auth } from "../firebase/firebase.js";
 import { getUserRole, signOutUser } from "../firebase/authService.js";
+import { getDonateButtonList } from "../firebase/firebaseService.js";
 
 type SubNavItem = {
     label: string;
@@ -11,7 +12,7 @@ type SubNavItem = {
 
 type NavItem = {
     label: string;
-    path: AppPath | "givebutter";
+    path: AppPath | "donate";
     children?: SubNavItem[];
 };
 
@@ -29,10 +30,10 @@ const NAV_ITEMS: NavItem[] = [
         ],
     },
     { label: "Mailing List", path: "/mailinglist" },
-    { label: "Donate", path: "givebutter" },
+    { label: "Donate", path: "donate" },
 ];
 
-export function loadNav(activeNavLink: string, donateID: string | null = null) {
+export function loadNav(activeNavLink: string) {
   const nav = document.querySelector("nav") as HTMLElement;
   if (!nav) return;
 
@@ -45,13 +46,45 @@ export function loadNav(activeNavLink: string, donateID: string | null = null) {
     }
   };
 
+const handleDonateClick = async (e: MouseEvent) => {
+  e.preventDefault();
+  closeMobileNav();
+
+  try {
+    const donateButtonLinks = await getDonateButtonList();
+
+    if (!donateButtonLinks || donateButtonLinks.length === 0) {
+      navigateTo("/donate" as any);
+      return;
+    }
+
+    const selectedProject = await donateListModal(
+      "Select a project to support",
+      donateButtonLinks
+    );
+
+    if (selectedProject) {
+      navigateTo(`/donate?id=${selectedProject.formId}` as any);
+    }
+  } catch (error) {
+    console.error("Error opening donate list modal:", error);
+  }
+};
+
   auth.onAuthStateChanged(async (user) => {
     nav.innerHTML = "";
 
     NAV_ITEMS.forEach(({ label, path, children }) => {
-      if (path === "givebutter") {
-        const widget = createGiveButterWidget(donateID, "button");
-        nav.appendChild(widget);
+      if (path === "donate") {
+        const donateLink = createLink(label, "donate-nav-btn", false);
+        donateLink.addEventListener("click", handleDonateClick);
+        donateLink.classList.add("donate-button");
+
+        if (activeNavLink === label) {
+          donateLink.setAttribute("aria-current", "page");
+        }
+
+        nav.appendChild(donateLink);
       } else if (children && children.length > 0) {
         const dropdownContainer = document.createElement("div");
         dropdownContainer.className = "nav-dropdown-container";
@@ -96,7 +129,7 @@ export function loadNav(activeNavLink: string, donateID: string | null = null) {
       } else {
         const link = createLink(label, "", false);
         link.addEventListener("click", () => {
-          closeMobileNav(); // Close drawer
+          closeMobileNav();
           navigateTo(path as any);
         });
 
@@ -127,6 +160,7 @@ export function loadNav(activeNavLink: string, donateID: string | null = null) {
     }
   });
 }
+
 export function loadHeader() {
     const headerElement = document.querySelector("header") as HTMLElement;
     if (!headerElement) return;

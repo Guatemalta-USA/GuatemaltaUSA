@@ -1,9 +1,9 @@
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
 import { initializeApp } from "./main.js";
-import { confirmDeleteModal, createButton, createInputRow, createMessage, makeElement, promptModal } from "./modules/utils.js";
-import type { CampaignPageId, ChildSponsorship, refStatus } from "./models.js";
-import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, setPageCampaignId, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
+import { confirmDeleteModal, createButton, createInputRow, createMessage, makeElement } from "./modules/utils.js";
+import type { ChildSponsorship, refStatus } from "./models.js";
+import { addChildSponsorship, deleteChildSponsorship, getAllChildSponsorshipsByYear, getAllDonors, updateDonor, validateReferralCode } from "./firebase/firebaseService.js";
 import { deleteImage, resizeImage, uploadImage } from "./modules/imageService.js";
 import './css/style.css';
 import './css/grid.css';
@@ -70,19 +70,7 @@ auth.onAuthStateChanged(async (user) => {
             document.getElementById("new-child")?.remove();
             const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child-btn", "accent-button", "add");
             newSponsorshipBtn.addEventListener("click", () => openSponsorshipModal());
-            const updateCampaignIdBtn = createButton("Update nav donate button", "button", "update-campaign", "accent-button", "autorenew");
-            updateCampaignIdBtn.addEventListener("click", async () => {
-                const newId = await promptModal("Enter the updated campaign Id\n(found in the embed code of the button widget)", "Campaign ID", "update", false);
-                if (newId.trim() !== "") {
-                    const update: CampaignPageId = {
-                        pageName: "Sponsor A Child",
-                        campaignId: newId
-                    }
-                    await setPageCampaignId(update);
-                    window.location.reload();
-                }
-            });
-            adminButtons.append(newSponsorshipBtn, updateCampaignIdBtn);
+            adminButtons.append(newSponsorshipBtn);
             adminButtons.classList.remove("hide");
         }
     } else {

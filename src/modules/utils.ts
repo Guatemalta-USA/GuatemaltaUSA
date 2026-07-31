@@ -1,4 +1,4 @@
-import { Message, SOCIAL_DATA, type KeyValue } from "../models";
+import { Message, SOCIAL_DATA, type KeyValue, type ProjectInfo } from "../models";
 import { Timestamp } from "firebase/firestore";
 
 export function createButton(
@@ -239,12 +239,25 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
   });
 }
 
+export interface InputConfig {
+  placeholder?: string;
+  defaultValue?: string;
+  required?: boolean;
+}
+
 export async function promptModal(
-  messageHeader: string, 
-  placeholderText: string, 
-  buttonText: string, 
-  required: boolean
-): Promise<string> {
+  messageHeader: string,
+  inputs: Array<string | InputConfig>,
+  buttonText: string,
+  modalRequired: boolean = false,
+  inputValues?: string[],
+): Promise<string[] | null> {
+  if (inputValues && inputValues.length !== inputs.length) {
+    throw new Error(
+      `Length of inputValues (${inputValues.length}) does not match length of inputs (${inputs.length}).`
+    );
+  }
+
   return new Promise((resolve) => {
     const modalRoot = makeElement("div", "modal-root", null, null);
     const modalOverlay = makeElement("div", null, "modal-overlay", null);
@@ -254,58 +267,82 @@ export async function promptModal(
     modalH2.style.whiteSpace = "pre-line";
     modalContent.appendChild(modalH2);
 
-    const formRow = makeElement("div", null, "form-row", null);
-    const userInput = document.createElement("input") as HTMLInputElement;
-    userInput.type = "text";
-    userInput.placeholder = placeholderText;
-    userInput.id = "userInput";
-    userInput.name = "userInput";
-    formRow.appendChild(userInput);
-    modalContent.appendChild(formRow);
+    const inputElements: HTMLInputElement[] = [];
+
+    inputs.forEach((inputConfig, index) => {
+      const config: InputConfig =
+        typeof inputConfig === "string" ? { placeholder: inputConfig } : inputConfig;
+
+      const formRow = makeElement("div", null, "form-row", null);
+      const userInput = document.createElement("input") as HTMLInputElement;
+      userInput.type = "text";
+      userInput.placeholder = config.placeholder || "";
+      
+      // Use provided inputValues[index] if available, falling back to config.defaultValue or empty string
+      userInput.value = inputValues?.[index] ?? config.defaultValue ?? "";
+      
+      userInput.id = `userInput_${index}`;
+      userInput.name = `userInput_${index}`;
+
+      if (config.required) {
+        userInput.required = true;
+      }
+
+      formRow.appendChild(userInput);
+      modalContent.appendChild(formRow);
+      inputElements.push(userInput);
+    });
 
     const buttonRow = makeElement("div", null, "button-row", null);
 
     const closeModal = () => {
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.removeChild(modalRoot);
+      if (document.body.contains(modalRoot)) {
+        document.body.removeChild(modalRoot);
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !required) {
+      if (event.key === "Escape" && !modalRequired) {
         closeModal();
-        resolve("");
+        resolve(null);
       }
     };
 
     const submitBtn = createButton(buttonText, "button", "submit-btn", "accent-button", "add");
     submitBtn.onclick = function () {
-      if (required && !userInput.value.trim()) {
-        userInput.reportValidity?.();
-        return;
+      for (const input of inputElements) {
+        if (input.required && !input.value.trim()) {
+          input.reportValidity?.();
+          input.focus();
+          return;
+        }
       }
+
+      const results = inputElements.map((input) => input.value);
       closeModal();
-      resolve(userInput.value);
+      resolve(results);
     };
 
-    if (!required) {
+    if (!modalRequired) {
       window.addEventListener("keydown", handleKeyDown);
       const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
       cancelButton.onclick = function () {
         closeModal();
-        resolve("");
+        resolve(null);
       };
       buttonRow.appendChild(cancelButton);
     }
-
     buttonRow.appendChild(submitBtn);
-
     modalContent.appendChild(buttonRow);
     modalOverlay.appendChild(modalContent);
     modalRoot.appendChild(modalOverlay);
 
-    modalRoot.style.display = 'flex';
+    modalRoot.style.display = "flex";
     document.body.appendChild(modalRoot);
-    userInput.focus();
+    if (inputElements.length > 0) {
+      inputElements[0].focus();
+    }
   });
 }
 
@@ -359,4 +396,90 @@ export function createTableRow(dataRow: (string | number | null)[]): HTMLTableRo
   });
 
   return tr;
+}
+
+export async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('Text successfully copied to clipboard!');
+    createMessage("copied to clipboard!", "main-message", "check_circle")
+  } catch (error) {
+    createMessage(`Failed to copy text to clipboard: ${error}`, "main-message", "error");
+  }
+}
+
+export function donateListModal(
+  messageHeader: string,
+  projects: ProjectInfo[]
+): Promise<ProjectInfo | null> {
+  return new Promise((resolve) => {
+    const modalRoot = makeElement("div", "modal-root", null, null);
+    const modalOverlay = makeElement("div", null, "modal-overlay", null);
+    const modalContent = makeElement("div", null, "modal-content", null);
+
+    const modalH2 = makeElement("h2", null, null, messageHeader);
+    modalH2.style.whiteSpace = "pre-line";
+    modalContent.appendChild(modalH2);
+
+    const closeModal = () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (document.body.contains(modalRoot)) {
+        document.body.removeChild(modalRoot);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeModal();
+        resolve(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    // List Container
+    const listContainer = makeElement("div", null, "donate-modal-list", null);
+
+    projects.forEach((project) => {
+      const projectButton = makeElement(
+        "button",
+        null,
+        "donate-option-btn accent-button",
+        project.projectName
+      ) as HTMLButtonElement;
+      projectButton.type = "button";
+
+      projectButton.onclick = () => {
+        closeModal();
+        resolve(project);
+      };
+
+      listContainer.appendChild(projectButton);
+    });
+
+    modalContent.appendChild(listContainer);
+
+    // Cancel Button
+    const buttonRow = makeElement("div", null, "button-row right", null);
+    const cancelButton = makeElement(
+      "button",
+      null,
+      "cancel-btn accent-button",
+      "Cancel"
+    ) as HTMLButtonElement;
+    cancelButton.type = "button";
+    cancelButton.onclick = () => {
+      closeModal();
+      resolve(null);
+    };
+
+    buttonRow.appendChild(cancelButton);
+    modalContent.appendChild(buttonRow);
+
+    modalOverlay.appendChild(modalContent);
+    modalRoot.appendChild(modalOverlay);
+
+    modalRoot.style.display = "flex";
+    document.body.appendChild(modalRoot);
+  });
 }

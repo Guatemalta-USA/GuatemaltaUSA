@@ -17,6 +17,7 @@
     --link-color: #9a97f3;
     --link-hover: #b7b4ff;
     --green-accent: #9cd500;
+    --green-accent-hover: #83b300;
     --green-accent-text: #1a1a1a;
     --blue-accent: #002e6c;
     --message-text: #fff;
@@ -46,6 +47,7 @@
     --link-color: #302ae6;
     --link-hover: #524cf5;
     --green-accent: #9cd500;
+    --green-accent-hover: #83b300;
     --green-accent-text: #1a1a1a;
     --blue-accent: #002e6c;
     --message-text: #fff;
@@ -269,6 +271,16 @@ nav a.active {
   z-index: 150;
   list-style: none;
   margin: 0;
+}
+
+.donate-button {
+  background-color: var(--green-accent);
+  color: var(--green-accent-text);
+}
+
+.donate-button:hover {
+  background-color: var(--green-accent-hover);
+  color: var(--green-accent-text);
 }
 
 /* Desktop Hover Toggle */

@@ -130,13 +130,13 @@ const BlockEmbed = Quill.import('blots/block/embed') as any;
 
 class GivebutterWidgetBlot extends BlockEmbed {
     static blotName = 'givebutter';
-    static tagName = 'BUTTON'; 
+    static tagName = 'BUTTON';
 
     static create(value: string) {
         const widgetId = value && value.trim() !== "" ? value.trim() : 'gRGya8';
         const node = createButton(" Donate Now", "button", "", "action-link", "favorite");
         node.setAttribute('data-id', widgetId);
-        
+
         const idTag = document.createElement('span');
         idTag.setAttribute('class', 'donate-id-tag');
         idTag.innerText = ` (${widgetId})`;
@@ -186,31 +186,42 @@ export class TheEditor {
                     ],
                     handlers: {
                         'link': async () => {
-                            const url = await promptModal("Enter URL", "url...", "Insert url", false);
-                            if (url) this.quill.format('link', url);
+                            const linkResponse = await promptModal("Enter URL", ["url..."], "Insert url", false);
+                            if (linkResponse) {
+                                const url = linkResponse[0];
+                                if (url) this.quill.format('link', url);
+                            }
+                            
                         },
                         'givebutter': async () => {
                             const range = this.quill.getSelection();
-                            const widgetId = await promptModal(
+                            const gbResponse = await promptModal(
                                 "Enter Givebutter Widget ID\n(Found in the embed code of the form widget)",
-                                "e.g., gRGya8",
+                                ["e.g., gRGya8"],
                                 "Insert Widget",
                                 false
                             );
-
-                            if (widgetId !== null) {
-                                if (range) {
-                                    this.quill.insertEmbed(range.index, 'givebutter', widgetId, Quill.sources.USER);
-                                    this.quill.setSelection(range.index + 1);
-                                } else {
-                                    const length = this.quill.getLength();
-                                    this.quill.insertEmbed(length, 'givebutter', widgetId, Quill.sources.USER);
+                            if (gbResponse) {
+                                const widgetId = gbResponse[0];
+                                if (widgetId !== null) {
+                                    if (range) {
+                                        this.quill.insertEmbed(range.index, 'givebutter', widgetId, Quill.sources.USER);
+                                        this.quill.setSelection(range.index + 1);
+                                    } else {
+                                        const length = this.quill.getLength();
+                                        this.quill.insertEmbed(length, 'givebutter', widgetId, Quill.sources.USER);
+                                    }
                                 }
                             }
+
                         },
                         'action-link': async () => {
-                            const url = await promptModal("Enter Action URL", "url...", "Add Action Button", false);
-                            if (url) this.quill.format('actionLink', url);
+                            const actionLinkResponse = await promptModal("Enter Action URL", ["url..."], "Add Action Button", false);
+                            if (actionLinkResponse) {
+                                const url = actionLinkResponse[0];
+                                if (url) this.quill.format('actionLink', url);
+                            }
+                            
                         },
                         'nav-link': (value: string) => {
                             if (value) {
@@ -229,36 +240,50 @@ export class TheEditor {
                         },
                         'video': async () => {
                             const range = this.quill.getSelection();
-                            const url = await promptModal("Enter the URL of the video", "video url", "Insert Video", false);
-
-                            if (url && url !== "") {
-                                if (range) {
-                                    this.quill.insertEmbed(range.index, 'video', url, Quill.sources.USER);
-                                    this.quill.setSelection(range.index + 1);
-                                } else {
-                                    const length = this.quill.getLength();
-                                    this.quill.insertEmbed(length, 'video', url, Quill.sources.USER);
+                            const videoResponse = await promptModal(
+                                "Enter the URL of the video",
+                                ["video url"],
+                                "Insert Video",
+                                false);
+                            if (videoResponse) {
+                                const url = videoResponse[0];
+                                if (url && url !== "") {
+                                    if (range) {
+                                        this.quill.insertEmbed(range.index, 'video', url, Quill.sources.USER);
+                                        this.quill.setSelection(range.index + 1);
+                                    } else {
+                                        const length = this.quill.getLength();
+                                        this.quill.insertEmbed(length, 'video', url, Quill.sources.USER);
+                                    }
                                 }
                             }
+
                         },
                         'mailto': async () => {
                             const savedRange = this.quill.getSelection();
                             const savedIndex = savedRange ? savedRange.index : this.quill.getLength() - 1;
                             const savedLength = savedRange ? savedRange.length : 0;
 
-                            const email = await promptModal("Enter Email Address", "example@domain.com", "Insert Email Link", false);
+                            const emailResponse = await promptModal(
+                                "Enter Email Address",
+                                ["example@domain.com"],
+                                "Insert Email Link",
+                                false);
+                            if (emailResponse) {
+                                const email = emailResponse[0];
+                                if (email && email.trim() !== "") {
+                                    const mailtoUrl = email.startsWith('mailto:') ? email.trim() : `mailto:${email.trim()}`;
+                                    this.quill.focus();
 
-                            if (email && email.trim() !== "") {
-                                const mailtoUrl = email.startsWith('mailto:') ? email.trim() : `mailto:${email.trim()}`;
-                                this.quill.focus();
-
-                                if (savedLength > 0) {
-                                    this.quill.formatText(savedIndex, savedLength, 'link', mailtoUrl);
-                                } else {
-                                    this.quill.insertText(savedIndex, email, 'link', mailtoUrl);
-                                    this.quill.setSelection(savedIndex + email.length);
+                                    if (savedLength > 0) {
+                                        this.quill.formatText(savedIndex, savedLength, 'link', mailtoUrl);
+                                    } else {
+                                        this.quill.insertText(savedIndex, email, 'link', mailtoUrl);
+                                        this.quill.setSelection(savedIndex + email.length);
+                                    }
                                 }
                             }
+
                         },
                         'table': () => {
                             const tableModule = this.quill.getModule('table') as any;
@@ -484,16 +509,19 @@ export class TheEditor {
                     this.quill.setSelection(savedRange.index + 1);
                     createMessage("Image uploaded successfully!", "main-message", "check_circle");
 
-                    const altText = await promptModal(
+                    const altTextResponse = await promptModal(
                         "Please provide a description for this image",
-                        "Image Description...",
+                        ["Image Description..."],
                         "Add Description",
                         true
                     );
-
-                    if (altText && altText.trim() !== "") {
+                    if (altTextResponse) {
+                        const altText = altTextResponse[0];
+                        if (altText && altText.trim() !== "") {
                         this.quill.formatText(savedRange.index, 1, 'alt', altText.trim());
                     }
+                    }
+                    
                 }
             } catch (error) {
                 createMessage("Upload failed.", "main-message", "error");

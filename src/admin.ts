@@ -1,14 +1,93 @@
 import { getAuthenticatedUser, getUserRole } from "./firebase/authService.js";
-import { getUnpublishedProjects } from "./firebase/firebaseService.js";
+import { deleteProjectFromDonateList, getDonateButtonList, getUnpublishedProjects, setProjectLink } from "./firebase/firebaseService.js";
 import { initializeApp } from "./main.js";
-import type { Project } from "./models.js";
+import type { Project, ProjectInfo } from "./models.js";
 import { navigateTo } from "./modules/navigate.js";
-import { createButton, createMessage, makeElement, promptModal, storeMessage } from "./modules/utils.js";
+import { confirmDeleteModal, copyToClipboard, createButton, createMessage, createTableHeader, makeElement, promptModal, storeMessage } from "./modules/utils.js";
 import { createDonateQRCodeWithLogo, createQRCodeWithLogo } from "./services/givebutter.service.js";
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
+
+async function renderDonateListTable(container: HTMLElement) {
+    container.innerHTML = ""; // Clear existing table contents
+
+    const donateButtonLinks = await getDonateButtonList();
+    const donateListTable = makeElement("table", "donate-list", null, null);
+    const donateListTableHeader = createTableHeader(["Project Name", "Share Link (click to copy to clipboard)", "Edit", "Delete"], "center");
+
+    const donateListTableBody = donateButtonLinks.reduce((acc: HTMLElement, link: ProjectInfo) => {
+        const tableRow = document.createElement("tr");
+        const projectNameCell = makeElement("td", null, null, link["projectName"]);
+        const shareLink = `https://guatemaltausa.org/donate?id=${link["formId"]}`;
+        const shareLinkCell = makeElement("td", null, null, shareLink);
+        shareLinkCell.addEventListener("click", async () => await copyToClipboard(shareLink));
+
+        // Edit Button
+        const editBtnCell = document.createElement("td");
+        const editBtn = document.createElement("button") as HTMLButtonElement;
+        editBtn.classList.add("table-button");
+        editBtn.type = "button";
+        const editIcon = makeElement("span", null, "material-symbols-outlined", "edit");
+        editBtn.appendChild(editIcon);
+        editBtn.addEventListener("click", async () => {
+            const updateResponse = await promptModal(
+                "Update the link for the Donate Button",
+                ["Project Name", "Form ID"],
+                "update",
+                false,
+                [link["projectName"], link["formId"]]
+            );
+            if (updateResponse) {
+                const [updatedName, updatedFormId] = updateResponse;
+                if (updatedName.trim() !== "" && updatedFormId.trim() !== "") {
+                    const updatedProjectLink: ProjectInfo = {
+                        ...(link.id && { id: link.id }),
+                        projectName: updatedName,
+                        formId: updatedFormId
+                    };
+                    await setProjectLink(updatedProjectLink);
+                    createMessage("Project updated successfully", "main-message", "check_circle");
+                    await renderDonateListTable(container); // Refresh table
+                }
+            }
+        });
+        editBtnCell.appendChild(editBtn);
+
+        // Delete Button
+        const deleteBtnCell = document.createElement("td");
+        const deleteBtn = document.createElement("button") as HTMLButtonElement;
+        deleteBtn.classList.add("table-button");
+        deleteBtn.type = "button";
+        const deleteIcon = makeElement("span", null, "material-symbols-outlined", "delete");
+        deleteBtn.appendChild(deleteIcon);
+        deleteBtn.addEventListener("click", async () => {
+            const confirmed = await confirmDeleteModal(
+                `Remove ${link["projectName"]} from the Donate Button list?`,
+                "Deleting this will NOT delete the project or make it unpublished"
+            );
+            if (confirmed) {
+                try {
+                    const targetId = link.id || link.projectName;
+                    await deleteProjectFromDonateList(targetId);
+                    createMessage("Project deleted successfully", "main-message", "check_circle");
+                    await renderDonateListTable(container); // Refresh table
+                } catch (error: any) {
+                    createMessage(error, "main-message", "error");
+                }
+            }
+        });
+        deleteBtnCell.appendChild(deleteBtn);
+
+        tableRow.append(projectNameCell, shareLinkCell, editBtnCell, deleteBtnCell);
+        acc.appendChild(tableRow);
+        return acc;
+    }, makeElement("tbody", null, null, null));
+
+    donateListTable.append(donateListTableHeader, donateListTableBody);
+    container.appendChild(donateListTable);
+}
 
 async function setUpAdminPage() {
     initializeApp("Admin", "Admin");
@@ -35,46 +114,53 @@ async function setUpAdminPage() {
         return;
     }
 
-
     const generateButtons = document.getElementById("generate-buttons") as HTMLElement;
     const qrCanvasSection = document.getElementById("qr-canvas") as HTMLElement;
     const unpublishedSection = document.getElementById("unpublished") as HTMLElement;
+    const donateListSection = document.getElementById("donate-list") as HTMLElement;
 
     const generateH2 = makeElement("H2", null, null, "Generate QR Codes");
     const donateGenerateH3 = makeElement("h3", null, null, "Donate QR Code");
     const donateP = makeElement("p", null, null, "Generate a QR Code that links to the donate form for a project");
     const generateDonateBtn = createButton("Generate Donate QR", "button", "donate-qr", "accent-button");
     generateDonateBtn.addEventListener("click", async () => {
-        const campaignID = await promptModal("Enter the campaign Id\n(found in the embed code of the form widget)", "Campaign ID", "Generate", false);
-        if (campaignID.trim() !== "") {
-            qrCanvasSection.innerHTML = "";
-            generateButtons.classList.add("hide");
-            try {
-                qrCanvasSection.classList.remove("hide");
-                const canvas = await createDonateQRCodeWithLogo(campaignID);
-                qrCanvasSection.appendChild(canvas);
-                const downloadBtn = createButton("Download QR Code", "button", "download", "accent-button", "download");
-                downloadBtn.onclick = function () {
-                    try {
-                        const dataUrl = canvas.toDataURL('image/png');
-                        const a = document.createElement('a');
-                        a.href = dataUrl;
-                        a.download = `donate-${campaignID}.png`
-                        a.click();
-                    } catch (err) {
-                        createMessage(`Could not download image: ${err}`, "main-message", "error");
-                    }
+        const campaignID = await promptModal(
+            "Enter the campaign Id\n(found in the embed code of the form widget)",
+            ["Campaign ID"],
+            "Generate",
+            false);
+        if (campaignID) {
+            const cID = campaignID[0];
+            if (cID.trim() !== "") {
+                qrCanvasSection.innerHTML = "";
+                generateButtons.classList.add("hide");
+                try {
+                    qrCanvasSection.classList.remove("hide");
+                    const canvas = await createDonateQRCodeWithLogo(cID);
+                    qrCanvasSection.appendChild(canvas);
+                    const downloadBtn = createButton("Download QR Code", "button", "download", "accent-button", "download");
+                    downloadBtn.onclick = function () {
+                        try {
+                            const dataUrl = canvas.toDataURL('image/png');
+                            const a = document.createElement('a');
+                            a.href = dataUrl;
+                            a.download = `donate-${cID}.png`;
+                            a.click();
+                        } catch (err) {
+                            createMessage(`Could not download image: ${err}`, "main-message", "error");
+                        }
+                    };
+                    const newBtn = createButton("Generate new QR Code", "button", "new", "accent-button");
+                    newBtn.onclick = function () {
+                        qrCanvasSection.classList.add("hide");
+                        generateButtons.classList.remove("hide");
+                    };
+                    const btnRow = makeElement("div", null, "button-row left", null);
+                    btnRow.append(downloadBtn, newBtn);
+                    qrCanvasSection.appendChild(btnRow);
+                } catch (error) {
+                    console.error('Error generating QR code:', error);
                 }
-                const newBtn = createButton("Generate new QR Code", "button", "new", "accent-button");
-                newBtn.onclick = function () {
-                    qrCanvasSection.classList.add("hide");
-                    generateButtons.classList.remove("hide");
-                }
-                const btnRow = makeElement("div", null, "button-row left", null);
-                btnRow.append(downloadBtn, newBtn);
-                qrCanvasSection.appendChild(btnRow);
-            } catch (error) {
-                console.error('Error generating QR code:', error);
             }
         }
     });
@@ -84,73 +170,115 @@ async function setUpAdminPage() {
     const linkP = makeElement("p", null, null, "Generate a QR code that goes to a link");
     const generateLinkBtn = createButton("Generate Link QR", "button", "link-qr", "accent-button");
     generateLinkBtn.addEventListener("click", async () => {
-        const url = await promptModal("Enter the url", "url", "Generate", false);
-        if (url.trim() !== "") {
-            qrCanvasSection.innerHTML = "";
-            generateButtons.classList.add("hide");
-            try {
-                qrCanvasSection.classList.remove("hide");
-                const canvas = await createQRCodeWithLogo(url);
-                qrCanvasSection.appendChild(canvas);
-                const downloadBtn = createButton("Download QR Code", "button", "download", "accent-button", "download");
-                downloadBtn.onclick = function () {
-                    try {
-                        const dataUrl = canvas.toDataURL('image/png');
-                        const a = document.createElement('a');
-                        a.href = dataUrl;
-                        const urlName = url.split(".")[1];
-                        a.download = `${urlName}-gusa.png`
-                        a.click();
-                    } catch (err) {
-                        createMessage(`Could not download image: ${err}`, "main-message", "error");
-                    }
+        const url = await promptModal(
+            "Enter the url",
+            ["url"],
+            "Generate",
+            false);
+        if (url) {
+            const urlString = url[0];
+            if (urlString.trim() !== "") {
+                qrCanvasSection.innerHTML = "";
+                generateButtons.classList.add("hide");
+                try {
+                    qrCanvasSection.classList.remove("hide");
+                    const canvas = await createQRCodeWithLogo(urlString);
+                    qrCanvasSection.appendChild(canvas);
+                    const downloadBtn = createButton("Download QR Code", "button", "download", "accent-button", "download");
+                    downloadBtn.onclick = function () {
+                        try {
+                            const dataUrl = canvas.toDataURL('image/png');
+                            const a = document.createElement('a');
+                            a.href = dataUrl;
+                            const urlName = urlString.split(".")[1];
+                            a.download = `${urlName}-gusa.png`;
+                            a.click();
+                        } catch (err) {
+                            createMessage(`Could not download image: ${err}`, "main-message", "error");
+                        }
+                    };
+                    const newBtn = createButton("Generate new QR Code", "button", "new", "accent-button");
+                    newBtn.onclick = function () {
+                        qrCanvasSection.classList.add("hide");
+                        generateButtons.classList.remove("hide");
+                    };
+                    const btnRow = makeElement("div", null, "button-row left", null);
+                    btnRow.append(downloadBtn, newBtn);
+                    qrCanvasSection.appendChild(btnRow);
+                } catch (error) {
+                    console.error('Error generating QR code:', error);
                 }
-                const newBtn = createButton("Generate new QR Code", "button", "new", "accent-button");
-                newBtn.onclick = function () {
-                    qrCanvasSection.classList.add("hide");
-                    generateButtons.classList.remove("hide");
-                }
-                const btnRow = makeElement("div", null, "button-row left", null);
-                btnRow.append(downloadBtn, newBtn);
-                qrCanvasSection.appendChild(btnRow);
-            } catch (error) {
-                console.error('Error generating QR code:', error);
             }
         }
     });
     generateButtons.append(linkGenerateH3, linkP, generateLinkBtn);
-    
-    const unpublishedH2 = makeElement("h2", null, null, "Unpublished Projects");
 
+    const unpublishedH2 = makeElement("h2", null, null, "Unpublished Projects");
     unpublishedSection.append(unpublishedH2);
     const unpublishedProjects = await getUnpublishedProjects();
-    const unpublishedProjectsList = unpublishedProjects.reduce((acc: HTMLElement, project: Project) => {
-        const article = makeElement("article", project["id"] ? project["id"] : "", "card", null);
-        const projectLink = makeElement("a", null, "post-link", null);
-        const projectId = project["id"] ? project["id"] : "";
-        projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
-        const titleH2 = makeElement("h2", null, null, project["projectTitle"]);
-        projectLink.appendChild(titleH2);
-        const lastUpdatedDate = project["lastUpdated"].toDate();
-        const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        const lastUpdated = makeElement("p", null, null, `Last updated: ${lastUpdatedStr}`);
-        const btnRow = makeElement("div", null, "button-row left", null);
-        const viewButton = createButton("View", "button", "view-project", "accent-button", "visibility");
-        viewButton.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
-        const editButton = createButton("Edit", "button", "edit-project", "accent-button", "edit");
-        editButton.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
-        btnRow.append(viewButton, editButton);
-        article.append(projectLink, lastUpdated, btnRow);
-        acc.appendChild(article);
-        return acc;
-    }, makeElement("div", "unpublished-projects", null, null));
-    unpublishedSection.appendChild(unpublishedProjectsList);
+    if (unpublishedProjects.length !== 0) {
+        const unpublishedProjectsList = unpublishedProjects.reduce((acc: HTMLElement, project: Project) => {
+            const article = makeElement("article", project["id"] ? project["id"] : "", "card", null);
+            const projectLink = makeElement("a", null, "post-link", null);
+            const projectId = project["id"] ? project["id"] : "";
+            projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
+            const titleH2 = makeElement("h2", null, null, project["projectTitle"]);
+            projectLink.appendChild(titleH2);
+            const lastUpdatedDate = project["lastUpdated"].toDate();
+            const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const lastUpdated = makeElement("p", null, null, `Last updated: ${lastUpdatedStr}`);
+            const btnRow = makeElement("div", null, "button-row left", null);
+            const viewButton = createButton("View", "button", "view-project", "accent-button", "visibility");
+            viewButton.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
+            const editButton = createButton("Edit", "button", "edit-project", "accent-button", "edit");
+            editButton.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
+            btnRow.append(viewButton, editButton);
+            article.append(projectLink, lastUpdated, btnRow);
+            acc.appendChild(article);
+            return acc;
+        }, makeElement("div", "unpublished-projects", null, null));
+        unpublishedSection.appendChild(unpublishedProjectsList);
+    } else {
+        unpublishedSection.remove();
+    }
+
+    const donateListH2 = makeElement("h2", null, null, "Donate Button List");
+    const tableContainer = makeElement("div", "donate-list-table-container", null, null);
+
+    const addProjectToDonate = createButton("Add project to donate list", "button", "add-project", "accent-button", "add");
+    addProjectToDonate.addEventListener("click", async () => {
+        const projectInfo = await promptModal(
+            "Add project to donate list\n(enter the ID in the form widget)",
+            ["Project name in list", "form ID"],
+            "add",
+            false
+        );
+        if (projectInfo) {
+            const [projectName, formID] = projectInfo;
+            if (projectName.trim() !== "" && formID.trim() !== "") {
+                const newProject: ProjectInfo = {
+                    projectName: projectName,
+                    formId: formID
+                };
+                try {
+                    await setProjectLink(newProject);
+                    createMessage("Project Added to Donate Button List", "main-message", "check_circle");
+                    await renderDonateListTable(tableContainer); // Refresh table
+                } catch (error: any) {
+                    createMessage(error, "main-message", "error");
+                }
+            }
+        }
+    });
+
+    donateListSection.append(donateListH2, tableContainer, addProjectToDonate);
+    await renderDonateListTable(tableContainer);
 }
 
 setUpAdminPage();

@@ -1,11 +1,10 @@
 import { initializeApp } from './main';
-import { getPostById, setPageCampaignId } from './firebase/firebaseService';
+import { getPostById } from './firebase/firebaseService';
 import Quill from 'quill';
 import { auth } from './firebase/firebase';
 import { getUserRole } from './firebase/authService';
 import { navigateTo } from './modules/navigate';
-import { createButton, createGiveButterWidget, promptModal, storeMessage } from './modules/utils';
-import type { CampaignPageId } from './models';
+import { createButton, createGiveButterWidget, storeMessage } from './modules/utils';
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
@@ -44,20 +43,7 @@ async function setupPostView() {
                             console.error("Cannot edit a post without an ID");
                         }
                     });
-                    const updateCampaignIdBtn = createButton("Update nav donate button", "button", "update-campaign", "accent-button", "autorenew");
-                    updateCampaignIdBtn.addEventListener("click", async () => {
-                        const newId = await promptModal("Enter the updated campaign Id (found in the embed code of the button widget)", "Campaign ID", "update", false);
-                        if (newId.trim() !== "") {
-                            const update: CampaignPageId = {
-                                pageName: id,
-                                campaignId: newId
-                            }
-                            await setPageCampaignId(update);
-                            window.location.reload();
-                        }
-                    });
-
-                    adminActions.append(editButton, updateCampaignIdBtn);
+                    adminActions.append(editButton);
                 }
             }
         });

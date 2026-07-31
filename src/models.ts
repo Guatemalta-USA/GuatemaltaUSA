@@ -283,7 +283,8 @@ export interface refStatus {
     error?: string
 }
 
-export interface CampaignPageId {
-    pageName: string;
-    campaignId: string;
+export interface ProjectInfo {
+    id?: string;
+    projectName: string;
+    formId: string;
 }

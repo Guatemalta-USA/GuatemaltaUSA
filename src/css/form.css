@@ -62,6 +62,10 @@
   cursor: pointer;
 }
 
+.table-button {
+  cursor: pointer;
+}
+
 /* =========================================
    FORM ROWS & INPUT ELEMENTS
    ========================================= */
@@ -143,7 +147,7 @@ table li {
 .left-text { text-align: left; }
 .right-text { text-align: right; }
 .center-text { text-align: center; }
-.center-wrapper { display: flex; justify-content: center; align-items: center; }
+.center-wrapper { display: flex; justify-content: center; align-items: center; flex-direction: column;}
 .column { flex-direction: column; }
 
 /* =========================================
@@ -225,4 +229,19 @@ input:checked + .slider:before {
   align-items: center;
   flex-wrap: wrap;
   margin: 10px;
+}
+
+.donate-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+  max-height: 300px;
+}
+
+.donate-option-btn {
+  width: 100%;
+  text-align: center;
+  padding: 12px 16px;
+  cursor: pointer;
 }
