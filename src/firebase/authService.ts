@@ -42,15 +42,20 @@ export function getCurrentUser(): User | null {
  * @returns - The user's role (if set)
  */
 export async function getUserRole(uid: string): Promise<string | null> {
-  //Create a reference to the specific user's document
+  const cacheKey = `user_role_${uid}`;
+  const cachedRole = sessionStorage.getItem(cacheKey);
+  if (cachedRole !== null) {
+    return cachedRole;
+  }
   const userDocRef = doc(db, "users", uid);
   try {
-    //Fetch the document
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
-      //Extract the 'role' field
-      const role = userDoc.data()?.role as string;
-      return role || null;
+      const role = (userDoc.data()?.role as string) || null;
+      if (role) {
+        sessionStorage.setItem(cacheKey, role);
+      }
+      return role;
     } else {
       console.log("User role document not found for UID:", uid);
       return null;
