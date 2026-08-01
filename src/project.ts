@@ -17,7 +17,7 @@ async function setUpProjectView() {
     const lastUpdatedDiv = document.getElementById("lastUpdated") as HTMLElement;
 
     if (!id) {
-        navigateTo("/impact/currentprojects");
+        navigateTo("/impact");
         return;
     }
 
@@ -26,7 +26,7 @@ async function setUpProjectView() {
     const project = await getProjectById(id);
     if (!project) {
         storeMessage("Project not found", "main-message", "error");
-        navigateTo("/impact/currentprojects");
+        navigateTo("/impact");
     } else {
         const adminActions = document.getElementById('admin-actions');
 

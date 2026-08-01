@@ -100,7 +100,7 @@ async function setUpEditProjectPage() {
                                 await deleteProject(projectId);
 
                                 storeMessage("Project deleted successfully", "main-message", "delete");
-                                navigateTo('/impact/currentprojects');
+                                navigateTo('/impact');
                             } catch (err) {
                                 console.error("Delete failed:", err);
                                 createMessage("Failed to delete the project. Please try again.", "main-message", "error");
@@ -113,7 +113,7 @@ async function setUpEditProjectPage() {
 
             } else {
                 storeMessage("The project you tried to edit does not exist", "main-message", "error");
-                navigateTo("/impact/currentprojects");
+                navigateTo("/impact");
             }
         } catch (err) {
             console.error("Error loading project for editing:", err);

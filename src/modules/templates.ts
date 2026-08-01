@@ -18,7 +18,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", path: "/" },
-  { label: "Impact", path: "/impact/currentprojects" },
+  { label: "Impact", path: "/impact" },
   { label: "Blog", path: "/blog" },
   {
     label: "About Us",
