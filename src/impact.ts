@@ -34,7 +34,7 @@ const projects: Record<string, Project[]> = {
     "past": await getProjectsByStatus(false)
 }
 
-const currentTabBtn = createButton("Current Project", "button", "tab-sponsorships", "tab-btn active");
+const currentTabBtn = createButton("Current Projects", "button", "tab-sponsorships", "tab-btn active");
 const pastTabBtn = createButton("Past Projects", "button", "tab-donors", "tab-btn");
 
 function setActiveTab(selectedTab: HTMLElement) {

@@ -31,6 +31,9 @@
     --quill-border: #444444;
     --card-background: #1e293b;
     --card-border: #000;
+    --tab-background: #000;
+    --tab-border: #1e293b;
+    --tab-active: #1e293b;
   }
 }
 
@@ -61,6 +64,9 @@
     --quill-border: #cccccc;
     --card-background: #fff;
     --card-border: #eeeeee;
+    --tab-background: #f0f0f0;
+    --tab-border: #ccc;
+    --tab-active: #9cd500;
   }
 }
 
@@ -882,26 +888,26 @@ textarea {
 .tab-container {
   display: flex;
   gap: 10px;
-  border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid var(--tab-border);
   margin-bottom: 20px;
 }
 
 .tab-btn {
   padding: 10px 20px;
   cursor: pointer;
-  background: #f0f0f0;
-  border: 1px solid #ccc;
+  background: var(--tab-background);
+  border: 1px solid var(--tab-border);
   border-bottom: none;
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
   font-weight: bold;
 }
 
 .tab-btn.active {
-  background: #ffffff;
-  border-color: #ccc;
-  border-bottom: 2px solid #ffffff;
+  background: var(--tab-active);
+  border-color: var(--tab-background);
+  border-bottom: 2px solid var(--tab-border);
   margin-bottom: -2px;
-  color: #000;
+  color: var(--body-color);
 }
 
 /* =========================================
