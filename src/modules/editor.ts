@@ -6,6 +6,7 @@ import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
 import { createButton, createMessage, makeElement, promptModal } from './utils';
 import { showLightbox } from './imageGallery';
+import { updateContent } from './i18n';
 
 // --- Quill Customizations & Types ---
 interface BlotFormat {
@@ -134,7 +135,8 @@ class GivebutterWidgetBlot extends BlockEmbed {
 
     static create(value: string) {
         const widgetId = value && value.trim() !== "" ? value.trim() : 'gRGya8';
-        const node = createButton(" Donate Now", "button", "", "action-link", "favorite");
+        //" Donate Now", "button", "", "action-link", "favorite"
+        const node = createButton({buttonText: "Donate Now", buttonType: "button", buttonId: "", buttonClass: "action-link", icon: "favorite", i18n: "donate_now"});
         node.setAttribute('data-id', widgetId);
 
         const idTag = document.createElement('span');
@@ -611,3 +613,4 @@ export class TheEditor {
     public getHTML(): string { return this.quill.root.innerHTML; }
     public setHTML(html: string): void { this.quill.root.innerHTML = html; }
 }
+updateContent();

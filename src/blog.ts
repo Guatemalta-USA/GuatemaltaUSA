@@ -21,7 +21,7 @@ async function setupBlogPage() {
         if (user) {
             const role = await getUserRole(user.uid);
             if (role === "admin") {
-                const newPostButton = createButton("Create New Post", "button", "new-post", "accent-button", "add");
+                const newPostButton = createButton({buttonText: "Create New Post", buttonType: "button", buttonId: "new-post", buttonClass: "accent-button", icon: "add"});
                 newPostButton.addEventListener("click", () => navigateTo("/blog/editpost"));
                 adminActions.appendChild(newPostButton);
             }

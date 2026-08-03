@@ -36,7 +36,7 @@ function toggleMode(editor: TheEditor, isEditing: boolean) {
 function showAdminUI(editor: TheEditor) {
   if (!adminControls || adminControls.querySelector("#edit-btn")) return;
 
-  const editButton = createButton("Edit Page Content", "button", "edit-btn", "accent-button", "edit");
+  const editButton = createButton({buttonText: "Edit Page Content", buttonType: "button", buttonId: "edit-btn", buttonClass: "accent-button", icon: "edit", i18n: "edit_page"});
   editButton.addEventListener('click', () => toggleMode(editor, true));
   
   adminControls.appendChild(editButton);

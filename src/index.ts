@@ -4,7 +4,7 @@ import type { Post, Project } from "./models.js";
 import { displayGallery, getPhotosFromGithub, setupControls } from "./modules/imageGallery.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createLink, makeElement } from "./modules/utils.js";
-import { updateContent } from "./modules/i18n.js";
+import i18n, { updateContent } from "./modules/i18n.js";
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
@@ -92,7 +92,6 @@ async function loadProjects() {
 }
 
 async function loadPosts() {
-  // Pass "recent_blog_posts" as the 5th argument
   const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts", "recent_blog_posts");
 
   try {
@@ -120,9 +119,8 @@ async function loadPosts() {
         const postTitle = makeElement("h2", null, null, post.postTitle);
         postLink.appendChild(postTitle);
         postArticle.appendChild(postLink);
+        const postInfo = makeElement("h3", null, null, i18n.t('post_by_date', { author: post["author"], date: post.publishDate.toDate().toLocaleDateString() }));
 
-        // Dynamic strings with variable options
-        const postInfo = makeElement("h3", null, null, null, "post_author_date");
         postInfo.setAttribute("data-i18n-options", JSON.stringify({
           author: post.author,
           date: post.publishDate.toDate().toLocaleDateString()
@@ -145,6 +143,7 @@ async function loadPosts() {
       });
 
       updatesSection.appendChild(fragment);
+      updateContent();
     }
   } catch (err) {
     console.error("Error loading posts:", err);

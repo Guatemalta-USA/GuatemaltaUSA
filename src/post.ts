@@ -35,7 +35,7 @@ async function setupPostView() {
                 if (role === 'admin' && adminActions) {
                     // Show the admin container
                     adminActions.classList.remove('hide');
-                    const editButton = createButton("Edit Post", "button", "edit-post", "accent-button", "edit");
+                    const editButton = createButton({ buttonText: "Edit Post", buttonType: "button", buttonId: "edit-post", buttonClass: "accent-button", icon: "edit"});
                     editButton.addEventListener('click', () => {
                         if (post.id) {
                             navigateTo('/blog/editpost', { params: { id: post.id } });

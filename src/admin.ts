@@ -122,7 +122,7 @@ async function setUpAdminPage() {
     const generateH2 = makeElement("H2", null, null, "Generate QR Codes");
     const donateGenerateH3 = makeElement("h3", null, null, "Donate QR Code");
     const donateP = makeElement("p", null, null, "Generate a QR Code that links to the donate form for a project");
-    const generateDonateBtn = createButton("Generate Donate QR", "button", "donate-qr", "accent-button");
+    const generateDonateBtn = createButton({buttonText: "Generate Donate QR", buttonType: "button", buttonId: "donate-qr", buttonClass: "accent-button"});
     generateDonateBtn.addEventListener("click", async () => {
         const campaignID = await promptModal(
             "Enter the campaign Id\n(found in the embed code of the form widget)",
@@ -138,7 +138,7 @@ async function setUpAdminPage() {
                     qrCanvasSection.classList.remove("hide");
                     const canvas = await createDonateQRCodeWithLogo(cID);
                     qrCanvasSection.appendChild(canvas);
-                    const downloadBtn = createButton("Download QR Code", "button", "download", "accent-button", "download");
+                    const downloadBtn = createButton({buttonText: "Download QR Code", buttonType: "button", buttonId: "download", buttonClass: "accent-button", icon: "download"});
                     downloadBtn.onclick = function () {
                         try {
                             const dataUrl = canvas.toDataURL('image/png');
@@ -150,7 +150,7 @@ async function setUpAdminPage() {
                             createMessage(`Could not download image: ${err}`, "main-message", "error");
                         }
                     };
-                    const newBtn = createButton("Generate new QR Code", "button", "new", "accent-button");
+                    const newBtn = createButton({buttonText: "Generate new QR Code", buttonType: "button", buttonId: "new", buttonClass: "accent-button", icon: "add"});
                     newBtn.onclick = function () {
                         qrCanvasSection.classList.add("hide");
                         generateButtons.classList.remove("hide");
@@ -168,7 +168,7 @@ async function setUpAdminPage() {
 
     const linkGenerateH3 = makeElement("h3", null, null, "Link QR Code");
     const linkP = makeElement("p", null, null, "Generate a QR code that goes to a link");
-    const generateLinkBtn = createButton("Generate Link QR", "button", "link-qr", "accent-button");
+    const generateLinkBtn = createButton({buttonText: "Generate Link QR", buttonType: "button", buttonId: "link-qr", buttonClass: "accent-button"});
     generateLinkBtn.addEventListener("click", async () => {
         const url = await promptModal(
             "Enter the url",
@@ -184,7 +184,7 @@ async function setUpAdminPage() {
                     qrCanvasSection.classList.remove("hide");
                     const canvas = await createQRCodeWithLogo(urlString);
                     qrCanvasSection.appendChild(canvas);
-                    const downloadBtn = createButton("Download QR Code", "button", "download", "accent-button", "download");
+                    const downloadBtn = createButton({buttonText: "Download QR Code", buttonType: "button", buttonId: "download", buttonClass: "accent-button", icon: "download"});
                     downloadBtn.onclick = function () {
                         try {
                             const dataUrl = canvas.toDataURL('image/png');
@@ -197,7 +197,7 @@ async function setUpAdminPage() {
                             createMessage(`Could not download image: ${err}`, "main-message", "error");
                         }
                     };
-                    const newBtn = createButton("Generate new QR Code", "button", "new", "accent-button");
+                    const newBtn = createButton({buttonText: "Generate new QR Code", buttonType: "button", buttonId: "new", buttonClass: "accent-button", icon: "add"});
                     newBtn.onclick = function () {
                         qrCanvasSection.classList.add("hide");
                         generateButtons.classList.remove("hide");
@@ -234,9 +234,9 @@ async function setUpAdminPage() {
             });
             const lastUpdated = makeElement("p", null, null, `Last updated: ${lastUpdatedStr}`);
             const btnRow = makeElement("div", null, "button-row left", null);
-            const viewButton = createButton("View", "button", "view-project", "accent-button", "visibility");
+            const viewButton = createButton({buttonText: "View", buttonType: "button", buttonId: "view-project", buttonClass: "accent-button", icon: "visibility"});
             viewButton.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
-            const editButton = createButton("Edit", "button", "edit-project", "accent-button", "edit");
+            const editButton = createButton({buttonText: "Edit", buttonType: "button", buttonId: "edit-project", buttonClass: "accent-button", icon: "edit"});
             editButton.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
             btnRow.append(viewButton, editButton);
             article.append(projectLink, lastUpdated, btnRow);
@@ -251,7 +251,7 @@ async function setUpAdminPage() {
     const donateListH2 = makeElement("h2", null, null, "Donate Button List");
     const tableContainer = makeElement("div", "donate-list-table-container", null, null);
 
-    const addProjectToDonate = createButton("Add project to donate list", "button", "add-project", "accent-button", "add");
+    const addProjectToDonate = createButton({buttonText: "Add project to donate list", buttonType: "button", buttonId: "add-project", buttonClass: "accent-button", icon: "add"});
     addProjectToDonate.addEventListener("click", async () => {
         const projectInfo = await promptModal(
             "Add project to donate list\n(enter the ID in the form widget)",

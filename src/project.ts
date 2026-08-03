@@ -9,6 +9,7 @@ import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
+import { updateContent } from "./modules/i18n";
 
 async function setUpProjectView() {
     const params = new URLSearchParams(window.location.search);
@@ -35,7 +36,7 @@ async function setUpProjectView() {
                 const role = await getUserRole(user.uid);
                 if (role === 'admin' && adminActions) {
                     adminActions.classList.remove("hide");
-                    const editButton = createButton("Edit Project", "button", "edit-project", "accent-button", "edit");
+                    const editButton = createButton({ buttonText: "Edit Project", buttonType: "button", buttonId: "edit-project", buttonClass: "accent-button", icon: "edit", i18n: "edit_project" });
                     editButton.addEventListener("click", () => {
                         if (project.id) {
                             navigateTo("/impact/editproject", { params: { id: id } });
@@ -43,7 +44,7 @@ async function setUpProjectView() {
                             console.error("Cannot edit a project without an ID");
                         }
                     });
-                    const addGoalBarBtn = createButton("Add Goal Bar", "button", "goal-bar", "accent-button", "add");
+                    const addGoalBarBtn = createButton({ buttonText: "Add Goal Bar", buttonType: "button", buttonId: "goal-bar", buttonClass: "accent-button", icon: "add", i18n: "add_goal_bar" });
                     addGoalBarBtn.addEventListener("click", async () => {
                         const goalBar = await promptModal(
                             "Enter the widget ID of the goal bar\n(found in the embed code of the Goal bar widget)",
@@ -102,6 +103,7 @@ async function setUpProjectView() {
                 postArticle.appendChild(firstPElm);
                 const readMore = createLink("Read More...", "", false);
                 readMore.classList.add("post-link");
+                readMore.setAttribute("data-i18n", "read_more");
                 readMore.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }));
                 postArticle.appendChild(readMore);
                 linkedPostsDiv.appendChild(postArticle);
@@ -187,7 +189,13 @@ async function setUpProjectView() {
         if (loading) loading.remove();
         projectContainer.classList.remove("hide");
         linkedPostsDiv.classList.remove("hide");
+        updateContent();
     }
 }
 
-setUpProjectView();
+async function init() {
+    await setUpProjectView();
+    updateContent();
+}
+
+init();

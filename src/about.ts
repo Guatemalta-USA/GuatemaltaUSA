@@ -21,6 +21,7 @@ import "./css/style.css";
 import "./css/grid.css";
 import "./css/form.css";
 import "./css/quill.css";
+import { updateContent } from "./modules/i18n";
 
 const loading = document.getElementById("loading");
 const viewSection = document.getElementById("content-display") as HTMLElement;
@@ -157,11 +158,10 @@ async function loadProfiles() {
 
           if (isAdmin) {
             const actionsDiv = makeElement("div", null, "profile-actions", null);
-
-            const editBtn = createButton("Edit", "button", `edit-${index}`, "edit-btn", "edit");
+            const editBtn = createButton({buttonText: "Edit", buttonType: "button", buttonId: `edit-${index}`, buttonClass: "edit-btn", icon: "edit", i18n: "button_edit"});
             editBtn.onclick = () => handleEdit(currentProfile);
 
-            const deleteBtn = createButton("Delete", "button", `del-${index}`, "delete-btn", "delete");
+            const deleteBtn = createButton({ buttonText: "Delete", buttonType: "button", buttonId: "delete-button", buttonClass: "delete-button", icon: "delete", i18n: "button_delete" });
             deleteBtn.onclick = async () => {
               const confirmed = await confirmDeleteModal(
                 `Delete ${currentProfile.name}'s profile?`,
@@ -203,6 +203,7 @@ async function loadProfiles() {
       profilesSection.appendChild(profilesContainer);
     }
   }
+  updateContent();
 }
 
 function handleEdit(profile: Profile) {
@@ -285,7 +286,7 @@ auth.onAuthStateChanged(async (user) => {
     isAdmin = role === "admin";
 
     if (isAdmin) {
-      const addBtn = createButton("Add new member", "button", "addNew", "accent-button", "add");
+      const addBtn = createButton({buttonText: "Add new member", buttonType: "button", buttonId: "addNew", buttonClass: "accent-button", icon: "add", i18n: "add_new_member"});
       addBtn.onclick = () => {
         modalRoot.classList.remove("hide");
         modalRoot.style.display = "flex";
@@ -327,3 +328,4 @@ contactForm.addEventListener("submit", (e) => {
 });
 
 contactForm.classList.remove("hide");
+updateContent();

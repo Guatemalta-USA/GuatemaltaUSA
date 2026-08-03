@@ -9,6 +9,7 @@ import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
+import { updateContent } from "./modules/i18n.js";
 
 await initializeApp("Impact", "Current Projects", null);
 
@@ -21,7 +22,7 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         const role = await getUserRole(user.uid);
         if (role === "admin") {
-            const newProjectButton = createButton("Start New Project", "button", "new-project", "accent-button", "add");
+            const newProjectButton = createButton({buttonText: "Start New Project", buttonType: "button", buttonId: "new-project", buttonClass: "accent-button", icon: "add", i18n: "start_new_project_btn"});
             newProjectButton.addEventListener("click", () => navigateTo("/impact/editproject"));
             actionButtons.appendChild(newProjectButton);
         }
@@ -34,8 +35,8 @@ const projects: Record<string, Project[]> = {
     "past": await getProjectsByStatus(false)
 }
 
-const currentTabBtn = createButton("Current Projects", "button", "tab-sponsorships", "tab-btn active");
-const pastTabBtn = createButton("Past Projects", "button", "tab-donors", "tab-btn");
+const currentTabBtn = createButton({buttonText: "Current Projects", buttonType: "button", buttonId: "current-tab", buttonClass: "tab-btn active", i18n: "current_projects"});
+const pastTabBtn = createButton({buttonText: "Past Projects", buttonType: "button", buttonId: "past-tab", buttonClass: "tab-btn", i18n: "past_projects"});
 
 function setActiveTab(selectedTab: HTMLElement) {
     currentTabBtn.classList.remove("active");
@@ -46,11 +47,13 @@ function setActiveTab(selectedTab: HTMLElement) {
 currentTabBtn.addEventListener("click", async () => {
     setActiveTab(currentTabBtn);
     await loadProjects("current");
+    updateContent();
 });
 
 pastTabBtn.addEventListener("click", async () => {
     setActiveTab(pastTabBtn);
     await loadProjects("past");
+    updateContent();
 });
 
 tabs.append(currentTabBtn, pastTabBtn);
@@ -75,6 +78,7 @@ async function loadProjects(status: string) {
                 const firstPElm = makeElement("p", null, null, firstP);
                 projectArticle.appendChild(firstPElm);
                 const readMore = createLink("Read More...", "", false);
+                readMore.setAttribute("data-i18n", "read_more");
                 readMore.classList.add("post-link");
                 readMore.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
                 projectArticle.appendChild(readMore);
@@ -91,3 +95,4 @@ async function loadProjects(status: string) {
 }
 loadProjects("current")
 tabs.classList.remove("hide");
+updateContent();

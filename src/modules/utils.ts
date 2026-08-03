@@ -1,25 +1,30 @@
 import { Message, SOCIAL_DATA, type KeyValue, type ProjectInfo } from "../models";
 import { Timestamp } from "firebase/firestore";
 
+type ButtonParams = {
+  buttonText: string;
+  buttonType: "button" | "submit" | "reset";
+  buttonId: string;
+  buttonClass: string;
+  i18n?: string;
+  icon?: string;
+};
+
 export function createButton(
-  buttonText: string,
-  buttonType: string,
-  buttonId: string,
-  buttonClass: string,
-  icon?: string,
+  params: ButtonParams
 ): HTMLElement {
   const newButton = document.createElement("button");
-  newButton.setAttribute("type", buttonType);
-  newButton.setAttribute("id", buttonId);
-  newButton.setAttribute("class", buttonClass);
-  if (icon) {
+  newButton.setAttribute("type", params["buttonType"]);
+  newButton.setAttribute("id", params["buttonId"]);
+  newButton.setAttribute("class", params["buttonClass"]);
+  if (params["icon"]) {
     const buttonIconSpan = document.createElement("span");
     buttonIconSpan.setAttribute("class", "material-symbols-outlined");
-    const buttonIcon = document.createTextNode(icon);
+    const buttonIcon = document.createTextNode(params["icon"]);
     buttonIconSpan.appendChild(buttonIcon);
     newButton.appendChild(buttonIconSpan);
   }
-  const buttonTextElm = document.createTextNode(buttonText);
+  const buttonTextElm = makeElement("span", null, null, params["buttonText"], params["i18n"]);
   newButton.appendChild(buttonTextElm);
   return newButton;
 }
@@ -62,7 +67,7 @@ export function createMessage(message: string, location: string, type: string) {
   messageDiv.appendChild(icon);
   const messageText = document.createTextNode(message);
   messageDiv.appendChild(messageText);
-  const closeButton = createButton("", "button", "closeButton", "", "close");
+  const closeButton = createButton({ buttonText: "", buttonType: "button", buttonId: "closeButton", buttonClass: "", icon: "close" });
   closeButton.addEventListener("click", () => (messageWrapper.innerHTML = ""));
   messageDiv.appendChild(closeButton);
   messageWrapper.appendChild(messageDiv);
@@ -219,14 +224,13 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
     };
 
     window.addEventListener("keydown", handleKeyDown);
-
-    const deleteButton = createButton("Delete", "button", "delete-button", "delete-button", "delete");
+    const deleteButton = createButton({ buttonText: "Delete", buttonType: "button", buttonId: "delete-button", buttonClass: "delete-button", icon: "delete", i18n: "button_delete" });
     deleteButton.onclick = function () {
       closeModal();
       resolve(true);
     };
-
-    const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
+    //"Cancel", "button", , 
+    const cancelButton = createButton({ buttonText: "Cancel", buttonType: "button", buttonId: "cancel-btn", buttonClass: "accent-button", icon: "close", i18n: "button_cancel" });
     cancelButton.onclick = function () {
       closeModal();
       resolve(false);
@@ -280,10 +284,10 @@ export async function promptModal(
       const userInput = document.createElement("input") as HTMLInputElement;
       userInput.type = "text";
       userInput.placeholder = config.placeholder || "";
-      
+
       // Use provided inputValues[index] if available, falling back to config.defaultValue or empty string
       userInput.value = inputValues?.[index] ?? config.defaultValue ?? "";
-      
+
       userInput.id = `userInput_${index}`;
       userInput.name = `userInput_${index}`;
 
@@ -311,8 +315,7 @@ export async function promptModal(
         resolve(null);
       }
     };
-
-    const submitBtn = createButton(buttonText, "button", "submit-btn", "accent-button", "add");
+    const submitBtn = createButton({buttonText: buttonText, buttonType: "button", buttonId: "submit-btn", buttonClass: "accent-button"});
     submitBtn.onclick = function () {
       for (const input of inputElements) {
         if (input.required && !input.value.trim()) {
@@ -329,7 +332,7 @@ export async function promptModal(
 
     if (!modalRequired) {
       window.addEventListener("keydown", handleKeyDown);
-      const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close");
+      const cancelButton = createButton({ buttonText: "Cancel", buttonType: "button", buttonId: "cancel-btn", buttonClass: "accent-button", icon: "close", i18n: "button_cancel" });
       cancelButton.onclick = function () {
         closeModal();
         resolve(null);

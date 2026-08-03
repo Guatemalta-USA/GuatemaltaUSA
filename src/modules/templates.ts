@@ -28,9 +28,9 @@ const NAV_ITEMS: NavItem[] = [
     path: "/about",
     i18n: "nav_about",
     children: [
-      { label: "Our Story", path: "/about", hash: "#story", i18n: "" },
-      { label: "Our Team", path: "/about", hash: "#team", i18n: "" },
-      { label: "Contact Us", path: "/about", hash: "#contact", i18n: "" },
+      { label: "Our Story", path: "/about", hash: "#story", i18n: "nav_story" },
+      { label: "Our Team", path: "/about", hash: "#team", i18n: "nav_team" },
+      { label: "Contact Us", path: "/about", hash: "#contact", i18n: "nav_contact" },
     ],
   },
   { label: "Mailing List", path: "/mailinglist", i18n: "nav_mailing_list" },

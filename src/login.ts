@@ -9,7 +9,7 @@ import './css/quill.css';
 createMessage("Opening Google sign-in window", "main-message", "info");
 try {
       const result = await signInWithGooglePopup();
-      //If sucessful sign in with Google, close the modal and display the message
+      //If successful sign in with Google, close the modal and display the message
       const user = result.user;
       if (user) {
         //Close the sign in modal

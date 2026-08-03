@@ -9,6 +9,7 @@ import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
+import { updateContent } from "./modules/i18n.js";
 
 await initializeApp("Impact", "Sponsor A Child");
 
@@ -33,8 +34,8 @@ const adminButtons = document.getElementById("admin-actions") as HTMLElement;
 const sponsorshipsSection = document.getElementById("sponsorships") as HTMLElement;
 const years: number[] = [2026];
 const tabContainer = makeElement("div", "tab-navigation", "tab-container hide", null);
-const sponsorshipTabBtn = createButton("Sponsorships", "button", "tab-sponsorships", "tab-btn active");
-const donorTabBtn = createButton("Donors", "button", "tab-donors", "tab-btn");
+const sponsorshipTabBtn = createButton({buttonText: "Sponsorships", buttonType: "button", buttonId: "tab-sponsorships", buttonClass: "tab-btn active"});
+const donorTabBtn = createButton({buttonText: "Donors", buttonType: "button", buttonId: "tab-donors", buttonClass: "tab-btn"});
 
 tabContainer.append(sponsorshipTabBtn, donorTabBtn);
 sponsorshipsSection.before(tabContainer);
@@ -47,6 +48,7 @@ sponsorshipTabBtn.addEventListener("click", () => {
     donorTabBtn.classList.remove("active");
     sponsorshipsSection.classList.remove("hide");
     donorSection.classList.add("hide");
+    updateContent();
 });
 
 donorTabBtn.addEventListener("click", async () => {
@@ -55,6 +57,7 @@ donorTabBtn.addEventListener("click", async () => {
     donorSection.classList.remove("hide");
     sponsorshipsSection.classList.add("hide");
     await updateDonorSection();
+    updateContent();
 });
 
 auth.onAuthStateChanged(async (user) => {
@@ -68,7 +71,7 @@ auth.onAuthStateChanged(async (user) => {
             tabContainer.classList.remove("hide");
 
             document.getElementById("new-child")?.remove();
-            const newSponsorshipBtn = createButton("Add Child to sponsor", "button", "new-child-btn", "accent-button", "add");
+            const newSponsorshipBtn = createButton({buttonText: "Add Child to sponsor", buttonType: "button", buttonId: "new-child-btn", buttonClass: "accent-button", icon: "add"});
             newSponsorshipBtn.addEventListener("click", () => openSponsorshipModal());
             adminButtons.append(newSponsorshipBtn);
             adminButtons.classList.remove("hide");
@@ -83,6 +86,7 @@ auth.onAuthStateChanged(async (user) => {
     }
 
     await updateSponsorshipSection();
+    updateContent();
 });
 
 async function submitData(formData: FormData): Promise<boolean> {
@@ -158,6 +162,7 @@ async function updateDonorSection() {
         donorContainer.appendChild(nextDonor);
     }
     donorSection.appendChild(donorContainer);
+    updateContent();
 }
 
 async function updateSponsorshipSection() {
@@ -202,7 +207,7 @@ async function updateSponsorshipSection() {
             const bioP = makeElement("p", null, null, child["bio"]);
             nextChild.append(header, bioP);
             if (currentUserRole === "admin") {
-                const deleteBtn = createButton("Delete", "button", `delete-${child["name"]}`, "delete-button", "delete");
+                const deleteBtn = createButton({buttonText: "Delete", buttonType: "button", buttonId: `delete-${child["name"]}`,buttonClass:  "delete-button", icon: "delete", i18n: "button_delete"});
                 deleteBtn.onclick = async () => {
                     const response = await confirmDeleteModal("Confirm Deletion", `Are you sure you want to remove ${child["name"]}?`)
                     if (response) {
@@ -216,7 +221,7 @@ async function updateSponsorshipSection() {
                 nextChild.appendChild(deleteBtn);
             }
             if (validation.isValid && !validation.hasClaimed && !child["sponsor"]) {
-                const selectBtn = createButton("Select child", "button", `select-${child["name"]}`, "accent-button", "check");
+                const selectBtn = createButton({buttonText: "Select child", buttonType: "button", buttonId: `select-${child["name"]}`, buttonClass: "accent-button", icon: "check"});
                 selectBtn.onclick = async () => {
                     try {
                         if (refCode) {
@@ -238,6 +243,7 @@ async function updateSponsorshipSection() {
 
         sponsorshipsSection.append(yearHeading, yearBlock);
     }
+    updateContent();
 }
 
 async function openSponsorshipModal() {
@@ -271,7 +277,7 @@ async function openSponsorshipModal() {
         }
     };
 
-    const submitBtn = createButton("Add Child", "button", "submit-btn", "accent-button", "add") as HTMLButtonElement;
+    const submitBtn = createButton({buttonText: "Add Child", buttonType: "button", buttonId: "submit-btn", buttonClass: "accent-button", icon: "add"}) as HTMLButtonElement;
     submitBtn.onclick = async function () {
         submitBtn.disabled = true;
         submitBtn.innerText = "Processing...";
@@ -284,7 +290,7 @@ async function openSponsorshipModal() {
         }
     }
 
-    const cancelButton = createButton("Cancel", "button", "cancel-btn", "accent-button", "close") as HTMLButtonElement;
+    const cancelButton = createButton({buttonText: "Cancel", buttonType: "button", buttonId: "cancel-btn", buttonClass: "accent-button", icon: "close", i18n: "button_cancel"}) as HTMLButtonElement;
     cancelButton.onclick = function () {
         modalContent.reset();
         closeModal();
@@ -302,3 +308,4 @@ async function openSponsorshipModal() {
 }
 
 if (loading) loading.remove();
+updateContent();
