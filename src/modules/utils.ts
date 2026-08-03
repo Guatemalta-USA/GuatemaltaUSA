@@ -171,13 +171,16 @@ export function fixDate(
   return dateTimezoneFixed.toLocaleDateString("en-US", options);
 }
 
-export function makeElement(elementType: string, elementId: string | null, elementClass: string | null, elementText: string | null) {
+export function makeElement(elementType: string, elementId: string | null, elementClass: string | null, elementText: string | null, i18n?: string) {
   const newElement = document.createElement(elementType);
   if (elementId) newElement.setAttribute('id', elementId);
   if (elementClass) {
     newElement.setAttribute('class', elementClass);
   }
   if (elementText) newElement.textContent = elementText;
+  if (i18n) {
+    newElement.setAttribute("data-i18n", i18n);
+  }
   return newElement;
 }
 

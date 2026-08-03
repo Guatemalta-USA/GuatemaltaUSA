@@ -3,37 +3,42 @@ import { createLink, createSocialLink, donateListModal, makeElement } from "./ut
 import { auth } from "../firebase/firebase.js";
 import { getUserRole, signOutUser } from "../firebase/authService.js";
 import { getDonateButtonList } from "../firebase/firebaseService.js";
+import i18n, { updateContent } from "./i18n.js";
 
 type SubNavItem = {
   label: string;
   path: AppPath;
   hash: string;
+  i18n: string;
 };
 
 type NavItem = {
   label: string;
   path: AppPath | "donate";
+  i18n: string;
   children?: SubNavItem[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home", path: "/" },
-  { label: "Impact", path: "/impact" },
-  { label: "Blog", path: "/blog" },
+  { label: "Home", path: "/", i18n: "nav_home" },
+  { label: "Impact", path: "/impact", i18n: "nav_impact" },
+  { label: "Blog", path: "/blog", i18n: "nav_blog" },
   {
     label: "About Us",
     path: "/about",
+    i18n: "nav_about",
     children: [
-      { label: "Our Story", path: "/about", hash: "#story" },
-      { label: "Our Team", path: "/about", hash: "#team" },
-      { label: "Contact Us", path: "/about", hash: "#contact" },
+      { label: "Our Story", path: "/about", hash: "#story", i18n: "" },
+      { label: "Our Team", path: "/about", hash: "#team", i18n: "" },
+      { label: "Contact Us", path: "/about", hash: "#contact", i18n: "" },
     ],
   },
-  { label: "Mailing List", path: "/mailinglist" },
-  { label: "Donate", path: "donate" },
+  { label: "Mailing List", path: "/mailinglist", i18n: "nav_mailing_list" },
+  { label: "Donate", path: "donate", i18n: "nav_donate" },
 ];
 
 let unsubscribeAuth: (() => void) | null = null;
+let languageChangeListener: ((lng: string) => void) | null = null;
 
 export function loadNav(activeNavLink: string) {
   const nav = document.querySelector("nav") as HTMLElement;
@@ -61,7 +66,7 @@ export function loadNav(activeNavLink: string) {
       }
 
       const selectedProject = await donateListModal(
-        "Select a project to support",
+        i18n.t("select_project_support", "Select a project to support"),
         donateButtonLinks
       );
 
@@ -75,9 +80,13 @@ export function loadNav(activeNavLink: string) {
 
   nav.innerHTML = "";
 
-  NAV_ITEMS.forEach(({ label, path, children }) => {
+  NAV_ITEMS.forEach((item) => {
+    const { label, path, children, i18n: i18nKey } = item;
+
     if (path === "donate") {
       const donateLink = createLink(label, "donate-nav-btn", false);
+      if (i18nKey) donateLink.setAttribute("data-i18n", i18nKey);
+      
       donateLink.addEventListener("click", handleDonateClick);
       donateLink.classList.add("donate-button");
 
@@ -94,6 +103,8 @@ export function loadNav(activeNavLink: string) {
       dropdownHeader.className = "dropdown-header";
 
       const parentLink = createLink(label, "dropdown-toggle", false);
+      if (i18nKey) parentLink.setAttribute("data-i18n", i18nKey);
+
       parentLink.addEventListener("click", (e) => {
         e.preventDefault();
         closeMobileNav();
@@ -115,6 +126,8 @@ export function loadNav(activeNavLink: string) {
         li.className = "nav-dropdown-item";
 
         const subLink = createLink(subItem.label, "", false);
+        if (subItem.i18n) subLink.setAttribute("data-i18n", subItem.i18n);
+
         subLink.addEventListener("click", (e) => {
           e.preventDefault();
           closeMobileNav();
@@ -129,6 +142,8 @@ export function loadNav(activeNavLink: string) {
       nav.appendChild(dropdownContainer);
     } else {
       const link = createLink(label, "", false);
+      if (i18nKey) link.setAttribute("data-i18n", i18nKey);
+
       link.addEventListener("click", () => {
         closeMobileNav();
         navigateTo(path as any);
@@ -156,7 +171,7 @@ export function loadNav(activeNavLink: string) {
       const userRole = await getUserRole(user.uid);
 
       if (userRole === "admin") {
-        const admin = makeElement("a", "admin", "", "Admin");
+        const admin = makeElement("a", "admin", "", "Admin", "nav_admin");
         admin.addEventListener("click", () => {
           closeMobileNav();
           navigateTo("/admin");
@@ -164,15 +179,48 @@ export function loadNav(activeNavLink: string) {
         authLinksContainer.appendChild(admin);
       }
 
-      const logout = makeElement("a", "logout", "", "Log Out");
+      const logout = makeElement("a", "logout", "nav-action", "Log Out", "nav_logout");
       logout.addEventListener("click", (e) => {
         e.preventDefault();
         closeMobileNav();
         signOutUser();
       });
       authLinksContainer.appendChild(logout);
+      updateContent();
     }
   });
+
+  const languageToggle = makeElement("a", "lang-toggle", "nav-action", null);
+  
+  const langIcon = makeElement("span", null, "material-symbols-outlined", "language");
+  const langToggleText = makeElement("span", "lang-text", null, null) as HTMLSpanElement;
+
+  const activeLang = i18n.resolvedLanguage || i18n.language || "en";
+  langToggleText.textContent = activeLang.toUpperCase();
+
+  languageToggle.append(langIcon, langToggleText);
+
+  languageToggle.addEventListener("click", async (e: MouseEvent): Promise<void> => {
+    e.preventDefault();
+    closeMobileNav();
+    const currentLang = i18n.resolvedLanguage || i18n.language || 'en';
+    const targetLang = currentLang.startsWith('en') ? 'es' : 'en';
+    await i18n.changeLanguage(targetLang);
+  });
+
+  if (languageChangeListener) {
+    i18n.off('languageChanged', languageChangeListener);
+  }
+
+  languageChangeListener = (lng: string) => {
+    langToggleText.textContent = lng.toUpperCase();
+  };
+
+  i18n.on('languageChanged', languageChangeListener);
+
+  nav.appendChild(languageToggle);
+
+  updateContent();
 }
 
 export function loadHeader() {
@@ -195,7 +243,8 @@ export function loadHeader() {
     "i",
     null,
     null,
-    "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities."
+    "Building a bridge of hope to Guatemala through sustainable housing, clean water, and educational opportunities.",
+    "header_mission"
   );
   mission.appendChild(italics);
   headerElement.appendChild(mission);

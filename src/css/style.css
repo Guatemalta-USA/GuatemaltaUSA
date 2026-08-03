@@ -191,7 +191,6 @@ header #mission {
   opacity: 0.9;
 }
 
-/* MAIN DESKTOP <NAV> BAR */
 nav {
   width: 100%;
   min-height: 60px;
@@ -226,11 +225,24 @@ nav a {
   box-sizing: border-box;
 }
 
-nav a:hover {
+nav a:not(.nav-action):hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-bottom: 3px solid var(--green-accent);
   color: #fff;
   text-decoration: none;
+}
+
+nav a.nav-action {
+  border-bottom: 3px solid transparent;
+  border-radius: 20px;
+  margin: 0 4px;
+  padding: 6px 16px;
+  height: auto;
+}
+
+nav a.nav-action:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
 }
 
 nav [aria-current]:not([aria-current="false"]),

@@ -4,6 +4,7 @@ import type { Post, Project } from "./models.js";
 import { displayGallery, getPhotosFromGithub, setupControls } from "./modules/imageGallery.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createLink, makeElement } from "./modules/utils.js";
+import { updateContent } from "./modules/i18n.js";
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
@@ -34,7 +35,9 @@ async function loadPhotos() {
 }
 
 async function loadProjects() {
-  const projectsHeading = makeElement("h1", null, null, "Current Projects");
+  // Pass "current_projects" as the 5th argument
+  const projectsHeading = makeElement("h1", null, null, "Current Projects", "current_projects");
+
   try {
     const currentProjects: Project[] = await getProjectsByStatus(true);
 
@@ -43,7 +46,8 @@ async function loadProjects() {
     }
 
     if (currentProjects.length === 0) {
-      currentProjectsSection.innerHTML = "<p>No projects yet. Check back soon!</p>";
+      const emptyMsg = makeElement("p", null, null, "No projects yet. Check back soon!", "no_projects_yet");
+      currentProjectsSection.appendChild(emptyMsg);
     } else {
       const fragment = document.createDocumentFragment();
 
@@ -65,6 +69,7 @@ async function loadProjects() {
         projectArticle.appendChild(firstPElm);
 
         const readMore = createLink("Read More...", "", false);
+        readMore.setAttribute("data-i18n", "read_more");
         readMore.classList.add("post-link");
         readMore.addEventListener("click", () =>
           navigateTo("/impact/project", { params: { id: projectId } })
@@ -78,13 +83,18 @@ async function loadProjects() {
     }
   } catch (err) {
     console.error("Error loading projects:", err);
-    currentProjectsSection.innerHTML = "<p>Error loading projects.</p>";
+    currentProjectsSection.appendChild(
+      makeElement("p", null, null, "Error loading projects.", "error_loading_projects")
+    );
   }
+
   currentProjectsSection.prepend(projectsHeading);
 }
 
 async function loadPosts() {
-  const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts");
+  // Pass "recent_blog_posts" as the 5th argument
+  const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts", "recent_blog_posts");
+
   try {
     const posts: Post[] = await getAllPosts();
 
@@ -93,7 +103,8 @@ async function loadPosts() {
     }
 
     if (posts.length === 0) {
-      updatesSection.innerHTML = "<p>No posts yet. Check back soon!</p>";
+      const emptyMsg = makeElement("p", null, null, "No posts yet. Check back soon!", "no_posts_yet");
+      updatesSection.appendChild(emptyMsg);
     } else {
       const fragment = document.createDocumentFragment();
 
@@ -110,12 +121,12 @@ async function loadPosts() {
         postLink.appendChild(postTitle);
         postArticle.appendChild(postLink);
 
-        const postInfo = makeElement(
-          "h3",
-          null,
-          null,
-          `By ${post.author} on ${post.publishDate.toDate().toLocaleDateString()}`
-        );
+        // Dynamic strings with variable options
+        const postInfo = makeElement("h3", null, null, null, "post_author_date");
+        postInfo.setAttribute("data-i18n-options", JSON.stringify({
+          author: post.author,
+          date: post.publishDate.toDate().toLocaleDateString()
+        }));
         postArticle.appendChild(postInfo);
 
         const firstP = post.getFirstParagraph();
@@ -123,6 +134,7 @@ async function loadPosts() {
         postArticle.appendChild(firstPElm);
 
         const readMore = createLink("Read More...", "", false);
+        readMore.setAttribute("data-i18n", "read_more");
         readMore.classList.add("post-link");
         readMore.addEventListener("click", () =>
           navigateTo('/blog/post', { params: { id: postId } })
@@ -136,14 +148,19 @@ async function loadPosts() {
     }
   } catch (err) {
     console.error("Error loading posts:", err);
-    updatesSection.innerHTML = "<p>Error loading posts.</p>";
+    updatesSection.appendChild(
+      makeElement("p", null, null, "Error loading posts.", "error_loading_posts")
+    );
   }
+
   updatesSection.prepend(updatesHeading);
 }
 
-initializeApp("Home", "Home").then(() => {
+initializeApp("Home", "Home").then(async () => {
   document.title = "Guatemalta USA | Sustainable Housing & Education Nonprofit";
   loadPhotos();
-  loadProjects();
-  loadPosts();
+
+  // Load dynamic content, then run updateContent() to ensure everything renders translated on first load
+  await Promise.all([loadProjects(), loadPosts()]);
+  updateContent();
 });
