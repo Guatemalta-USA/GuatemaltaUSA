@@ -1,6 +1,6 @@
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import {resources} from './translations';
+import { resources } from './translations';
 
 i18n
   .use(LanguageDetector)
@@ -19,30 +19,48 @@ i18n
     updateContent();
   });
 
+// Automatically trigger updateContent whenever the language changes
+i18n.on('languageChanged', () => {
+  updateContent();
+});
+
 type TranslationKey = keyof typeof resources['en']['translation'];
 
 export function updateContent() {
-    const currentLang = (document.documentElement.lang as 'en' | 'es') || 'en';
+    // 1. Get resolved language from i18n instance (normalizing tags like 'es-ES' -> 'es')
+    const rawLang = i18n.language || i18n.resolvedLanguage || 'en';
+    const currentLang: 'en' | 'es' = rawLang.startsWith('es') ? 'es' : 'en';
 
-    // 1. Static UI elements using data-i18n dictionary keys
+    // Sync <html lang="..."> attribute in the DOM
+    if (typeof document !== 'undefined' && document.documentElement) {
+        document.documentElement.lang = currentLang;
+    }
+
+    // 2. Static UI elements using data-i18n dictionary keys
     const elementsToTranslate = document.querySelectorAll('[data-i18n]');
     elementsToTranslate.forEach(element => {
         const key = element.getAttribute('data-i18n') as TranslationKey | null;
-        if (key && resources[currentLang]?.translation?.[key]) {
-            element.textContent = resources[currentLang].translation[key];
+        if (key) {
+            const translatedText = i18n.t(key, { lng: currentLang });
+            if (translatedText && translatedText !== key) {
+                element.textContent = translatedText;
+            }
         }
     });
 
-    // 2. Elements with placeholder attributes (e.g., input fields, textareas)
+    // 3. Elements with placeholder attributes (e.g., input fields, textareas)
     const placeholdersToTranslate = document.querySelectorAll('[data-i18n-placeholder]');
     placeholdersToTranslate.forEach(element => {
         const key = element.getAttribute('data-i18n-placeholder') as TranslationKey | null;
-        if (key && resources[currentLang]?.translation?.[key]) {
-            element.setAttribute('placeholder', resources[currentLang].translation[key]);
+        if (key) {
+            const translatedText = i18n.t(key, { lng: currentLang });
+            if (translatedText && translatedText !== key) {
+                element.setAttribute('placeholder', translatedText);
+            }
         }
     });
 
-    // 3. Dynamic content titles (Projects, Posts, etc.) using direct localized string attributes
+    // 4. Dynamic content titles (Projects, Posts, etc.) using direct localized string attributes
     const dynamicTitles = document.querySelectorAll('[data-title-en]');
     dynamicTitles.forEach(element => {
         const titleEn = element.getAttribute('data-title-en');
@@ -55,7 +73,7 @@ export function updateContent() {
         }
     });
 
-    // 4. Dynamic content body excerpts using direct localized string attributes
+    // 5. Dynamic content body excerpts using direct localized string attributes
     const dynamicExcerpts = document.querySelectorAll('[data-excerpt-en]');
     dynamicExcerpts.forEach(element => {
         const excerptEn = element.getAttribute('data-excerpt-en');

@@ -361,11 +361,15 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]> {
-    const q = query(projectsCol);
+    const q = query(
+        collection(db, 'projects').withConverter(projectConverter),
+        where("isCurrent", "==", isCurrent),
+        where("published", "==", true)
+    );
     const querySnapshot = await getDocs(q);
-    const all = querySnapshot.docs.map(doc => doc.data());
+    const projects = querySnapshot.docs.map((doc) => doc.data());
 
-    return all.filter(p => Boolean(p.isCurrent) === isCurrent && Boolean(p.published) === true);
+    return projects.sort((a, b) => a.getTitle('en').localeCompare(b.getTitle('en')));
 }
 
 export async function getUnpublishedProjects(): Promise<Project[]> {

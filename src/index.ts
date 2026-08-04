@@ -36,6 +36,13 @@ async function loadPhotos() {
 
 let cachedProjects: Project[] = [];
 
+function getExcerpt(project: Project, lang: 'en' | 'es'): string {
+    if (typeof project.getFirstParagraph === "function") {
+        return project.getFirstParagraph(lang);
+    }
+    return "";
+}
+
 async function loadProjects() {
   const projectsHeading = makeElement("h1", null, null, "Current Projects", "current_projects");
 
@@ -55,7 +62,8 @@ async function loadProjects() {
       currentProjectsSection.appendChild(emptyMsg);
     } else {
       const fragment = document.createDocumentFragment();
-      const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+      const rawLang = i18n.language || getResolvedLanguage() || 'en';
+      const activeLang: 'en' | 'es' = rawLang.startsWith('es') ? 'es' : 'en';
 
       cachedProjects.forEach((project: Project) => {
         const projectId = project.id ? project.id : "";
@@ -66,14 +74,30 @@ async function loadProjects() {
           navigateTo("/impact/project", { params: { id: projectId } })
         );
 
-        const displayTitle = project.projectTitle[currentLang] || project.projectTitle.en || project.projectTitle.es || "";
-        const projectTitle = makeElement("h2", null, null, displayTitle);
+        // Title handling with fallbacks
+        const titleEn = project.getTitle ? project.getTitle('en') : ((project.projectTitle as any)?.en || "Untitled");
+        const titleEs = project.getTitle ? (project.getTitle('es') || titleEn) : ((project.projectTitle as any)?.es || titleEn);
+        const initialTitle = activeLang === 'es' ? (titleEs || titleEn) : titleEn;
+
+        const projectTitle = makeElement("h2", null, null, initialTitle);
+        projectTitle.setAttribute("data-title-en", titleEn);
+        projectTitle.setAttribute("data-title-es", titleEs);
         
         projectLink.appendChild(projectTitle);
         projectArticle.appendChild(projectLink);
 
-        const firstP = project.getFirstParagraph(currentLang);
-        const firstPElm = makeElement("p", null, null, firstP);
+        // Excerpt handling with fallback to English
+        const rawExcerptEn = getExcerpt(project, 'en');
+        const rawExcerptEs = getExcerpt(project, 'es');
+
+        const excerptEn = rawExcerptEn || rawExcerptEs;
+        const excerptEs = rawExcerptEs || rawExcerptEn;
+        const initialExcerpt = activeLang === 'es' ? excerptEs : excerptEn;
+
+        const firstPElm = makeElement("p", null, null, initialExcerpt);
+        firstPElm.setAttribute("data-excerpt-en", excerptEn);
+        firstPElm.setAttribute("data-excerpt-es", excerptEs);
+
         projectArticle.appendChild(firstPElm);
 
         const readMore = createLink("Read More...", "", false);
@@ -100,12 +124,6 @@ async function loadProjects() {
   currentProjectsSection.prepend(projectsHeading);
   updateContent();
 }
-
-i18n.on('languageChanged', () => {
-  if (cachedProjects.length > 0) {
-    loadProjects();
-  }
-});
 
 async function loadPosts() {
   const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts", "recent_blog_posts");

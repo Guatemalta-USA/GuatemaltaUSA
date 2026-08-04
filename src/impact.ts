@@ -83,10 +83,18 @@ pastTabBtn.addEventListener("click", async () => {
 
 tabs.append(currentTabBtn, pastTabBtn);
 
+function getExcerpt(project: Project, lang: 'en' | 'es'): string {
+    if (typeof project.getFirstParagraph === "function") {
+        const result = project.getFirstParagraph(lang);
+        if (result) return result;
+    }
+    return "";
+}
+
 async function loadProjects(status: string) {
     container.innerHTML = "";
     
-    // Select correct status array (already filtered for published: true by getProjectsByStatus)
+    // Select correct status array (already populated with Project class instances)
     const projectsToDisplay = status === "current" ? currentProjects : pastProjects;
 
     try {
@@ -104,18 +112,13 @@ async function loadProjects(status: string) {
                 const projectLink = makeElement("a", null, "post-link", null);
                 projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
                 
-                // Extract English and Spanish titles safely
-                const titleEn = typeof project.projectTitle === "string" 
-                    ? project.projectTitle 
-                    : (project.projectTitle?.en || "Untitled");
-                const titleEs = typeof project.projectTitle === "string" 
-                    ? project.projectTitle 
-                    : (project.projectTitle?.es || titleEn);
+                const titleEn = project.getTitle ? project.getTitle('en') : ((project.projectTitle as any)?.en || "Untitled");
+                const titleEs = project.getTitle ? (project.getTitle('es') || titleEn) : ((project.projectTitle as any)?.es || titleEn);
+                const initialTitle = project.getTitle ? project.getTitle(currentLang) : (currentLang === 'es' ? titleEs : titleEn);
 
-                const initialTitle = currentLang === "es" ? titleEs : titleEn;
                 const projectTitle = makeElement("h2", null, "project-title-heading", initialTitle);
                 
-                // Attach attributes for updateContent() switcher
+                // Attach attributes for updateContent() i18n switcher
                 projectTitle.setAttribute("data-title-en", titleEn);
                 projectTitle.setAttribute("data-title-es", titleEs);
                 
@@ -123,13 +126,13 @@ async function loadProjects(status: string) {
                 projectArticle.appendChild(projectLink);
 
                 // Paragraph Excerpt
-                const excerptEn = project.getFirstParagraph ? project.getFirstParagraph('en') : "";
-                const excerptEs = project.getFirstParagraph ? project.getFirstParagraph('es') : excerptEn;
-                const initialExcerpt = currentLang === "es" ? excerptEs : excerptEn;
+                const excerptEn = getExcerpt(project, 'en');
+                const excerptEs = getExcerpt(project, 'es') || excerptEn;
+                const initialExcerpt = currentLang === 'es' ? excerptEs : excerptEn;
 
                 const firstPElm = makeElement("p", null, null, initialExcerpt);
                 
-                // Attach attributes for updateContent() switcher
+                // Attach attributes for updateContent() i18n switcher
                 firstPElm.setAttribute("data-excerpt-en", excerptEn);
                 firstPElm.setAttribute("data-excerpt-es", excerptEs);
 

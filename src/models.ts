@@ -1,4 +1,4 @@
-import { Timestamp, serverTimestamp } from "firebase/firestore";
+import { Timestamp, serverTimestamp, type FirestoreDataConverter } from "firebase/firestore";
 
 export class Message {
     public message: string;
@@ -190,38 +190,77 @@ export class Project {
     }
 
     getTitle(lang: SupportedLanguage = 'en'): string {
+        if (!this.projectTitle) return '';
         return this.projectTitle[lang] || this.projectTitle.en || this.projectTitle.es || '';
     }
 
     private extractPlainText(contentValue: any): string {
         if (!contentValue) return '';
 
-        if (typeof contentValue === 'string') {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = contentValue;
-            return tempDiv.textContent || tempDiv.innerText || '';
+        let target = contentValue;
+
+        // If stored as a JSON string, attempt parsing
+        if (typeof target === 'string' && (target.trim().startsWith('{') || target.trim().startsWith('['))) {
+            try {
+                target = JSON.parse(target);
+            } catch {
+                // Keep as raw string if JSON parsing fails
+            }
         }
 
-        if (typeof contentValue === 'object') {
-            const ops = contentValue.ops || (typeof contentValue.toJSON === 'function' ? contentValue.toJSON().ops : null);
-            if (Array.isArray(ops)) {
-                return ops
-                    .map((op: any) => (typeof op.insert === 'string' ? op.insert : ''))
-                    .join('')
-                    .trim();
+        // Handle standard strings or HTML
+        if (typeof target === 'string') {
+            if (typeof document !== 'undefined') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = target;
+                return (tempDiv.textContent || tempDiv.innerText || '').trim();
             }
+            return target.replace(/<[^>]*>/g, '').trim();
+        }
+
+        // Determine ops array regardless of whether target is { ops: [...] } or direct [...]
+        let ops: any[] | null = null;
+        if (Array.isArray(target)) {
+            ops = target;
+        } else if (typeof target === 'object' && target !== null) {
+            ops = target.ops || (typeof target.toJSON === 'function' ? target.toJSON().ops : null);
+        }
+
+        if (Array.isArray(ops)) {
+            return ops
+                .map((op: any) => {
+                    if (typeof op.insert === 'string') {
+                        return op.insert;
+                    }
+                    // Skip non-text embeds (images, widgets, givebutter components, etc.)
+                    return '';
+                })
+                .join('')
+                .trim();
         }
 
         return '';
     }
 
     getFirstParagraph(lang: SupportedLanguage = 'en'): string {
-        const rawContent = this.content[lang] || this.content.en || this.content.es;
+        if (!this.content) return '';
+
+        let rawContent: any = '';
+        if (typeof this.content === 'object' && this.content !== null) {
+            rawContent = (this.content as Record<string, any>)[lang] 
+                ?? (this.content as Record<string, any>)['en'] 
+                ?? (this.content as Record<string, any>)['es']
+                ?? this.content;
+        } else {
+            rawContent = this.content;
+        }
+
         const plainText = this.extractPlainText(rawContent);
 
         if (!plainText) return '';
 
-        const paragraphs = plainText.split(/\n+/).filter((p) => p.trim().length > 0);
+        // Extract the first non-empty line/paragraph
+        const paragraphs = plainText.split(/\r?\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
         return paragraphs.length > 0 ? paragraphs[0] : plainText;
     }
 
@@ -252,12 +291,12 @@ export class Project {
     toFirestore(): Record<string, any> {
         return {
             projectTitle: {
-                en: this.projectTitle.en || '',
-                es: this.projectTitle.es || ''
+                en: this.projectTitle?.en || '',
+                es: this.projectTitle?.es || ''
             },
             content: {
-                en: this.sanitizeData(this.content.en),
-                es: this.sanitizeData(this.content.es)
+                en: this.sanitizeData((this.content as Record<string, any>)?.en ?? ''),
+                es: this.sanitizeData((this.content as Record<string, any>)?.es ?? '')
             },
             isCurrent: this.isCurrent,
             published: this.published,
@@ -267,37 +306,49 @@ export class Project {
     }
 
     static fromFirestore(id: string, data: Record<string, any>): Project {
-    const title: LocalizedString = typeof data.projectTitle === 'object' && data.projectTitle !== null && ('en' in data.projectTitle || 'es' in data.projectTitle)
-        ? { en: data.projectTitle.en || '', es: data.projectTitle.es || '' }
-        : { en: typeof data.projectTitle === 'string' ? data.projectTitle : '', es: '' };
+        // Parse Title safely from legacy string or localized map
+        const title: LocalizedString = typeof data.projectTitle === 'object' && data.projectTitle !== null
+            ? { en: data.projectTitle.en || '', es: data.projectTitle.es || '' }
+            : { en: typeof data.projectTitle === 'string' ? data.projectTitle : '', es: '' };
 
-    let content: LocalizedString | LocalizedContent;
+        // Parse Content safely checking both data.content and legacy data.description
+        const rawContentData = data.content ?? data.description ?? data.projectDescription;
+        let content: LocalizedContent | LocalizedString;
 
-    if (data.content && typeof data.content === 'object' && ('en' in data.content || 'es' in data.content)) {
-        content = {
-            en: data.content.en ?? '',
-            es: data.content.es ?? ''
-        };
-    } else if (data.content) {
-        content = {
-            en: data.content,
-            es: ''
-        };
-    } else {
-        content = { en: '', es: '' };
+        if (rawContentData && typeof rawContentData === 'object' && ('en' in rawContentData || 'es' in rawContentData)) {
+            content = {
+                en: rawContentData.en ?? '',
+                es: rawContentData.es ?? ''
+            };
+        } else if (rawContentData) {
+            content = {
+                en: rawContentData,
+                es: ''
+            };
+        } else {
+            content = { en: '', es: '' };
+        }
+
+        return new Project(
+            title,
+            content,
+            data.isCurrent ?? data.currentProject ?? true,
+            data.published ?? true,
+            data.goalBar ?? null,
+            id,
+            data.updatedAt?.toDate ? data.updatedAt.toDate() : undefined
+        );
     }
+}
 
-    return new Project(
-        title,
-        content,
-        data.isCurrent ?? true,
-        data.published ?? true,
-        data.goalBar ?? null,
-        id,
-        data.updatedAt?.toDate ? data.updatedAt.toDate() : undefined
-    );
-}
-}
+// Firestore Converter Definition
+export const projectConverter: FirestoreDataConverter<Project> = {
+    toFirestore: (project: Project) => project.toFirestore(),
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return Project.fromFirestore(snapshot.id, data);
+    }
+};
 
 export class ImageMetadata {
     public filename: string;
