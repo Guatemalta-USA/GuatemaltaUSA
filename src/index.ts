@@ -4,7 +4,7 @@ import type { Post, Project } from "./models.js";
 import { displayGallery, getPhotosFromGithub, setupControls } from "./modules/imageGallery.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createLink, makeElement } from "./modules/utils.js";
-import i18n, { updateContent } from "./modules/i18n.js";
+import i18n, { updateContent, getResolvedLanguage } from "./modules/i18n.js";
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
@@ -34,24 +34,30 @@ async function loadPhotos() {
   }
 }
 
+let cachedProjects: Project[] = [];
+
 async function loadProjects() {
-  // Pass "current_projects" as the 5th argument
   const projectsHeading = makeElement("h1", null, null, "Current Projects", "current_projects");
 
   try {
-    const currentProjects: Project[] = await getProjectsByStatus(true);
+    if (cachedProjects.length === 0) {
+      cachedProjects = await getProjectsByStatus(true);
+    }
 
     if (loadingProjects) {
       loadingProjects.remove();
     }
 
-    if (currentProjects.length === 0) {
+    currentProjectsSection.innerHTML = "";
+
+    if (cachedProjects.length === 0) {
       const emptyMsg = makeElement("p", null, null, "No projects yet. Check back soon!", "no_projects_yet");
       currentProjectsSection.appendChild(emptyMsg);
     } else {
       const fragment = document.createDocumentFragment();
+      const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
 
-      currentProjects.forEach((project: Project) => {
+      cachedProjects.forEach((project: Project) => {
         const projectId = project.id ? project.id : "";
         const projectArticle = makeElement("article", projectId, null, null);
         const projectLink = makeElement("a", null, "post-link", null);
@@ -60,11 +66,13 @@ async function loadProjects() {
           navigateTo("/impact/project", { params: { id: projectId } })
         );
 
-        const projectTitle = makeElement("h2", null, null, project.projectTitle);
+        const displayTitle = project.projectTitle[currentLang] || project.projectTitle.en || project.projectTitle.es || "";
+        const projectTitle = makeElement("h2", null, null, displayTitle);
+        
         projectLink.appendChild(projectTitle);
         projectArticle.appendChild(projectLink);
 
-        const firstP = project.getFirstParagraph();
+        const firstP = project.getFirstParagraph(currentLang);
         const firstPElm = makeElement("p", null, null, firstP);
         projectArticle.appendChild(firstPElm);
 
@@ -83,13 +91,21 @@ async function loadProjects() {
     }
   } catch (err) {
     console.error("Error loading projects:", err);
+    currentProjectsSection.innerHTML = "";
     currentProjectsSection.appendChild(
       makeElement("p", null, null, "Error loading projects.", "error_loading_projects")
     );
   }
 
   currentProjectsSection.prepend(projectsHeading);
+  updateContent();
 }
+
+i18n.on('languageChanged', () => {
+  if (cachedProjects.length > 0) {
+    loadProjects();
+  }
+});
 
 async function loadPosts() {
   const updatesHeading = makeElement("h1", null, null, "Recent Blog Posts", "recent_blog_posts");

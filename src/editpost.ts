@@ -66,7 +66,7 @@ async function setupEditPostPage() {
             const projects: Project[] = await getAllProjects();
             projects.forEach((project) => {
                 const option = document.createElement("option");
-                option.text = project.projectTitle;
+                option.text = project.projectTitle.en;
                 if (project.id) option.value = project.id;
                 linkToProjectSelect.add(option);
             });

@@ -36,10 +36,16 @@ const projectsCol = collection(db, 'projects').withConverter(projectConverter);
 
 function slugify(text: string): string {
     return text
+        .toString()
         .toLowerCase()
         .trim()
-        .replace(/[^\w ]+/g, '')
-        .replace(/ +/g, '-');
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
 }
 
 export async function addPage(pageData: PageContents): Promise<void> {
@@ -355,9 +361,11 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]> {
-    const q = query(projectsCol, where("currentProject", "==", isCurrent), where("published", "==", true), orderBy("projectTitle", "asc"));
+    const q = query(projectsCol);
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data());
+    const all = querySnapshot.docs.map(doc => doc.data());
+
+    return all.filter(p => Boolean(p.isCurrent) === isCurrent && Boolean(p.published) === true);
 }
 
 export async function getUnpublishedProjects(): Promise<Project[]> {
@@ -375,21 +383,25 @@ export async function getProjectById(id: string): Promise<Project | null> {
 
 export async function saveProject(project: Project): Promise<string> {
     try {
+        const firestoreData = project.toFirestore();
+
         if (project.id) {
-            // Update existing
-            const docRef = doc(db, 'projects', project.id).withConverter(projectConverter);
-            await setDoc(docRef, project);
+            // Update existing document
+            const docRef = doc(db, 'projects', project.id);
+            await setDoc(docRef, firestoreData);
             return project.id;
         } else {
-            // Create new
-            const customId = slugify(project.projectTitle);
+            // Create new document with slug generated from title
+            const titleString = project.projectTitle.en || project.projectTitle.es || 'untitled-project';
+            const customId = slugify(titleString);
+            
             const docRef = doc(db, 'projects', customId);
-            await setDoc(docRef, project.toFirestore());
+            await setDoc(docRef, firestoreData);
             return customId;
         }
     } catch (error) {
-        console.log("Error saving project: ", error);
-        throw new Error("Error saving project. Please try reloading the page.");
+        console.error("Error saving project: ", error);
+        throw error;
     }
 }
 

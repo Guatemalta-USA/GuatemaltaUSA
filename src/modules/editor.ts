@@ -135,8 +135,7 @@ class GivebutterWidgetBlot extends BlockEmbed {
 
     static create(value: string) {
         const widgetId = value && value.trim() !== "" ? value.trim() : 'gRGya8';
-        //" Donate Now", "button", "", "action-link", "favorite"
-        const node = createButton({buttonText: "Donate Now", buttonType: "button", buttonId: "", buttonClass: "action-link", icon: "favorite", i18n: "donate_now"});
+        const node = createButton({ buttonText: "Donate Now", buttonType: "button", buttonId: "", buttonClass: "action-link", icon: "favorite", i18n: "donate_now" });
         node.setAttribute('data-id', widgetId);
 
         const idTag = document.createElement('span');
@@ -165,6 +164,7 @@ export class TheEditor {
     private deletedImageURLs: string[] = [];
     private deleteObserver: MutationObserver | null = null;
     private activeImageElement: HTMLImageElement | null = null;
+    private trackedImages: Set<string> = new Set();
 
     constructor() {
         const container = document.getElementById('editor-container');
@@ -193,7 +193,6 @@ export class TheEditor {
                                 const url = linkResponse[0];
                                 if (url) this.quill.format('link', url);
                             }
-                            
                         },
                         'givebutter': async () => {
                             const range = this.quill.getSelection();
@@ -215,7 +214,6 @@ export class TheEditor {
                                     }
                                 }
                             }
-
                         },
                         'action-link': async () => {
                             const actionLinkResponse = await promptModal("Enter Action URL", ["url..."], "Add Action Button", false);
@@ -223,7 +221,6 @@ export class TheEditor {
                                 const url = actionLinkResponse[0];
                                 if (url) this.quill.format('actionLink', url);
                             }
-                            
                         },
                         'nav-link': (value: string) => {
                             if (value) {
@@ -246,7 +243,8 @@ export class TheEditor {
                                 "Enter the URL of the video",
                                 ["video url"],
                                 "Insert Video",
-                                false);
+                                false
+                            );
                             if (videoResponse) {
                                 const url = videoResponse[0];
                                 if (url && url !== "") {
@@ -259,7 +257,6 @@ export class TheEditor {
                                     }
                                 }
                             }
-
                         },
                         'mailto': async () => {
                             const savedRange = this.quill.getSelection();
@@ -270,7 +267,8 @@ export class TheEditor {
                                 "Enter Email Address",
                                 ["example@domain.com"],
                                 "Insert Email Link",
-                                false);
+                                false
+                            );
                             if (emailResponse) {
                                 const email = emailResponse[0];
                                 if (email && email.trim() !== "") {
@@ -285,7 +283,6 @@ export class TheEditor {
                                     }
                                 }
                             }
-
                         },
                         'table': () => {
                             const tableModule = this.quill.getModule('table') as any;
@@ -376,10 +373,9 @@ export class TheEditor {
                 }
 
                 if (img) {
-                    const blot = Quill.find(img);
-                    if (blot && !('root' in blot)) {
-                        const index = this.quill.getIndex(blot);
-                        this.quill.formatText(index, 1, 'style', align.style);
+                    const blot = Quill.find(img) as any;
+                    if (blot) {
+                        blot.format('style', align.style);
                     }
                 }
             };
@@ -399,8 +395,7 @@ export class TheEditor {
             <path class="ql-fill" d="M6,7.5 A1.5,1.5 0 1,1 3,7.5 A1.5,1.5 0 1,1 6,7.5 Z" fill="#a855f7"></path>
             <line class="ql-stroke" x1="8" x2="14" y1="7" y2="7" stroke="#a855f7" stroke-width="2"></line>
             <line class="ql-stroke" x1="5" x2="13" y1="11" y2="11" stroke="#a855f7" stroke-width="2"></line>
-        </svg>
-    `;
+        </svg>`;
         }
 
         const navPicker = document.querySelector('.ql-nav-link');
@@ -457,17 +452,17 @@ export class TheEditor {
     }
 
     private setupDeleteObserver() {
-        let currentImages = new Set(this.getImagesFromEditor());
+        this.trackedImages = new Set(this.getImagesFromEditor());
         this.deleteObserver = new MutationObserver(() => {
             const newImages = new Set(this.getImagesFromEditor());
-            for (const url of currentImages) {
+            for (const url of this.trackedImages) {
                 if (!newImages.has(url)) {
                     if (url.includes('photos.guatemaltausa.org')) {
                         this.deletedImageURLs.push(url);
                     }
                 }
             }
-            currentImages = newImages;
+            this.trackedImages = newImages;
         });
         this.deleteObserver.observe(this.quill.root, { childList: true, subtree: true });
     }
@@ -517,13 +512,16 @@ export class TheEditor {
                         "Add Description",
                         true
                     );
+
                     if (altTextResponse) {
                         const altText = altTextResponse[0];
                         if (altText && altText.trim() !== "") {
-                        this.quill.formatText(savedRange.index, 1, 'alt', altText.trim());
+                            const [leaf] = this.quill.getLeaf(savedRange.index) as [any, number];
+                            if (leaf && typeof leaf.format === 'function') {
+                                leaf.format('alt', altText.trim());
+                            }
+                        }
                     }
-                    }
-                    
                 }
             } catch (error) {
                 createMessage("Upload failed.", "main-message", "error");
@@ -555,11 +553,23 @@ export class TheEditor {
         this.currentPage = pageName;
         try {
             const data = await getPageContents(pageName);
+            
+            // Temporarily pause delete tracking during initial contents load
+            if (this.deleteObserver) this.deleteObserver.disconnect();
+
             if (data && data.content) {
                 this.quill.setContents(data.content);
             } else {
                 this.quill.setContents([] as any);
             }
+
+            // Resync tracked images and reconnect observer
+            this.trackedImages = new Set(this.getImagesFromEditor());
+            this.deletedImageURLs = [];
+            if (this.deleteObserver) {
+                this.deleteObserver.observe(this.quill.root, { childList: true, subtree: true });
+            }
+
             const lastUpdatedDiv = document.getElementById("last-updated");
             if (lastUpdatedDiv && data?.lastUpdated) {
                 lastUpdatedDiv.innerHTML = "";
@@ -613,4 +623,5 @@ export class TheEditor {
     public getHTML(): string { return this.quill.root.innerHTML; }
     public setHTML(html: string): void { this.quill.root.innerHTML = html; }
 }
+
 updateContent();

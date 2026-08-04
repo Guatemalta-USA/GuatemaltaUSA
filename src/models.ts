@@ -4,6 +4,7 @@ export class Message {
     public message: string;
     public messageContainer: string;
     public icon: string;
+
     constructor(
         message: string,
         messageContainer: string,
@@ -19,6 +20,7 @@ export class PageContents {
     public pageName: string;
     public lastUpdated: Timestamp;
     public content: any;
+
     constructor(
         pageName: string,
         lastUpdated: Timestamp,
@@ -148,78 +150,153 @@ export class Post {
     }
 }
 
+export interface LocalizedString {
+    en: string;
+    es: string;
+}
+
+export interface LocalizedContent {
+    en: any;
+    es: any;
+}
+
+export type SupportedLanguage = 'en' | 'es';
+
 export class Project {
-    public id?: string;
-    public projectTitle: string;
-    public currentProject: boolean;
-    public published: boolean;
-    public lastUpdated: Timestamp;
-    public content: any;
-    public goalBar: string | null = null;
+    id?: string;
+    projectTitle: LocalizedString;
+    content: LocalizedString | LocalizedContent;
+    isCurrent: boolean;
+    published: boolean;
+    goalBar: string | null;
+    updatedAt?: Timestamp | Date;
 
     constructor(
-        projectTitle: string,
-        currentProject: boolean,
-        published: boolean,
-        lastUpdated: Timestamp,
-        content: any,
-        goalBar: string | null
+        projectTitle: LocalizedString,
+        content: LocalizedString | LocalizedContent,
+        isCurrent: boolean = true,
+        published: boolean = true,
+        goalBar: string | null = null,
+        id?: string,
+        updatedAt?: Timestamp | Date
     ) {
+        this.id = id;
         this.projectTitle = projectTitle;
-        this.currentProject = currentProject;
-        this.published = published;
-        this.lastUpdated = lastUpdated;
         this.content = content;
+        this.isCurrent = isCurrent;
+        this.published = published;
         this.goalBar = goalBar;
+        this.updatedAt = updatedAt;
     }
 
-    static fromFirestore(id: string, data: any): Project {
-        const project = new Project(
-            data.projectTitle,
-            data.currentProject,
-            data.published,
-            data.lastUpdated,
-            data.content,
-            data.goalBar
-        );
-        project.id = id;
-        return project;
+    getTitle(lang: SupportedLanguage = 'en'): string {
+        return this.projectTitle[lang] || this.projectTitle.en || this.projectTitle.es || '';
     }
 
-    toFirestore() {
+    private extractPlainText(contentValue: any): string {
+        if (!contentValue) return '';
+
+        if (typeof contentValue === 'string') {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = contentValue;
+            return tempDiv.textContent || tempDiv.innerText || '';
+        }
+
+        if (typeof contentValue === 'object') {
+            const ops = contentValue.ops || (typeof contentValue.toJSON === 'function' ? contentValue.toJSON().ops : null);
+            if (Array.isArray(ops)) {
+                return ops
+                    .map((op: any) => (typeof op.insert === 'string' ? op.insert : ''))
+                    .join('')
+                    .trim();
+            }
+        }
+
+        return '';
+    }
+
+    getFirstParagraph(lang: SupportedLanguage = 'en'): string {
+        const rawContent = this.content[lang] || this.content.en || this.content.es;
+        const plainText = this.extractPlainText(rawContent);
+
+        if (!plainText) return '';
+
+        const paragraphs = plainText.split(/\n+/).filter((p) => p.trim().length > 0);
+        return paragraphs.length > 0 ? paragraphs[0] : plainText;
+    }
+
+    private sanitizeData(data: any): any {
+        if (data === null || data === undefined) {
+            return data;
+        }
+
+        if (Array.isArray(data)) {
+            return data.map((item) => this.sanitizeData(item));
+        }
+
+        if (typeof data === 'object') {
+            if (typeof data.toJSON === 'function') {
+                return JSON.parse(JSON.stringify(data.toJSON()));
+            }
+
+            const cleanObj: Record<string, any> = {};
+            for (const key of Object.keys(data)) {
+                cleanObj[key] = this.sanitizeData(data[key]);
+            }
+            return JSON.parse(JSON.stringify(cleanObj));
+        }
+
+        return data;
+    }
+
+    toFirestore(): Record<string, any> {
         return {
-            projectTitle: this.projectTitle,
-            currentProject: this.currentProject,
+            projectTitle: {
+                en: this.projectTitle.en || '',
+                es: this.projectTitle.es || ''
+            },
+            content: {
+                en: this.sanitizeData(this.content.en),
+                es: this.sanitizeData(this.content.es)
+            },
+            isCurrent: this.isCurrent,
             published: this.published,
-            lastUpdated: serverTimestamp(),
-            content: this.content,
-            goalBar: this.goalBar
+            goalBar: this.goalBar ?? null,
+            updatedAt: serverTimestamp()
         };
     }
 
-    getFirstParagraph(): string {
-        if (!this.content) return "";
-        const ops = Array.isArray(this.content) ? this.content : this.content.ops;
-        if (!Array.isArray(ops)) return "";
-        let firstParagraph = "";
-        for (const op of ops) {
-            if (typeof op.insert === 'string') {
-                const newlineIndex = op.insert.indexOf('\n');
+    static fromFirestore(id: string, data: Record<string, any>): Project {
+    const title: LocalizedString = typeof data.projectTitle === 'object' && data.projectTitle !== null && ('en' in data.projectTitle || 'es' in data.projectTitle)
+        ? { en: data.projectTitle.en || '', es: data.projectTitle.es || '' }
+        : { en: typeof data.projectTitle === 'string' ? data.projectTitle : '', es: '' };
 
-                if (newlineIndex !== -1) {
-                    firstParagraph += op.insert.substring(0, newlineIndex);
-                    break;
-                } else {
-                    firstParagraph += op.insert;
-                }
-            }
-        }
-        return firstParagraph.trim();
+    let content: LocalizedString | LocalizedContent;
+
+    if (data.content && typeof data.content === 'object' && ('en' in data.content || 'es' in data.content)) {
+        content = {
+            en: data.content.en ?? '',
+            es: data.content.es ?? ''
+        };
+    } else if (data.content) {
+        content = {
+            en: data.content,
+            es: ''
+        };
+    } else {
+        content = { en: '', es: '' };
     }
 
-    setGoalBarId(id: string) {
-        this.goalBar = id;
-    }
+    return new Project(
+        title,
+        content,
+        data.isCurrent ?? true,
+        data.published ?? true,
+        data.goalBar ?? null,
+        id,
+        data.updatedAt?.toDate ? data.updatedAt.toDate() : undefined
+    );
+}
 }
 
 export class ImageMetadata {
@@ -239,7 +316,7 @@ export class ChildSponsorship {
     public name: string;
     public year: number;
     public bio: string;
-    photoURL: string;
+    public photoURL: string;
     public sponsor: string | null = null;
 
     constructor(
@@ -280,7 +357,7 @@ export interface refStatus {
     donorName: string;
     hasClaimed: boolean;
     childName?: string;
-    error?: string
+    error?: string;
 }
 
 export interface ProjectInfo {

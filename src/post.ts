@@ -9,6 +9,7 @@ import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
+import i18n from './modules/i18n';
 
 async function setupPostView() {
     const params = new URLSearchParams(window.location.search);
@@ -55,7 +56,7 @@ async function setupPostView() {
         const postContainer = document.getElementById("post-container") as HTMLElement;
         const loading = document.getElementById("loading");
         if (titleElem) titleElem.innerText = post.postTitle;
-        if (postInfoElem) postInfoElem.innerText = `By ${post.author} on ${post.publishDate.toDate().toLocaleDateString()}`
+        if (postInfoElem) postInfoElem.innerText = i18n.t('post_by_date', { author: post["author"], date: post.publishDate.toDate().toLocaleDateString() });
 
         // Initialize Read-Only Quill
         const viewer = new Quill('#viewer-container', {
@@ -125,12 +126,12 @@ async function setupPostView() {
         const lastUpdatedDate = post.lastUpdated.toDate();
         const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
             year: 'numeric',
-            month: 'short',
+            month: '2-digit',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
         });
-        lastUpdatedDiv.innerText = `Last updated: ${lastUpdatedStr}`;
+        lastUpdatedDiv.innerText = i18n.t('last_updated', {timestamp: lastUpdatedStr});
 
         if (loading) loading.remove();
         postContainer.classList.remove("hide");

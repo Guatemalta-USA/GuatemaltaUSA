@@ -41,7 +41,8 @@ export const resources = {
             "phone": "Phone Number (Optional):",
             "post_by_date": "By {{author}} on {{date}}",
             "project_updates": "Project Updates",
-            "edit_page": "Edit Page Content"
+            "edit_page": "Edit Page Content",
+            "last_updated": "Last Updated: {{timestamp}}"
         }
     },
     es: {
@@ -86,7 +87,8 @@ export const resources = {
             "phone": "Número de teléfono (Opcional):",
             "post_by_date": "Por {{author}} el {{date}}",
             "project_updates": "Actualizaciones del proyecto",
-            "edit_page": "Editar página"
+            "edit_page": "Editar página",
+            "last_updated": "Última actualización: {{timestamp}}"
         }
     }
 }

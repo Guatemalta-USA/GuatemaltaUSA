@@ -14,6 +14,7 @@ const adminControls = document.getElementById('admin-controls');
 const cancelButton = document.getElementById('cancel-btn');
 
 let goalBarID: string | null = null;
+let currentProject: Project | null = null;
 
 initGivebutter();
 
@@ -36,9 +37,9 @@ function toggleMode(editor: TheEditor, isEditing: boolean) {
 function showAdminUI(editor: TheEditor) {
   if (!adminControls || adminControls.querySelector("#edit-btn")) return;
 
-  const editButton = createButton({buttonText: "Edit Page Content", buttonType: "button", buttonId: "edit-btn", buttonClass: "accent-button", icon: "edit", i18n: "edit_page"});
+  const editButton = createButton({ buttonText: "Edit Page Content", buttonType: "button", buttonId: "edit-btn", buttonClass: "accent-button", icon: "edit", i18n: "edit_page" });
   editButton.addEventListener('click', () => toggleMode(editor, true));
-  
+
   adminControls.appendChild(editButton);
   adminControls.classList.remove("hide");
 }
@@ -102,11 +103,20 @@ export async function initializeApp(
         editor.quill.setContents(post.content);
       }
     } else if (editorConfig.type === 'project' && editorConfig.projectId) {
-      const project = await getProjectById(editorConfig.projectId);
-      if (project) {
-        goalBarID = project.goalBar;
-        if (projectTitleInput) projectTitleInput.value = project.projectTitle;
-        editor.quill.setContents(project.content);
+      currentProject = await getProjectById(editorConfig.projectId);
+      if (currentProject) {
+        goalBarID = currentProject.goalBar;
+        if (projectTitleInput) {
+          projectTitleInput.value = currentProject.getTitle('en');
+        }
+        const primaryContent = currentProject.content.en || currentProject.content.es;
+        if (primaryContent) {
+          if (typeof primaryContent === 'string') {
+            editor.setHTML(primaryContent);
+          } else {
+            editor.quill.setContents(primaryContent);
+          }
+        }
       }
     }
 
@@ -147,18 +157,28 @@ export async function initializeApp(
             await savePost(postToSave);
           } else if (editorConfig.type === 'project') {
             const content = await editor.prepareContentForSave();
-            const projectTitle = projectTitleInput?.value || "Untitled Project";
+            const titleValue = projectTitleInput?.value || "Untitled Project";
+
+            // Maintain existing Spanish translation if available on fetched instance
+            const updatedTitle = {
+              en: titleValue,
+              es: currentProject?.projectTitle?.es || ""
+            };
+
+            const updatedContent = {
+              en: content,
+              es: currentProject?.content?.es || ""
+            };
 
             const projectToSave = new Project(
-              projectTitle,
-              projectStatusInput?.checked ?? false,
-              publishedInput?.checked ?? false,
-              Timestamp.now(),
-              content,
-              goalBarID
+              updatedTitle,
+              updatedContent,
+              projectStatusInput?.checked ?? true,
+              publishedInput?.checked ?? true,
+              goalBarID,
+              editorConfig.projectId
             );
 
-            if (editorConfig.projectId) projectToSave.id = editorConfig.projectId;
             await saveProject(projectToSave);
           }
 
@@ -181,7 +201,14 @@ export async function initializeApp(
           if (post) editor.quill.setContents(post.content);
         } else if (editorConfig.type === 'project' && editorConfig.projectId) {
           const project = await getProjectById(editorConfig.projectId);
-          if (project) editor.quill.setContents(project.content);
+          if (project) {
+            const primaryContent = project.content.en || project.content.es;
+            if (typeof primaryContent === 'string') {
+              editor.setHTML(primaryContent);
+            } else if (primaryContent) {
+              editor.quill.setContents(primaryContent);
+            }
+          }
         }
         toggleMode(editor, false);
       } catch (error) {

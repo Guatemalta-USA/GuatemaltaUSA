@@ -6,6 +6,10 @@
     <meta name="color-scheme" content="dark light">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guatemalta USA</title>
+    <link rel="stylesheet" href="/src/css/style.css">
+    <link rel="stylesheet" href="/src/css/grid.css">
+    <link rel="stylesheet" href="/src/css/form.css">
+    <link rel="stylesheet" href="/src/css/quill.css">
     <meta name="description"
         content="Stay updated on our latest projects and success stories. Sign up for the Guatemalta USA mailing list to see the direct impact of your support.">
     <script type="application/ld+json">
@@ -43,9 +47,13 @@
                 </div>
                 <div id="admin-controls" class="hide"></div>
                 <div id="edit-section" class="">
+                    <div class="language-tabs">
+                        <button type="button" id="tab-lang-en" class="tab-btn active">English</button>
+                        <button type="button" id="tab-lang-es" class="tab-btn">Español</button>
+                    </div>
                     <div id="project-details">
                         <input type="text" placeholder="Project Title" name="project-title-input"
-                            id="project-title-input" />
+                            id="project-title-input" data-i18n="[placeholder]project_title_placeholder" />
                         <div id="toggles">
                             <div>
                                 <label class="switch">
@@ -59,16 +67,20 @@
                                     <input type="checkbox" id="published-toggle">
                                     <span class="slider round"></span>
                                 </label>
-                                <span id="published-label">Unpublished</span>
+                                <span id="published-label" data-i18n="unpublished">Unpublished</span>
                             </div>
                         </div>
                     </div>
                     <div id="editor-container" style="height: 300px;"></div>
                     <div class="actions">
                         <button id="delete-btn" class="delete-button">
-                            <span class="material-symbols-outlined">delete</span> Delete Project</button>
+                            <span class="material-symbols-outlined">delete</span>
+                            <span data-i18n="delete_project">Delete Project</span>
+                        </button>
                         <button id="save-btn" class="accent-button">
-                            <span class="material-symbols-outlined">save</span> Save Project</button>
+                            <span class="material-symbols-outlined">save</span>
+                            <span data-i18n="save_project">Save Project</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -76,7 +88,7 @@
         </main>
         <footer></footer>
     </div>
-    <script type="module" src="../src/editProject"></script>
+    <script type="module" src="/src/editProject.ts"></script>
 </body>
 
 </html>
