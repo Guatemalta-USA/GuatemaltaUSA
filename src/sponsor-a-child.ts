@@ -126,7 +126,7 @@ async function submitData(formData: FormData): Promise<boolean> {
         const photoInput = document.getElementById("photoFile") as HTMLInputElement;
         const file = photoInput.files?.[0];
         if (file) {
-            const resizedBlob = await resizeImage(file, 800, 800);
+            const resizedBlob = await resizeImage(file, {});
             newChild["photoURL"] = await uploadImage(resizedBlob as File);
         }
 

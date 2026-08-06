@@ -1,84 +1,138 @@
-const WORKER_URL = "https://photo-upload.guatemaltausa.workers.dev"
+const WORKER_URL = "https://photo-upload.guatemaltausa.workers.dev";
 
-export async function resizeImage(file: File, maxWidth = 800, maxHeight = 800): Promise<Blob> {
+export interface ResizeOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number; // 0.0 to 1.0
+  format?: 'image/webp' | 'image/jpeg' | 'image/png';
+}
+
+/**
+ * Resizes and compresses an image using modern browser APIs.
+ */
+export async function resizeImage(
+  file: File, 
+  options: ResizeOptions = {}
+): Promise<Blob> {
+  const { 
+    maxWidth = 800, 
+    maxHeight = 800, 
+    quality = 0.85, 
+    format = 'image/jpeg' 
+  } = options;
+
+  // Use createImageBitmap for optimal performance & lower memory overhead
+  const imageBitmap = await createImageBitmap(file);
+
+  let { width, height } = imageBitmap;
+
+  // Calculate new dimensions keeping aspect ratio
+  if (width > height) {
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+  } else {
+    if (height > maxHeight) {
+      width = Math.round((width * maxHeight) / height);
+      height = maxHeight;
+    }
+  }
+
+  // Draw to offscreen/standard canvas
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    imageBitmap.close();
+    throw new Error("Failed to acquire 2D context from canvas");
+  }
+
+  // Use higher-quality image scaling
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(imageBitmap, 0, 0, width, height);
+
+  // Close bitmap to free GPU memory
+  imageBitmap.close();
+
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-        if (width > height) {
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
         } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
+          reject(new Error("Canvas compression to Blob failed"));
         }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Failed to get canvas context"));
-        ctx.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error("Canvas compression failed"));
-          },
-          "image/png"
-        );
-      };
-    };
-    reader.onerror = (err) => reject(err);
+      },
+      format,
+      quality
+    );
   });
 }
 
-export async function uploadImage(image: Blob | File): Promise<string> {
+/**
+ * Uploads an image file or blob to Cloudflare R2 via Worker.
+ */
+export async function uploadImage(image: Blob | File, customFormat: string = "image/jpeg"): Promise<string> {
+  const contentType = image.type || customFormat;
+
   const response = await fetch(WORKER_URL, {
     method: "POST",
     body: image,
     headers: {
-      "Content-Type": "image/png",
+      "Content-Type": contentType,
     },
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to upload image to Cloudflare");
+    let errorMessage = "Failed to upload image to Cloudflare R2";
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      // Fallback if worker returned plain text or HTML error
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
+  if (!data.url) {
+    throw new Error("Cloudflare Worker response missing expected 'url' field");
+  }
+
   return data.url;
 }
 
+/**
+ * Deletes an image from Cloudflare R2 by filename or full URL.
+ */
 export async function deleteImage(photoURL: string): Promise<void> {
-  try {
-    const filename = photoURL.split("/").pop();
+  if (!photoURL) return;
 
-    if (!filename) throw new Error("Could not parse filename from URL");
+  // Extract raw filename if full URL passed
+  const filename = photoURL.split("/").pop();
 
-    const response = await fetch(`${WORKER_URL}?filename=${filename}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete image from R2");
-    }
-
-    console.log(`Deleted image: ${filename}`);
-  } catch (error) {
-    console.error("Error in deleteImage:", error);
+  if (!filename) {
+    throw new Error("Could not parse valid filename from URL");
   }
+
+  const response = await fetch(`${WORKER_URL}?filename=${encodeURIComponent(filename)}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Failed to delete image: ${filename}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      // Fallback
+    }
+    throw new Error(errorMessage);
+  }
+
+  console.log(`Successfully deleted image from R2: ${filename}`);
 }

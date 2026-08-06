@@ -1,10 +1,11 @@
 import { getAuthenticatedUser, getUserRole } from "./firebase/authService.js";
-import { deleteProjectFromDonateList, getDonateButtonList, getUnpublishedProjects, setProjectLink } from "./firebase/firebaseService.js";
+import { deleteProjectFromDonateList, getDonateButtonList, getProjectsByStatus, getUnpublishedProjects, setProjectLink } from "./firebase/firebaseService.js";
 import { initializeApp } from "./main.js";
 import type { Project, ProjectInfo } from "./models.js";
 import { navigateTo } from "./modules/navigate.js";
 import { confirmDeleteModal, copyToClipboard, createButton, createMessage, createTableHeader, makeElement, promptModal, storeMessage } from "./modules/utils.js";
 import { createDonateQRCodeWithLogo, createQRCodeWithLogo } from "./services/givebutter.service.js";
+
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
@@ -152,7 +153,9 @@ function renderQRCodeCanvasControls(
     qrCanvasSection.appendChild(btnRow);
 }
 
-function setupQRCodeGeneratorSection(generateButtons: HTMLElement, qrCanvasSection: HTMLElement) {
+function setupQRCodeGeneratorSection() {
+    const generateButtons = document.getElementById("generate-buttons") as HTMLElement;
+    const qrCanvasSection = document.getElementById("qr-canvas") as HTMLElement;
     const generateH2 = makeElement("h2", null, null, "Generate QR Codes");
     
     // Donate QR Code Block
@@ -217,7 +220,8 @@ function setupQRCodeGeneratorSection(generateButtons: HTMLElement, qrCanvasSecti
     );
 }
 
-async function renderUnpublishedSection(unpublishedSection: HTMLElement) {
+async function renderUnpublishedSection() {
+    const unpublishedSection = document.getElementById("unpublished") as HTMLElement;
     const unpublishedH2 = makeElement("h2", null, null, "Unpublished Projects");
     unpublishedSection.append(unpublishedH2);
     
@@ -264,7 +268,57 @@ async function renderUnpublishedSection(unpublishedSection: HTMLElement) {
     unpublishedSection.appendChild(unpublishedProjectsList);
 }
 
-async function renderDonateSection(donateListSection: HTMLElement) {
+async function renderCurrentSection() {
+    const currentSection = document.getElementById("current") as HTMLElement;
+    const currentH2 = makeElement("h2", null, null, "Current Projects");
+    currentSection.appendChild(currentH2);
+
+    const currentProjects = await getProjectsByStatus(true);
+
+    if (currentProjects.length === 0) {
+        currentSection.remove();
+        return;
+    }
+
+    const currentPRojectsList = currentProjects.reduce((acc: HTMLElement, project: Project) => {
+        console.log(`${project.getTitle()} - ${project.orderIndex}`)
+        const projectId = project["id"] ? project["id"] : "";
+        const article = makeElement("article", projectId, "card", null);
+        
+        const projectLink = makeElement("a", null, "post-link", null);
+        projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
+        
+        const titleH2 = makeElement("h2", null, null, project["projectTitle"].en);
+        projectLink.appendChild(titleH2);
+        
+        const lastUpdatedDate = (project as any).updatedAt.toDate();
+        const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        const lastUpdated = makeElement("p", null, null, `Last updated: ${lastUpdatedStr}`);
+        
+        const btnRow = makeElement("div", null, "button-row left", null);
+        const viewButton = createButton({ buttonText: "View", buttonType: "button", buttonId: "view-project", buttonClass: "accent-button", icon: "visibility" });
+        viewButton.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
+        
+        const editButton = createButton({ buttonText: "Edit", buttonType: "button", buttonId: "edit-project", buttonClass: "accent-button", icon: "edit" });
+        editButton.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
+        
+        btnRow.append(viewButton, editButton);
+        article.append(projectLink, lastUpdated, btnRow);
+        acc.appendChild(article);
+        return acc;
+    }, makeElement("div", "unpublished-projects", null, null));
+
+    currentSection.appendChild(currentPRojectsList);
+}
+
+async function renderDonateSection() {
+    const donateListSection = document.getElementById("donate-list") as HTMLElement;
     const donateListH2 = makeElement("h2", null, null, "Donate Button List");
     const tableContainer = makeElement("div", "donate-list-table-container", null, null);
 
@@ -304,14 +358,10 @@ async function setUpAdminPage() {
     const isAdmin = await checkAdminPermissions();
     if (!isAdmin) return;
 
-    const generateButtons = document.getElementById("generate-buttons") as HTMLElement;
-    const qrCanvasSection = document.getElementById("qr-canvas") as HTMLElement;
-    const unpublishedSection = document.getElementById("unpublished") as HTMLElement;
-    const donateListSection = document.getElementById("donate-list") as HTMLElement;
-
-    setupQRCodeGeneratorSection(generateButtons, qrCanvasSection);
-    await renderUnpublishedSection(unpublishedSection);
-    await renderDonateSection(donateListSection);
+    setupQRCodeGeneratorSection();
+    await renderUnpublishedSection();
+    await renderCurrentSection();
+    await renderDonateSection();
 }
 
 setUpAdminPage();

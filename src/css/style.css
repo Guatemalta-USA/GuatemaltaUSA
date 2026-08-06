@@ -151,6 +151,10 @@ a {
   cursor: pointer;
 }
 
+.y-scroll {
+  overflow-y: scroll;
+}
+
 /* =========================================
    3. LAYOUT UTILITIES & NAVIGATION
    ========================================= */

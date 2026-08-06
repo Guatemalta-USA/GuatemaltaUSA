@@ -176,6 +176,7 @@ export async function initializeApp(
               projectStatusInput?.checked ?? true,
               publishedInput?.checked ?? true,
               goalBarID,
+              0,
               editorConfig.projectId
             );
 

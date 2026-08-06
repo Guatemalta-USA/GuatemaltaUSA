@@ -1,26 +1,46 @@
 import Quill from "quill";
+import 'quill/dist/quill.snow.css';
+import { registerCustomQuillBlots } from "./modules/quillBlots";
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
 import { getPostsWithLinkedProjectId, getProjectById, saveProject } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import { navigateTo } from "./modules/navigate";
 import { createButton, createGiveButterWidget, createLink, makeElement, promptModal, storeMessage } from "./modules/utils";
+import { Timestamp } from "firebase/firestore/lite";
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
 import i18n, { updateContent, getResolvedLanguage } from "./modules/i18n";
 import { Project } from "./models";
-import { Timestamp } from "firebase/firestore";
+
+// Register custom blots so the viewer understands 'givebutter', 'actionLink', etc.
+registerCustomQuillBlots();
 
 let activeProject: Project | null = null;
 let quillViewer: Quill | null = null;
 
+// Ensure Quill viewer is initialized in read-only mode
+function initQuillViewer() {
+    const container = document.getElementById('viewer-container');
+    if (container && !quillViewer) {
+        quillViewer = new Quill(container, {
+            theme: 'snow',
+            readOnly: true,
+            modules: {
+                toolbar: false
+            }
+        });
+    }
+}
+
 function renderLocalizedProject() {
     if (!activeProject) return;
 
-    const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+    initQuillViewer();
 
+    const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
     const displayTitle = activeProject.projectTitle[currentLang] || activeProject.projectTitle.en || activeProject.projectTitle.es || '';
     const displayContent = activeProject.content[currentLang] || activeProject.content.en || activeProject.content.es;
 

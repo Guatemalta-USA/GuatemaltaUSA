@@ -54,7 +54,7 @@ async function handleSubmit() {
         await deleteImage(existingProfile.photoURL);
       }
 
-      const resizedBlob = await resizeImage(file, 800, 800);
+      const resizedBlob = await resizeImage(file, {});
       photoURL = await uploadImage(resizedBlob as File);
     } else if (editingProfileId && existingProfile) {
       photoURL = existingProfile.photoURL;

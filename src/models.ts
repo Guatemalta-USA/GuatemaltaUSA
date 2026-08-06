@@ -169,6 +169,7 @@ export class Project {
     isCurrent: boolean;
     published: boolean;
     goalBar: string | null;
+    orderIndex: number;
     updatedAt?: Timestamp | Date;
 
     constructor(
@@ -177,6 +178,7 @@ export class Project {
         isCurrent: boolean = true,
         published: boolean = true,
         goalBar: string | null = null,
+        orderIndex: number,
         id?: string,
         updatedAt?: Timestamp | Date
     ) {
@@ -187,6 +189,7 @@ export class Project {
         this.published = published;
         this.goalBar = goalBar;
         this.updatedAt = updatedAt;
+        this.orderIndex = orderIndex;
     }
 
     getTitle(lang: SupportedLanguage = 'en'): string {
@@ -300,6 +303,7 @@ export class Project {
             },
             isCurrent: this.isCurrent,
             published: this.published,
+            orderIndex: this.orderIndex,
             goalBar: this.goalBar ?? null,
             updatedAt: serverTimestamp()
         };
@@ -335,8 +339,9 @@ export class Project {
             data.isCurrent ?? data.currentProject ?? true,
             data.published ?? true,
             data.goalBar ?? null,
+            data.orderIndex ?? 0,
             id,
-            data.updatedAt?.toDate ? data.updatedAt.toDate() : undefined
+            data.updatedAt
         );
     }
 }

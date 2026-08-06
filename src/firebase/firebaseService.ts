@@ -12,6 +12,7 @@ import {
     serverTimestamp,
     setDoc,
     updateDoc,
+    limit,
     where,
     type FirestoreDataConverter,
     type SnapshotOptions
@@ -364,12 +365,13 @@ export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]
     const q = query(
         collection(db, 'projects').withConverter(projectConverter),
         where("isCurrent", "==", isCurrent),
-        where("published", "==", true)
+        where("published", "==", true),
+        orderBy("orderIndex", "asc")
     );
     const querySnapshot = await getDocs(q);
     const projects = querySnapshot.docs.map((doc) => doc.data());
 
-    return projects.sort((a, b) => a.getTitle('en').localeCompare(b.getTitle('en')));
+    return projects;
 }
 
 export async function getUnpublishedProjects(): Promise<Project[]> {
@@ -386,26 +388,49 @@ export async function getProjectById(id: string): Promise<Project | null> {
 }
 
 export async function saveProject(project: Project): Promise<string> {
-    try {
-        const firestoreData = project.toFirestore();
+  try {
+    if (project.id) {
+      // Update existing document - maintain existing orderIndex
+      const docRef = doc(db, 'projects', project.id);
+      await setDoc(docRef, project.toFirestore());
+      return project.id;
+    } else {
+      // 1. Find highest existing orderIndex
+      const projectsRef = collection(db, 'projects');
+      const q = query(projectsRef, orderBy('orderIndex', 'desc'), limit(1));
+      const snapshot = await getDocs(q);
 
-        if (project.id) {
-            // Update existing document
-            const docRef = doc(db, 'projects', project.id);
-            await setDoc(docRef, firestoreData);
-            return project.id;
-        } else {
-            // Create new document with slug generated from title
-            const titleString = project.projectTitle.en || project.projectTitle.es || 'untitled-project';
-            const customId = slugify(titleString);
-            
-            const docRef = doc(db, 'projects', customId);
-            await setDoc(docRef, firestoreData);
-            return customId;
-        }
+      let nextOrderIndex = 1;
+      if (!snapshot.empty) {
+        const highestProject = snapshot.docs[0].data();
+        nextOrderIndex = (highestProject.orderIndex || 0) + 1;
+      }
+
+      // 2. Assign the next orderIndex
+      project.orderIndex = nextOrderIndex;
+
+      // 3. Generate custom slug ID and save
+      const titleString = project.projectTitle.en || project.projectTitle.es || 'untitled-project';
+      const customId = slugify(titleString);
+      
+      const docRef = doc(db, 'projects', customId);
+      await setDoc(docRef, project.toFirestore());
+      return customId;
+    }
+  } catch (error) {
+    console.error("Error saving project: ", error);
+    throw error;
+  }
+}
+
+export async function updateOrderIndexForProject(projectId: string, newOrderIndex: number) {
+    const projectDocRef = doc(db, "projects", projectId);
+
+    try {
+        await updateDoc(projectDocRef, {orderIndex: newOrderIndex});
     } catch (error) {
-        console.error("Error saving project: ", error);
-        throw error;
+        console.error("Could not update order index:", error);
+        throw new Error("Could not updated order index");
     }
 }
 

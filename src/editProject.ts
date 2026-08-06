@@ -188,6 +188,7 @@ export class EditProjectPage {
                     isCurrent,
                     isPublished,
                     this.currentProject.goalBar,
+                    this.currentProject.orderIndex,
                     this.currentProjectId || undefined
                 );
 
