@@ -41,9 +41,16 @@ export function createLink(linkText: string, url: string, external: boolean) {
   return newLink;
 }
 
-export function createMessage(message: string, location: string, type: string) {
+export function createMessage(
+  message: string, 
+  location: string, 
+  type: string, 
+  autoCloseSeconds?: number
+) {
   clearMessages();
   const messageWrapper = document.getElementById(location) as HTMLElement;
+  if (!messageWrapper) return;
+
   const messageDiv = document.createElement("div");
   if (type === "check_circle") {
     messageDiv.setAttribute("class", "success message");
@@ -60,17 +67,35 @@ export function createMessage(message: string, location: string, type: string) {
     messageDiv.setAttribute("class", "info message");
     messageDiv.setAttribute("aria-live", "polite");
   }
+
   const icon = document.createElement("span");
   icon.setAttribute("class", "material-symbols-outlined");
   const iconName = document.createTextNode(type);
   icon.appendChild(iconName);
   messageDiv.appendChild(icon);
+
   const messageText = document.createTextNode(message);
   messageDiv.appendChild(messageText);
-  const closeButton = createButton({ buttonText: "", buttonType: "button", buttonId: "closeButton", buttonClass: "", icon: "close" });
+
+  const closeButton = createButton({ 
+    buttonText: "", 
+    buttonType: "button", 
+    buttonId: "closeButton", 
+    buttonClass: "", 
+    icon: "close" 
+  });
   closeButton.addEventListener("click", () => (messageWrapper.innerHTML = ""));
   messageDiv.appendChild(closeButton);
+
   messageWrapper.appendChild(messageDiv);
+
+  if (autoCloseSeconds && autoCloseSeconds > 0) {
+    setTimeout(() => {
+      if (messageWrapper.contains(messageDiv)) {
+        messageWrapper.innerHTML = "";
+      }
+    }, autoCloseSeconds * 1000);
+  }
 }
 
 export function createTableHeader(tableHeadings: string[], textAlign: string) {

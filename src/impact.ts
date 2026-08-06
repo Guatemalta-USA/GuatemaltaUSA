@@ -93,7 +93,7 @@ function getExcerpt(project: Project, lang: 'en' | 'es'): string {
 
 async function loadProjects(status: string) {
     container.innerHTML = "";
-    
+
     // Select correct status array (already populated with Project class instances)
     const projectsToDisplay = status === "current" ? currentProjects : pastProjects;
 
@@ -105,23 +105,23 @@ async function loadProjects(status: string) {
             const projectsDiv = projectsToDisplay.reduce((acc: HTMLElement, project: Project) => {
                 const projectId = project.id ? project.id : "";
                 const projectArticle = makeElement("article", projectId, "project-card", null);
-                
+
                 const currentLang = (document.documentElement.lang as 'en' | 'es') || 'en';
 
                 // Title Link & Heading
                 const projectLink = makeElement("a", null, "post-link", null);
                 projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
-                
+
                 const titleEn = project.getTitle ? project.getTitle('en') : ((project.projectTitle as any)?.en || "Untitled");
                 const titleEs = project.getTitle ? (project.getTitle('es') || titleEn) : ((project.projectTitle as any)?.es || titleEn);
                 const initialTitle = project.getTitle ? project.getTitle(currentLang) : (currentLang === 'es' ? titleEs : titleEn);
 
                 const projectTitle = makeElement("h2", null, "project-title-heading", initialTitle);
-                
+
                 // Attach attributes for updateContent() i18n switcher
                 projectTitle.setAttribute("data-title-en", titleEn);
                 projectTitle.setAttribute("data-title-es", titleEs);
-                
+
                 projectLink.appendChild(projectTitle);
                 projectArticle.appendChild(projectLink);
 
@@ -131,7 +131,7 @@ async function loadProjects(status: string) {
                 const initialExcerpt = currentLang === 'es' ? excerptEs : excerptEn;
 
                 const firstPElm = makeElement("p", null, null, initialExcerpt);
-                
+
                 // Attach attributes for updateContent() i18n switcher
                 firstPElm.setAttribute("data-excerpt-en", excerptEn);
                 firstPElm.setAttribute("data-excerpt-es", excerptEs);
@@ -151,9 +151,6 @@ async function loadProjects(status: string) {
 
             container.appendChild(projectsDiv);
         }
-
-        if (loading) loading.remove();
-        container.classList.remove("hide");
     } catch (err) {
         console.error("Error displaying projects:", err);
         container.innerHTML = "<p>Error loading projects.</p>";
@@ -163,3 +160,5 @@ async function loadProjects(status: string) {
 await loadProjects("current");
 tabs.classList.remove("hide");
 updateContent();
+if (loading) loading.remove();
+container.classList.remove("hide");

@@ -158,6 +158,23 @@ a {
 /* =========================================
    3. LAYOUT UTILITIES & NAVIGATION
    ========================================= */
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+  color: #666;
+  margin-right: 8px;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.sortable-ghost {
+  opacity: 0.4;
+  background-color: #f0f0f0;
+  border: 2px dashed #007bff;
+}
+
 .container {
   max-width: 900px;
   margin: 0 auto;

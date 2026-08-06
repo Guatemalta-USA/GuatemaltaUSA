@@ -15,7 +15,8 @@ import {
     limit,
     where,
     type FirestoreDataConverter,
-    type SnapshotOptions
+    type SnapshotOptions,
+    writeBatch
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -362,16 +363,17 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function getProjectsByStatus(isCurrent: boolean): Promise<Project[]> {
+    const sortField = isCurrent ? "orderIndex" : "projectTitle.en";
+
     const q = query(
         collection(db, 'projects').withConverter(projectConverter),
         where("isCurrent", "==", isCurrent),
         where("published", "==", true),
-        orderBy("orderIndex", "asc")
+        orderBy(sortField, "asc")
     );
-    const querySnapshot = await getDocs(q);
-    const projects = querySnapshot.docs.map((doc) => doc.data());
 
-    return projects;
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => doc.data());
 }
 
 export async function getUnpublishedProjects(): Promise<Project[]> {
@@ -423,14 +425,19 @@ export async function saveProject(project: Project): Promise<string> {
   }
 }
 
-export async function updateOrderIndexForProject(projectId: string, newOrderIndex: number) {
-    const projectDocRef = doc(db, "projects", projectId);
+export async function updateProjectsOrder(orderUpdates: { id: string; newOrderIndex: number }[]): Promise<void> {
+    const batch = writeBatch(db);
+
+    orderUpdates.forEach(({ id, newOrderIndex }) => {
+        const projectRef = doc(db, 'projects', id);
+        batch.update(projectRef, { orderIndex: newOrderIndex });
+    });
 
     try {
-        await updateDoc(projectDocRef, {orderIndex: newOrderIndex});
+        await batch.commit();
     } catch (error) {
-        console.error("Could not update order index:", error);
-        throw new Error("Could not updated order index");
+        console.error("Error committing batch order update:", error);
+        throw new Error("Could not update project order.");
     }
 }
 
@@ -460,7 +467,7 @@ export async function setProjectLink(project: ProjectInfo) {
 
 export async function getDonateButtonList() {
     try {
-        const q = query(collection(db, "donateButtonList"), orderBy("projectName", "asc"));
+        const q = query(collection(db, "donateButtonList"), orderBy("orderIndex", "asc"));
         const querySnapshot = await getDocs(q);
 
         const donateList: ProjectInfo[] = querySnapshot.docs.map(doc => ({
@@ -502,5 +509,21 @@ export async function deleteProjectFromDonateList(docId: string) {
     } catch (error: any) {
         console.error("Error deleting project from Donate Button List:", error);
         throw new Error("Failed to delete project from Donate Button List");
+    }
+}
+
+export async function updateDonateListOrder(orderUpdates: { id: string; newOrderIndex: number }[]): Promise<void> {
+    const batch = writeBatch(db);
+
+    orderUpdates.forEach(({ id, newOrderIndex }) => {
+        const donateRef = doc(db, 'donateButtonList', id);
+        batch.update(donateRef, { orderIndex: newOrderIndex });
+    });
+
+    try {
+        await batch.commit();
+    } catch (error) {
+        console.error("Error committing batch order update for donate list:", error);
+        throw new Error("Could not update donate list order.");
     }
 }

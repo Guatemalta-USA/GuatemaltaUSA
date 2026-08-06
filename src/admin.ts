@@ -1,5 +1,5 @@
 import { getAuthenticatedUser, getUserRole } from "./firebase/authService.js";
-import { deleteProjectFromDonateList, getDonateButtonList, getProjectsByStatus, getUnpublishedProjects, setProjectLink } from "./firebase/firebaseService.js";
+import { deleteProjectFromDonateList, getDonateButtonList, getProjectsByStatus, getUnpublishedProjects, setProjectLink, updateDonateListOrder, updateProjectsOrder } from "./firebase/firebaseService.js";
 import { initializeApp } from "./main.js";
 import type { Project, ProjectInfo } from "./models.js";
 import { navigateTo } from "./modules/navigate.js";
@@ -10,6 +10,7 @@ import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
+import Sortable from "sortablejs";
 
 async function checkAdminPermissions(): Promise<boolean> {
     try {
@@ -39,14 +40,26 @@ async function checkAdminPermissions(): Promise<boolean> {
 }
 
 async function renderDonateListTable(container: HTMLElement) {
-    container.innerHTML = ""; // Clear existing table contents
+    container.innerHTML = "";
 
     const donateButtonLinks = await getDonateButtonList();
     const donateListTable = makeElement("table", "donate-list", null, null);
-    const donateListTableHeader = createTableHeader(["Project Name", "Share Link (click to copy to clipboard)", "Edit", "Delete"], "center");
+    
+    // Header with extra column for Drag handle
+    const donateListTableHeader = createTableHeader(["", "Project Name", "Share Link (click to copy to clipboard)", "Edit", "Delete"], "center");
 
     const donateListTableBody = donateButtonLinks.reduce((acc: HTMLElement, link: ProjectInfo) => {
         const tableRow = document.createElement("tr");
+        const targetId = link.id || link.projectName;
+        
+        // Critical for SortableJS tracking
+        tableRow.setAttribute("data-id", targetId);
+
+        // Drag Handle Cell
+        const dragCell = document.createElement("td");
+        const dragIcon = makeElement("span", null, "material-symbols-outlined drag-handle", "drag_indicator");
+        dragCell.appendChild(dragIcon);
+
         const projectNameCell = makeElement("td", null, null, link["projectName"]);
         const shareLink = `https://guatemaltausa.org/donate?id=${link["formId"]}`;
         const shareLinkCell = makeElement("td", null, null, shareLink);
@@ -76,8 +89,8 @@ async function renderDonateListTable(container: HTMLElement) {
                         formId: updatedFormId
                     };
                     await setProjectLink(updatedProjectLink);
-                    createMessage("Project updated successfully", "main-message", "check_circle");
-                    await renderDonateListTable(container); // Refresh table
+                    createMessage("Project updated successfully", "main-message", "check_circle", 5);
+                    await renderDonateListTable(container);
                 }
             }
         });
@@ -97,9 +110,8 @@ async function renderDonateListTable(container: HTMLElement) {
             );
             if (confirmed) {
                 try {
-                    const targetId = link.id || link.projectName;
                     await deleteProjectFromDonateList(targetId);
-                    createMessage("Project deleted successfully", "main-message", "check_circle");
+                    createMessage("Project deleted successfully", "main-message", "check_circle", 5);
                     await renderDonateListTable(container); // Refresh table
                 } catch (error: any) {
                     createMessage(error, "main-message", "error");
@@ -108,13 +120,34 @@ async function renderDonateListTable(container: HTMLElement) {
         });
         deleteBtnCell.appendChild(deleteBtn);
 
-        tableRow.append(projectNameCell, shareLinkCell, editBtnCell, deleteBtnCell);
+        tableRow.append(dragCell, projectNameCell, shareLinkCell, editBtnCell, deleteBtnCell);
         acc.appendChild(tableRow);
         return acc;
-    }, makeElement("tbody", null, null, null));
+    }, makeElement("tbody", "donate-list-tbody", null, null));
 
     donateListTable.append(donateListTableHeader, donateListTableBody);
     container.appendChild(donateListTable);
+
+    Sortable.create(donateListTableBody, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: async () => {
+            const updatedRows = Array.from(donateListTableBody.children) as HTMLElement[];
+            
+            const orderUpdates = updatedRows.map((row, index) => ({
+                id: row.getAttribute("data-id")!,
+                newOrderIndex: index + 1
+            }));
+
+            try {
+                await updateDonateListOrder(orderUpdates);
+                createMessage("Donate list order updated successfully", "main-message", "check_circle", 3);
+            } catch (error) {
+                createMessage("Failed to save donate list order", "main-message", "error");
+            }
+        }
+    });
 }
 
 function renderQRCodeCanvasControls(
@@ -270,6 +303,8 @@ async function renderUnpublishedSection() {
 
 async function renderCurrentSection() {
     const currentSection = document.getElementById("current") as HTMLElement;
+    currentSection.innerHTML = "";
+    
     const currentH2 = makeElement("h2", null, null, "Current Projects");
     currentSection.appendChild(currentH2);
 
@@ -280,17 +315,22 @@ async function renderCurrentSection() {
         return;
     }
 
-    const currentPRojectsList = currentProjects.reduce((acc: HTMLElement, project: Project) => {
-        console.log(`${project.getTitle()} - ${project.orderIndex}`)
+    const currentProjectsList = makeElement("div", "current-projects-list", "drag-container", null);
+
+    currentProjects.forEach((project: Project) => {
         const projectId = project["id"] ? project["id"] : "";
-        const article = makeElement("article", projectId, "card", null);
+        const article = makeElement("article", projectId, "card drag-item", null);
+        
+        article.setAttribute("data-id", projectId);
+
+        const dragHandle = makeElement("span", null, "material-symbols-outlined drag-handle", "drag_indicator");
         
         const projectLink = makeElement("a", null, "post-link", null);
         projectLink.addEventListener("click", () => navigateTo("/impact/project", { params: { id: projectId } }));
         
         const titleH2 = makeElement("h2", null, null, project["projectTitle"].en);
         projectLink.appendChild(titleH2);
-        
+
         const lastUpdatedDate = (project as any).updatedAt.toDate();
         const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
             year: 'numeric',
@@ -309,12 +349,31 @@ async function renderCurrentSection() {
         editButton.addEventListener("click", () => navigateTo("/impact/editproject", { params: { id: projectId } }));
         
         btnRow.append(viewButton, editButton);
-        article.append(projectLink, lastUpdated, btnRow);
-        acc.appendChild(article);
-        return acc;
-    }, makeElement("div", "unpublished-projects", null, null));
+        article.append(dragHandle, projectLink, lastUpdated, btnRow);
+        currentProjectsList.appendChild(article);
+    });
 
-    currentSection.appendChild(currentPRojectsList);
+    currentSection.appendChild(currentProjectsList);
+    Sortable.create(currentProjectsList, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: async () => {
+            const updatedElements = Array.from(currentProjectsList.children) as HTMLElement[];
+            
+            const orderUpdates = updatedElements.map((el, index) => ({
+                id: el.getAttribute("data-id")!,
+                newOrderIndex: index + 1
+            }));
+
+            try {
+                await updateProjectsOrder(orderUpdates);
+                createMessage("Project order updated successfully", "main-message", "check_circle", 3);
+            } catch (error) {
+                createMessage("Failed to save new order", "main-message", "error");
+            }
+        }
+    });
 }
 
 async function renderDonateSection() {
