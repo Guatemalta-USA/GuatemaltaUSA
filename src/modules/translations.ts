@@ -42,7 +42,11 @@ export const resources = {
             "post_by_date": "By {{author}} on {{date}}",
             "project_updates": "Project Updates",
             "edit_page": "Edit Page Content",
-            "last_updated": "Last Updated: {{timestamp}}"
+            "last_updated": "Last Updated: {{timestamp}}",
+            "copyright": "©{{year}} Guatemalta USA, INC. All rights reserved.",
+            "registered_nonprofit": "Registered 501(c)(3) Nonprofit Organization | EIN: 41-4897982",
+            "privacy_policy": "Privacy Policy",
+            "financial_transparency": "Financial Transparency",
         }
     },
     es: {
@@ -88,7 +92,11 @@ export const resources = {
             "post_by_date": "Por {{author}} el {{date}}",
             "project_updates": "Actualizaciones del proyecto",
             "edit_page": "Editar página",
-            "last_updated": "Última actualización: {{timestamp}}"
+            "last_updated": "Última actualización: {{timestamp}}",
+            "copyright": "©{{year}} Guatemalta USA, INC. Reservados todos los derechos.",
+            "registered_nonprofit": "Organización sin fines de lucro registrada bajo la sección 501(c)(3) | EIN: 41-4897982",
+            "privacy_policy": "política de privacidad",
+            "financial_transparency": "Transparencia financiera",
         }
     }
 }

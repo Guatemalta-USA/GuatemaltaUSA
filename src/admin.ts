@@ -275,7 +275,7 @@ async function renderUnpublishedSection() {
         const titleH2 = makeElement("h2", null, null, project["projectTitle"].en);
         projectLink.appendChild(titleH2);
         
-        const lastUpdatedDate = (project as any).lastUpdated.toDate();
+        const lastUpdatedDate = (project as any).updatedAt.toDate();
         const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
             year: 'numeric',
             month: 'short',

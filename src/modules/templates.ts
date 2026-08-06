@@ -288,6 +288,7 @@ export function loadFooter() {
   privatePolicy.onclick = function () {
     navigateTo("/privatepolicy");
   };
+  privatePolicy.setAttribute("data-i18n", "privacy_policy");
   ul.appendChild(privatePolicy);
 
   const financial = document.createElement("a");
@@ -296,6 +297,7 @@ export function loadFooter() {
   financial.onclick = function () {
     navigateTo("/financialtransparency");
   };
+  financial.setAttribute("data-i18n", "financial_transparency");
   ul.appendChild(financial);
   footerElement.appendChild(ul);
 
@@ -304,7 +306,7 @@ export function loadFooter() {
     "p",
     null,
     null,
-    `©${new Date().getFullYear()} Guatemalta USA, INC. All rights reserved.`
+    i18n.t("copyright", {year: new Date().getFullYear()})
   );
   const addressP = makeElement(
     "p",
@@ -316,8 +318,10 @@ export function loadFooter() {
     "p",
     null,
     null,
-    "Registered 501(c)(3) Nonprofit Organization | EIN: 41-4897982"
+    "Registered 501(c)(3) Nonprofit Organization | EIN: 41-4897982",
+    "registered_nonprofit"
   );
+
   footerLegal.append(nameP, addressP, registeredP);
   footerElement.appendChild(footerLegal);
 }

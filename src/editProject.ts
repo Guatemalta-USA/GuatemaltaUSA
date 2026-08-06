@@ -1,16 +1,16 @@
 import { initializeApp } from './main.js';
 import { TheEditor } from './modules/editor.js';
-import { getProjectById, saveProject } from './firebase/firebaseService.js';
-import { createMessage } from './modules/utils.js';
+import { deleteProject, getProjectById, saveProject } from './firebase/firebaseService.js';
+import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils.js';
 import { Project, type LocalizedString, type LocalizedContent, type SupportedLanguage } from './models.js';
+import { navigateTo } from './modules/navigate.js';
+import { Timestamp } from 'firebase/firestore';
 
 export class EditProjectPage {
     private editor: TheEditor | null = null;
     private currentProjectId: string | null = null;
     private currentProject: Project | null = null;
     private activeLang: SupportedLanguage = 'en';
-
-    // In-memory store for localized edits before persisting to Firestore
     private localizedTitles: LocalizedString = { en: '', es: '' };
     private localizedContents: LocalizedContent = { en: null, es: null };
 
@@ -22,8 +22,7 @@ export class EditProjectPage {
         const urlParams = new URLSearchParams(window.location.search);
         this.currentProjectId = urlParams.get('id') || urlParams.get('projectId');
 
-        // Run site setup and initialize editor configuration via main.ts
-        await initializeApp('projects', 'Edit Project', {
+        await initializeApp('projects', this.currentProjectId ? 'Edit Project' : 'Create Project', {
             type: 'project',
             projectId: this.currentProjectId || undefined
         });
@@ -35,15 +34,24 @@ export class EditProjectPage {
             console.error('Editor container "#editor-container" not found.');
         }
 
-        // Setup UI behaviors
         this.setupTabNavigation();
         this.setupSaveHandler();
+        this.setupDeleteHandler();
 
-        // Load project data if ID exists
         if (this.currentProjectId) {
             await this.loadProjectData(this.currentProjectId);
         } else {
-            createMessage("No project ID provided in URL.", "main-message", "error");
+            this.currentProject = new Project(
+                { en: '', es: '' },
+                { en: null, es: null },
+                true,
+                false,
+                null,
+                0,
+                "",
+                Timestamp.now()
+            );
+            this.loadLanguageView(this.activeLang);
         }
     }
 
@@ -60,7 +68,6 @@ export class EditProjectPage {
                 this.editor.currentPage = projectId;
             }
 
-            // Populate localized store from existing project
             this.localizedTitles = {
                 en: this.currentProject.projectTitle?.en || '',
                 es: this.currentProject.projectTitle?.es || ''
@@ -81,7 +88,11 @@ export class EditProjectPage {
                 publishedToggle.checked = Boolean(this.currentProject.published);
             }
 
-            // Load active language (English by default) into form and editor
+            const deleteBtn = document.getElementById('delete-post-btn');
+            if (deleteBtn) {
+                deleteBtn.style.display = 'inline-block';
+            }
+
             this.loadLanguageView(this.activeLang);
 
         } catch (error) {
@@ -129,8 +140,6 @@ export class EditProjectPage {
 
         const handleTabSwitch = async (targetLang: SupportedLanguage, targetBtn: HTMLElement, otherBtn: HTMLElement | null) => {
             if (this.activeLang === targetLang) return;
-
-            // Save active tab state before switching views
             await this.saveCurrentTabState();
 
             targetBtn.classList.add('active');
@@ -175,10 +184,8 @@ export class EditProjectPage {
             const publishedToggle = document.getElementById('published-toggle') as HTMLInputElement | null;
 
             try {
-                // Ensure active tab changes are captured before persisting
                 await this.saveCurrentTabState();
 
-                // Read toggles directly from the DOM state
                 const isCurrent = statusToggle ? statusToggle.checked : this.currentProject.isCurrent;
                 const isPublished = publishedToggle ? publishedToggle.checked : this.currentProject.published;
 
@@ -187,17 +194,74 @@ export class EditProjectPage {
                     this.localizedContents,
                     isCurrent,
                     isPublished,
-                    this.currentProject.goalBar,
-                    this.currentProject.orderIndex,
+                    this.currentProject.goalBar ?? null,
+                    this.currentProject.orderIndex ?? 0,
                     this.currentProjectId || undefined
                 );
 
                 const savedId = await saveProject(projectToSave);
-                createMessage("Project saved successfully!", "main-message", "check_circle");
-                console.log(`Project saved with ID: ${savedId}`);
+
+                if (!this.currentProjectId) {
+                    this.currentProjectId = savedId;
+                    this.currentProject.id = savedId;
+                    if (this.editor) {
+                        this.editor.currentPage = savedId;
+                    }
+                    window.history.replaceState({}, '', `?id=${savedId}`);
+
+                    const deleteBtn = document.getElementById('delete-post-btn');
+                    if (deleteBtn) deleteBtn.style.display = 'inline-block';
+                }
+
+                createMessage("Project saved successfully!", "main-message", "check_circle", 5);
             } catch (error) {
                 console.error("Failed to save project:", error);
                 createMessage("Error saving project changes.", "main-message", "error");
+            }
+        });
+    }
+
+    private setupDeleteHandler(): void {
+        const deleteBtn = document.getElementById('delete-btn');
+        if (!deleteBtn) return;
+
+        deleteBtn.style.display = this.currentProjectId ? 'inline-block' : 'none';
+
+        deleteBtn.addEventListener("click", async () => {
+
+            if (!this.currentProjectId) {
+                console.warn("Delete blocked: No valid currentProjectId found.");
+                return;
+            }
+
+            const projectTitle = this.currentProject?.getTitle?.(this.activeLang) 
+                || (typeof this.currentProject?.projectTitle === 'object' ? this.currentProject.projectTitle[this.activeLang] : '')
+                || 'Project';
+
+            const confirmed = await confirmDeleteModal(
+                `Delete "${projectTitle}"?`,
+                "Deleting this project will also delete its photos. This action cannot be undone."
+            );
+
+            if (confirmed) {
+                try {
+                    deleteBtn.innerText = "Deleting...";
+                    (deleteBtn as HTMLButtonElement).disabled = true;
+
+                    if (this.editor) {
+                        await this.editor.deleteAllImages();
+                    }
+
+                    await deleteProject(this.currentProjectId);
+
+                    storeMessage("Project deleted successfully", "main-message", "delete");
+                    navigateTo('/impact');
+                } catch (err) {
+                    console.error("Delete failed:", err);
+                    createMessage("Failed to delete the project. Please try again.", "main-message", "error");
+                    deleteBtn.innerText = "Delete Project";
+                    (deleteBtn as HTMLButtonElement).disabled = false;
+                }
             }
         });
     }

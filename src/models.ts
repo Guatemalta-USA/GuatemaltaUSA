@@ -199,19 +199,14 @@ export class Project {
 
     private extractPlainText(contentValue: any): string {
         if (!contentValue) return '';
-
         let target = contentValue;
-
-        // If stored as a JSON string, attempt parsing
         if (typeof target === 'string' && (target.trim().startsWith('{') || target.trim().startsWith('['))) {
             try {
                 target = JSON.parse(target);
             } catch {
-                // Keep as raw string if JSON parsing fails
             }
         }
 
-        // Handle standard strings or HTML
         if (typeof target === 'string') {
             if (typeof document !== 'undefined') {
                 const tempDiv = document.createElement('div');
@@ -221,7 +216,6 @@ export class Project {
             return target.replace(/<[^>]*>/g, '').trim();
         }
 
-        // Determine ops array regardless of whether target is { ops: [...] } or direct [...]
         let ops: any[] | null = null;
         if (Array.isArray(target)) {
             ops = target;
@@ -235,7 +229,6 @@ export class Project {
                     if (typeof op.insert === 'string') {
                         return op.insert;
                     }
-                    // Skip non-text embeds (images, widgets, givebutter components, etc.)
                     return '';
                 })
                 .join('')
@@ -259,10 +252,8 @@ export class Project {
         }
 
         const plainText = this.extractPlainText(rawContent);
-
         if (!plainText) return '';
 
-        // Extract the first non-empty line/paragraph
         const paragraphs = plainText.split(/\r?\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
         return paragraphs.length > 0 ? paragraphs[0] : plainText;
     }
@@ -305,7 +296,7 @@ export class Project {
             published: this.published,
             orderIndex: this.orderIndex,
             goalBar: this.goalBar ?? null,
-            updatedAt: serverTimestamp()
+            updatedAt: Timestamp.now()
         };
     }
 
