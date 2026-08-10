@@ -97,6 +97,8 @@ async function loadProjects(status: string) {
     // Select correct status array (already populated with Project class instances)
     const projectsToDisplay = status === "current" ? currentProjects : pastProjects;
 
+    const currentLang = (document.documentElement.lang as 'en' | 'es') || 'en';
+
     try {
         if (projectsToDisplay.length === 0) {
             const noProjects = makeElement("p", null, null, "No projects yet. Check back soon!");
@@ -105,8 +107,6 @@ async function loadProjects(status: string) {
             const projectsDiv = projectsToDisplay.reduce((acc: HTMLElement, project: Project) => {
                 const projectId = project.id ? project.id : "";
                 const projectArticle = makeElement("article", projectId, "project-card", null);
-
-                const currentLang = (document.documentElement.lang as 'en' | 'es') || 'en';
 
                 // Title Link & Heading
                 const projectLink = makeElement("a", null, "post-link", null);
@@ -150,6 +150,7 @@ async function loadProjects(status: string) {
             }, document.createElement("div"));
 
             container.appendChild(projectsDiv);
+            updateContent();
         }
     } catch (err) {
         console.error("Error displaying projects:", err);

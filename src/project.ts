@@ -3,10 +3,10 @@ import 'quill/dist/quill.snow.css';
 import { registerCustomQuillBlots } from "./modules/quillBlots";
 import { getUserRole } from "./firebase/authService";
 import { auth } from "./firebase/firebase";
-import { getPostsWithLinkedProjectId, getProjectById, saveProject } from "./firebase/firebaseService";
+import { getCampaignTotalById, getPostsWithLinkedProjectId, getProjectById, saveProject } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import { navigateTo } from "./modules/navigate";
-import { createButton, createGiveButterWidget, createLink, makeElement, promptModal, storeMessage } from "./modules/utils";
+import { createButton, createGiveButterWidget, createLink, formatDate, makeElement, promptModal, storeMessage } from "./modules/utils";
 import { Timestamp } from "firebase/firestore/lite";
 import './css/style.css';
 import './css/grid.css';
@@ -14,12 +14,39 @@ import './css/form.css';
 import './css/quill.css';
 import i18n, { updateContent, getResolvedLanguage } from "./modules/i18n";
 import { Project } from "./models";
+import { isEmptyDelta } from "./modules/editor";
 
 // Register custom blots so the viewer understands 'givebutter', 'actionLink', etc.
 registerCustomQuillBlots();
 
 let activeProject: Project | null = null;
 let quillViewer: Quill | null = null;
+
+const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+
+// Helper function to check if Delta or HTML string content is considered empty
+function isEmptyContent(content: any): boolean {
+    if (!content) return true;
+
+    // Check for stringified JSON Delta or raw HTML/text
+    if (typeof content === 'string') {
+        const trimmed = content.trim();
+        if (!trimmed || trimmed === '<p><br></p>' || trimmed === '<p></p>') return true;
+        try {
+            const parsed = JSON.parse(trimmed);
+            return isEmptyDelta(parsed);
+        } catch {
+            return false;
+        }
+    }
+
+    // Check for structured Delta object
+    if (typeof content === 'object') {
+        return isEmptyDelta(content);
+    }
+
+    return false;
+}
 
 // Ensure Quill viewer is initialized in read-only mode
 function initQuillViewer() {
@@ -40,9 +67,17 @@ function renderLocalizedProject() {
 
     initQuillViewer();
 
-    const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
-    const displayTitle = activeProject.projectTitle[currentLang] || activeProject.projectTitle.en || activeProject.projectTitle.es || '';
-    const displayContent = activeProject.content[currentLang] || activeProject.content.en || activeProject.content.es;
+    // Title Fallback: check current language -> English -> Spanish -> empty string
+    const titleLang = (activeProject.projectTitle[currentLang] && activeProject.projectTitle[currentLang].trim() !== '')
+        ? currentLang
+        : 'en';
+    const displayTitle = activeProject.projectTitle[titleLang] || activeProject.projectTitle.en || activeProject.projectTitle.es || '';
+
+    // Content Fallback: if current language is empty/missing, fall back to English
+    const rawContent = activeProject.content[currentLang];
+    const displayContent = !isEmptyContent(rawContent)
+        ? rawContent
+        : activeProject.content.en || activeProject.content.es;
 
     document.title = `${displayTitle} - Guatemalta USA`;
     const titleElem = document.getElementById('display-title');
@@ -57,7 +92,7 @@ function renderLocalizedProject() {
                 quillViewer.clipboard.dangerouslyPasteHTML(displayContent);
             }
         }
-        
+
         setTimeout(() => {
             bindDonateButtons();
         }, 0);
@@ -173,6 +208,7 @@ async function setUpProjectView() {
     const lastUpdatedDiv = document.getElementById("lastUpdated") as HTMLElement;
 
     if (!id) {
+        storeMessage({ messageBody: "Project not found", location: "main-message", type: "error", i18n: "project_not_found" });
         navigateTo("/impact");
         return;
     }
@@ -181,7 +217,7 @@ async function setUpProjectView() {
 
     const project = await getProjectById(id);
     if (!project) {
-        storeMessage({messageBody: "Project not found", location: "main-message", type: "error", i18n: "project_not_found"});
+        storeMessage({ messageBody: "Project not found", location: "main-message", type: "error", i18n: "project_not_found" });
         navigateTo("/impact");
         return;
     }
@@ -228,10 +264,10 @@ async function setUpProjectView() {
                             project.updatedAt = Timestamp.now()
                             try {
                                 await saveProject(project);
-                                storeMessage({messageBody: "Goal Bar added", location: "main-message", type: "check_circle"});
+                                storeMessage({ messageBody: "Goal Bar added", location: "main-message", type: "check_circle" });
                                 window.location.reload();
                             } catch (error: any) {
-                                storeMessage({messageBody: error, location: "main-message", type: "error"});
+                                storeMessage({ messageBody: error, location: "main-message", type: "error" });
                             }
                         }
                     }
@@ -245,10 +281,21 @@ async function setUpProjectView() {
     if (project.goalBar) {
         const goalBarContainer = document.getElementById("goal-bar-container") as HTMLElement;
         if (goalBarContainer) {
-            const goalBar = createGiveButterWidget(project.goalBar, "goal bar");
-            goalBarContainer.appendChild(goalBar);
+            if (id === "a-gift-of-sight-restoring-vision-and-hope-in-guatemala") {
+                const totalRaised = await getCampaignTotalById(id);
+                const customGoalBarContainer = makeElement("div", null, "custom-goal-bar", null);
+                const surgeriesSponsored = makeElement("h2", null, null, `Surgeries sponsored: ${Math.floor(totalRaised / 85)}/20`);
+                const totalRaisedP = makeElement("p", null, null, `Total raised: $${totalRaised.toLocaleString('en-US')}`);
+                customGoalBarContainer.append(surgeriesSponsored, totalRaisedP);
+                goalBarContainer.appendChild(customGoalBarContainer);
+            } else {
+                const goalBar = createGiveButterWidget(project.goalBar, "goal bar");
+                goalBarContainer.appendChild(goalBar);
+            }
         }
     }
+
+
 
     const linkedPosts = await getPostsWithLinkedProjectId(id);
     if (linkedPosts && linkedPosts.length > 0) {
@@ -260,10 +307,10 @@ async function setUpProjectView() {
             const postArticle = makeElement("article", postId, "", null);
             const postLink = makeElement("a", null, "post-link", null);
             postLink.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }))
-            const postTitle = makeElement("h2", null, null, post.postTitle);
+            const postTitle = makeElement("h2", null, null, post.postTitle[currentLang]);
             postLink.appendChild(postTitle);
             postArticle.appendChild(postLink);
-            const postInfo = makeElement("h3", null, null, `By ${post.author} on ${post.publishDate.toDate().toLocaleDateString()}`);
+            const postInfo = makeElement("h3", null, null, `By ${post.author} on ${formatDate(post.publishDate)}`);
             postArticle.appendChild(postInfo);
             const firstP = post.getFirstParagraph();
             const firstPElm = makeElement("p", null, null, firstP);
@@ -287,20 +334,8 @@ async function setUpProjectView() {
 
     renderLocalizedProject();
 
-    const rawUpdatedAt = project.updatedAt;
-    const lastUpdatedDate = rawUpdatedAt && typeof (rawUpdatedAt as any).toDate === 'function'
-        ? (rawUpdatedAt as any).toDate()
-        : (rawUpdatedAt instanceof Date ? rawUpdatedAt : new Date());
-
-    const lastUpdatedStr = lastUpdatedDate.toLocaleString([], {
-        year: 'numeric',
-        month: '2-digit',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
     if (lastUpdatedDiv) {
-        lastUpdatedDiv.innerText = i18n.t('last_updated', { timestamp: lastUpdatedStr });
+        lastUpdatedDiv.innerText = i18n.t('last_updated', { timestamp: formatDate(project.updatedAt) });
     }
     updateContent();
 }

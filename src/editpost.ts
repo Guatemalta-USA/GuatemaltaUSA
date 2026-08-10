@@ -81,9 +81,9 @@ async function setupEditPostPage() {
         try {
             existingPost = await getPostById(postId);
             if (existingPost) {
-                if (titleInput) titleInput.value = existingPost.postTitle;
+                if (titleInput) titleInput.value = existingPost.postTitle.en;
                 if (authorInput) authorInput.value = existingPost.author;
-                editorInstance.quill.setContents(existingPost.content);
+                editorInstance.quill.setContents(existingPost.content.en);
                 if (linkToProjectSelect && existingPost.linkedProjectId) {
                     linkToProjectSelect.value = existingPost.linkedProjectId;
                 }
@@ -158,7 +158,10 @@ async function setupEditPostPage() {
                 const originalPublishDate = existingPost ? existingPost.publishDate : Timestamp.now();
 
                 const postToSave = new Post(
-                    titleInput.value,
+                    {
+                        en: titleInput.value,
+                        es: titleInput.value
+                    },
                     authorInput.value,
                     originalPublishDate,
                     Timestamp.now(),

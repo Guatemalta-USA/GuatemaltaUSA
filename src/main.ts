@@ -15,6 +15,7 @@ const cancelButton = document.getElementById('cancel-btn');
 
 let goalBarID: string | null = null;
 let currentProject: Project | null = null;
+let currentPost: Post | null = null;
 
 initGivebutter();
 
@@ -98,9 +99,17 @@ export async function initializeApp(
     } else if (editorConfig.type === 'post' && editorConfig.postId) {
       const post = await getPostById(editorConfig.postId);
       if (post) {
-        if (titleInput) titleInput.value = post.postTitle;
-        loadedPostPublishDate = post.publishDate;
-        editor.quill.setContents(post.content);
+        currentPost = await getPostById(editorConfig.postId);
+        if (titleInput) titleInput.value = post.getTitle('en');
+        loadedPostPublishDate = post.publishDate as Timestamp;
+        const primaryPostContent = post.content.en || post.content.es;
+        if (primaryPostContent) {
+          if (typeof primaryPostContent === 'string') {
+            editor.setHTML(primaryPostContent);
+          } else {
+            editor.quill.setContents(primaryPostContent);
+          }
+        }
       }
     } else if (editorConfig.type === 'project' && editorConfig.projectId) {
       currentProject = await getProjectById(editorConfig.projectId);
@@ -141,15 +150,26 @@ export async function initializeApp(
             await editor.save();
           } else if (editorConfig.type === 'post') {
             const content = await editor.prepareContentForSave();
-            const postTitle = titleInput?.value || "Untitled Post";
+            const titleValue = titleInput?.value || "Untitled Post";
+            
+            const updatedPostTitle = {
+              en: titleValue,
+              es: currentPost?.postTitle.es || ""
+            };
+
+            const updatedPostContent = {
+              en: content,
+              es: currentPost?.content?.es || ""
+            };
+
             const linkToProjectSelect = document.getElementById("link-to-project") as HTMLSelectElement;
 
             const postToSave = new Post(
-              postTitle,
+              updatedPostTitle,
               authorInput?.value || "",
               loadedPostPublishDate || Timestamp.now(),
               Timestamp.now(),
-              content,
+              updatedPostContent,
               linkToProjectSelect?.value || ""
             );
 
@@ -199,7 +219,14 @@ export async function initializeApp(
           await editor.load(editorConfig.pageName);
         } else if (editorConfig.type === 'post' && editorConfig.postId) {
           const post = await getPostById(editorConfig.postId);
-          if (post) editor.quill.setContents(post.content);
+          if (post) {
+            const primaryPostContent = post.content.en || post.content.es;
+            if (typeof primaryPostContent === "string") {
+              editor.setHTML(primaryPostContent);
+            } else {
+              editor.quill.setContents(primaryPostContent);
+            }
+          }
         } else if (editorConfig.type === 'project' && editorConfig.projectId) {
           const project = await getProjectById(editorConfig.projectId);
           if (project) {

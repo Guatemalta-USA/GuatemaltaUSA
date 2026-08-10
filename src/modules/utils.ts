@@ -193,6 +193,20 @@ export function fixDate(
   return dateTimezoneFixed.toLocaleDateString("en-US", options);
 }
 
+export function formatDate(rawDate: any) {
+    const lastUpdatedDate = rawDate && typeof (rawDate as any).toDate === 'function'
+        ? (rawDate as any).toDate()
+        : (rawDate instanceof Date ? rawDate : new Date());
+
+    return lastUpdatedDate.toLocaleString([], {
+        year: 'numeric',
+        month: '2-digit',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 export function makeElement(elementType: string, elementId: string | null, elementClass: string | null, elementText: string | null, i18n?: string) {
   const newElement = document.createElement(elementType);
   if (elementId) newElement.setAttribute('id', elementId);

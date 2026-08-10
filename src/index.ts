@@ -3,7 +3,7 @@ import { initializeApp } from "./main.js";
 import type { Post, Project } from "./models.js";
 import { displayGallery, getPhotosFromGithub, setupControls } from "./modules/imageGallery.js";
 import { navigateTo } from "./modules/navigate.js";
-import { createLink, makeElement } from "./modules/utils.js";
+import { createLink, formatDate, makeElement } from "./modules/utils.js";
 import i18n, { updateContent, getResolvedLanguage } from "./modules/i18n.js";
 import './css/style.css';
 import './css/grid.css';
@@ -15,6 +15,7 @@ const loadingUpdates = document.querySelector('.loading-updates') as HTMLElement
 const photosSection = document.getElementById("home-photos") as HTMLElement;
 const currentProjectsSection = document.getElementById("home-current") as HTMLElement;
 const updatesSection = document.getElementById("home-updates") as HTMLElement;
+const currentLang = (document.documentElement.lang as 'en' | 'es') || 'en';
 
 async function loadPhotos() {
   const placeholderGallery = document.getElementById("placeholder-container") as HTMLElement;
@@ -150,14 +151,14 @@ async function loadPosts() {
           navigateTo('/blog/post', { params: { id: postId } })
         );
 
-        const postTitle = makeElement("h2", null, null, post.postTitle);
+        const postTitle = makeElement("h2", null, null, post.postTitle[currentLang]);
         postLink.appendChild(postTitle);
         postArticle.appendChild(postLink);
-        const postInfo = makeElement("h3", null, null, i18n.t('post_by_date', { author: post["author"], date: post.publishDate.toDate().toLocaleDateString() }));
+        const postInfo = makeElement("h3", null, null, i18n.t('post_by_date', { author: post["author"], date: formatDate(post.publishDate) }));
 
         postInfo.setAttribute("data-i18n-options", JSON.stringify({
           author: post.author,
-          date: post.publishDate.toDate().toLocaleDateString()
+          date: formatDate(post.publishDate)
         }));
         postArticle.appendChild(postInfo);
 

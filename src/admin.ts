@@ -12,6 +12,8 @@ import './css/form.css';
 import './css/quill.css';
 import Sortable from "sortablejs";
 
+let donateButtonListLength: number = 0;
+
 async function checkAdminPermissions(): Promise<boolean> {
     try {
         const user = await getAuthenticatedUser();
@@ -43,6 +45,7 @@ async function renderDonateListTable(container: HTMLElement) {
     container.innerHTML = "";
 
     const donateButtonLinks = await getDonateButtonList();
+    donateButtonListLength = donateButtonLinks.length;
     const donateListTable = makeElement("table", "donate-list", null, null);
     
     // Header with extra column for Drag handle
@@ -394,7 +397,8 @@ async function renderDonateSection() {
             if (projectName.trim() !== "" && formID.trim() !== "") {
                 const newProject: ProjectInfo = {
                     projectName: projectName,
-                    formId: formID
+                    formId: formID,
+                    orderIndex: donateButtonListLength + 1
                 };
                 try {
                     await setProjectLink(newProject);

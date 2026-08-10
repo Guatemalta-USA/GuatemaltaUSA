@@ -1,5 +1,4 @@
 import { Timestamp, serverTimestamp, type FirestoreDataConverter } from "firebase/firestore";
-
 export type MessageParams = {
   messageBody: string;
   location: "main-message" | "modal";
@@ -74,19 +73,19 @@ export type KeyValue = [string, string];
 
 export class Post {
     public id?: string;
-    public postTitle: string;
+    public postTitle: LocalizedString;
     public author: string;
-    public publishDate: Timestamp;
-    public lastUpdated: Timestamp;
-    public content: any;
+    public publishDate: Timestamp | Date;
+    public lastUpdated: Timestamp | Date;
+    public content: LocalizedString | LocalizedContent;
     public linkedProjectId: string;
 
     constructor(
-        postTitle: string,
+        postTitle: LocalizedString,
         author: string,
-        publishDate: Timestamp,
-        lastUpdated: Timestamp,
-        content: any,
+        publishDate: Timestamp | Date,
+        lastUpdated: Timestamp | Date,
+        content: LocalizedString | LocalizedContent,
         linkedProjectId: string
     ) {
         this.postTitle = postTitle;
@@ -97,13 +96,124 @@ export class Post {
         this.linkedProjectId = linkedProjectId;
     }
 
+    getTitle(lang: SupportedLanguage = 'en'): string {
+        if (!this.postTitle) return '';
+        return this.postTitle[lang] || this.postTitle.en || this.postTitle.es || '';
+    }
+
+    private extractPlainText(contentValue: any): string {
+        if (!contentValue) return '';
+        let target = contentValue;
+        if (typeof target === 'string' && (target.trim().startsWith('{') || target.trim().startsWith('['))) {
+            try {
+                target = JSON.parse(target);
+            } catch {
+            }
+        }
+
+        if (typeof target === 'string') {
+            if (typeof document !== 'undefined') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = target;
+                return (tempDiv.textContent || tempDiv.innerText || '').trim();
+            }
+            return target.replace(/<[^>]*>/g, '').trim();
+        }
+
+        let ops: any[] | null = null;
+        if (Array.isArray(target)) {
+            ops = target;
+        } else if (typeof target === 'object' && target !== null) {
+            ops = target.ops || (typeof target.toJSON === 'function' ? target.toJSON().ops : null);
+        }
+
+        if (Array.isArray(ops)) {
+            return ops
+                .map((op: any) => {
+                    if (typeof op.insert === 'string') {
+                        return op.insert;
+                    }
+                    return '';
+                })
+                .join('')
+                .trim();
+        }
+
+        return '';
+    }
+
+    getFirstParagraph(lang: SupportedLanguage = 'en'): string {
+        if (!this.content) return '';
+
+        let rawContent: any = '';
+        if (typeof this.content === 'object' && this.content !== null) {
+            rawContent = (this.content as Record<string, any>)[lang] 
+                ?? (this.content as Record<string, any>)['en'] 
+                ?? (this.content as Record<string, any>)['es']
+                ?? this.content;
+        } else {
+            rawContent = this.content;
+        }
+
+        const plainText = this.extractPlainText(rawContent);
+        if (!plainText) return '';
+
+        const paragraphs = plainText.split(/\r?\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
+        return paragraphs.length > 0 ? paragraphs[0] : plainText;
+    }
+
+    private sanitizeData(data: any): any {
+        if (data === null || data === undefined) {
+            return data;
+        }
+
+        if (Array.isArray(data)) {
+            return data.map((item) => this.sanitizeData(item));
+        }
+
+        if (typeof data === 'object') {
+            if (typeof data.toJSON === 'function') {
+                return JSON.parse(JSON.stringify(data.toJSON()));
+            }
+
+            const cleanObj: Record<string, any> = {};
+            for (const key of Object.keys(data)) {
+                cleanObj[key] = this.sanitizeData(data[key]);
+            }
+            return JSON.parse(JSON.stringify(cleanObj));
+        }
+
+        return data;
+    }
+
     static fromFirestore(id: string, data: any): Post {
+        const title: LocalizedString = typeof data.postTitle === 'object' && data.postTitle !== null
+        ? {en: data.postTitle.en || '', es: data.postTitle.es || ''}
+        : {en: typeof data.postTitle === "string" ? data.postTitle : '', es: ''};
+
+        const rawContentData = data.content ?? data.description ?? data.postDescription;
+        let content: LocalizedContent | LocalizedString;
+
+        if (rawContentData && typeof rawContentData === 'object' && ('en' in rawContentData || 'es' in rawContentData)) {
+            content = {
+                en: rawContentData.en ?? '',
+                es: rawContentData.es ?? ''
+            };
+        } else if (rawContentData) {
+            content = {
+                en: rawContentData,
+                es: ''
+            };
+        } else {
+            content = {en: '', es: ''};
+        }
+
         const post = new Post(
-            data.postTitle,
+            title,
             data.author,
             data.publishDate,
             data.lastUpdated,
-            data.content,
+            content,
             data.linkedProjectId
         );
         post.id = id;
@@ -112,33 +222,27 @@ export class Post {
 
     toFirestore() {
         return {
-            postTitle: this.postTitle,
+            postTitle: {
+                en: this.postTitle?.en || '',
+                es: this.postTitle?.es || '',
+            },
             author: this.author,
             publishDate: this.publishDate,
             lastUpdated: serverTimestamp(),
-            content: this.content,
+            content: {
+                en: this.sanitizeData((this.content as Record<string, any>)?.en ?? ''),
+                es: this.sanitizeData((this.content as Record<string, any>)?.es ?? '')
+            },
             linkedProjectId: this.linkedProjectId
         };
     }
+}
 
-    getFirstParagraph(): string {
-        if (!this.content) return "";
-        const ops = Array.isArray(this.content) ? this.content : this.content.ops;
-        if (!Array.isArray(ops)) return "";
-        let firstParagraph = "";
-        for (const op of ops) {
-            if (typeof op.insert === 'string') {
-                const newlineIndex = op.insert.indexOf('\n');
-
-                if (newlineIndex !== -1) {
-                    firstParagraph += op.insert.substring(0, newlineIndex);
-                    break;
-                } else {
-                    firstParagraph += op.insert;
-                }
-            }
-        }
-        return firstParagraph.trim();
+export const postConverter: FirestoreDataConverter<Post> = {
+    toFirestore: (post: Post) => post.toFirestore(),
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return Post.fromFirestore(snapshot.id, data);
     }
 }
 

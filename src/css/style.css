@@ -842,6 +842,18 @@ textarea {
   cursor: pointer;
 }
 
+.custom-goal-bar {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: var(--blue-accent);
+  color: var(--message-text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 /* =========================================
    11. SKELETON PLACEHOLDERS
    ========================================= */

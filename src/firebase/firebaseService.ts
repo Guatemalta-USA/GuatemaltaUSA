@@ -327,7 +327,7 @@ export async function savePost(post: Post): Promise<string> {
         await updateDoc(docRef, post.toFirestore());
         return post.id;
     }
-    const customId = slugify(post.postTitle);
+    const customId = slugify(post.postTitle.en);
     const docRef = doc(db, POSTS_PATH, customId);
     await setDoc(docRef, post.toFirestore());
 
@@ -526,4 +526,18 @@ export async function updateDonateListOrder(orderUpdates: { id: string; newOrder
         console.error("Error committing batch order update for donate list:", error);
         throw new Error("Could not update donate list order.");
     }
+}
+
+export async function getCampaignTotalById(projectId: string): Promise<number> {
+    const campaignTotalRef = collection(db, "campaignTotals");
+    const q = query(campaignTotalRef, where("name", "==", projectId));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        const campaignTotal = docSnap.data() as { amount: number; name: string };
+        return typeof campaignTotal.amount === 'number' ? campaignTotal.amount : 0;
+    }
+    
+    return 0;
 }

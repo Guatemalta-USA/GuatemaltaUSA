@@ -481,4 +481,18 @@ export class TheEditor {
     public setHTML(html: string): void { this.quill.root.innerHTML = html; }
 }
 
+export function isEmptyDelta(deltaObj: any): boolean {
+    if (!deltaObj || !Array.isArray(deltaObj.ops) || deltaObj.ops.length === 0) {
+        return true;
+    }
+    // Quill represents an empty doc as a single newline insert operation
+    if (deltaObj.ops.length === 1) {
+        const op = deltaObj.ops[0];
+        if (typeof op.insert === 'string' && (op.insert === '\n' || op.insert.trim() === '')) {
+            return true;
+        }
+    }
+    return false;
+}
+
 updateContent();
