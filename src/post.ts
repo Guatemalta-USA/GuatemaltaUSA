@@ -25,7 +25,7 @@ async function setupPostView() {
 
     const post = await getPostById(id);
     if (!post) {
-        storeMessage("Post not found", "main-message", "error");
+        storeMessage({messageBody: "Post not found", location: "main-message", type: "error", i18n: "post_not_found"});
         navigateTo("/blog");
     } else {
         const adminActions = document.getElementById('admin-actions');

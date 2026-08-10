@@ -18,20 +18,20 @@ async function setupEditPostPage() {
         const user = await getAuthenticatedUser();
         
         if (!user) {
-            storeMessage("Access denied. Admin privileges are required to manage posts.", "main-message", "error");
+            storeMessage({messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied"});
             navigateTo('/blog');
             return;
         }
         const role = await getUserRole(user.uid);
 
         if (role !== 'admin') {
-            storeMessage("Access denied. Admin privileges are required to manage posts.", "main-message", "error");
+            storeMessage({messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied"});
             navigateTo('/blog');
             return;
         }
     } catch (authError) {
         console.error("Authorization check failed:", authError);
-        storeMessage("An error occurred verifying your permissions.", "main-message", "error");
+        storeMessage({messageBody: "An error occurred verifying your permissions.", location: "main-message", type: "error"});
         navigateTo('/blog');
         return;
     }
@@ -109,11 +109,11 @@ async function setupEditPostPage() {
 
                                 await deletePost(postId);
 
-                                storeMessage("Post deleted successfully", "main-message", "delete");
+                                storeMessage({messageBody: "Post deleted successfully", location: "main-message", type: "delete"});
                                 navigateTo('/blog');
                             } catch (err) {
                                 console.error("Delete failed:", err);
-                                createMessage("Failed to delete the post. Please try again.", "main-message", "error");
+                                createMessage({messageBody: "Failed to delete the post. Please try again.", location: "main-message", type: "error"});
                                 deleteBtn.innerText = "Delete Post";
                                 (deleteBtn as HTMLButtonElement).disabled = false;
                             }
@@ -122,7 +122,7 @@ async function setupEditPostPage() {
                 }
             } else {
                 console.error("No post found with that ID");
-                storeMessage("The post you tried to edit does not exist", "main-message", "error");
+                storeMessage({messageBody: "The post you tried to edit does not exist", location: "main-message", type: "error"});
                 navigateTo("/blog");
                 return;
             }
@@ -143,11 +143,11 @@ async function setupEditPostPage() {
 
             try {
                 if (!titleInput.value.trim()) {
-                    createMessage("Please do not leave the Title empty", "main-message", "error");
+                    createMessage({messageBody: "Please do not leave the Title empty", location: "main-message", type: "error"});
                     throw new Error("Cannot save post. Title input cannot be empty");
                 }
                 if (!authorInput || !authorInput.value.trim()) {
-                    createMessage("Please do not leave the author empty", "main-message", "error");
+                    createMessage({messageBody: "Please do not leave the author empty", location: "main-message", type: "error"});
                     throw new Error("Cannot save post. Author input cannot be empty");
                 }
 
@@ -169,12 +169,12 @@ async function setupEditPostPage() {
                 if (postId) postToSave.id = postId;
 
                 const savedId = await savePost(postToSave);
-                storeMessage("Post published successfully!", "main-message", "check_circle");
+                storeMessage({messageBody: "Post published successfully!", location: "main-message", type: "check_circle"});
                 navigateTo('/blog/post', { params: { id: savedId } });
 
             } catch (err: any) {
                 console.error("Save failed:", err);
-                createMessage(err.message || err, "main-message", "error");
+                createMessage({messageBody: err.message || err, location: "main-message", type: "error"});
                 saveBtn.innerText = "Publish Post";
                 (saveBtn as HTMLButtonElement).disabled = false;
             }

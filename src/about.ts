@@ -72,16 +72,16 @@ async function handleSubmit() {
 
     if (editingProfileId) {
       await updateProfile(editingProfileId, profileData);
-      createMessage("Profile updated!", "main-message", "edit");
+      createMessage({ messageBody: "Profile updated!", location: "main-message", type: "edit" });
     } else {
       if (!file) {
-        createMessage("Please select an image for a new profile", "main-message", "error");
+        createMessage({ messageBody: "Please select an image for a new profile", location: "main-message", type: "error" });
         submitBtn.disabled = false;
         submitBtn.innerText = "Save Profile";
         return;
       }
       await addProfile(profileData);
-      createMessage("Profile added!", "main-message", "check_circle");
+      createMessage({ messageBody: "Profile added!", location: "main-message", type: "check_circle" });
     }
 
     modalRoot.classList.add("hide");
@@ -92,7 +92,7 @@ async function handleSubmit() {
     await loadProfiles();
   } catch (error) {
     console.error("Error in handleSubmit:", error);
-    createMessage("An error occurred while saving the profile.", "main-message", "error");
+    createMessage({ messageBody: "An error occurred while saving the profile.", location: "main-message", type: "error" });
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerText = "Save Profile";
@@ -158,7 +158,7 @@ async function loadProfiles() {
 
           if (isAdmin) {
             const actionsDiv = makeElement("div", null, "profile-actions", null);
-            const editBtn = createButton({buttonText: "Edit", buttonType: "button", buttonId: `edit-${index}`, buttonClass: "edit-btn", icon: "edit", i18n: "button_edit"});
+            const editBtn = createButton({ buttonText: "Edit", buttonType: "button", buttonId: `edit-${index}`, buttonClass: "edit-btn", icon: "edit", i18n: "button_edit" });
             editBtn.onclick = () => handleEdit(currentProfile);
 
             const deleteBtn = createButton({ buttonText: "Delete", buttonType: "button", buttonId: "delete-button", buttonClass: "delete-button", icon: "delete", i18n: "button_delete" });
@@ -174,13 +174,15 @@ async function loadProfiles() {
                   }
                   await deleteProfile(currentProfile.name);
                   await loadProfiles();
-                  createMessage("Profile and image deleted successfully.", "main-message", "delete");
+                  createMessage({ messageBody: "Profile and image deleted successfully.", location: "main-message", type: "delete" });
                 } catch (err) {
                   console.error("Delete failed:", err);
                   createMessage(
-                    "Failed to fully delete the profile. Please try reloading the page",
-                    "main-message",
-                    "error"
+                    {
+                      messageBody: "Failed to fully delete the profile. Please try reloading the page",
+                      location: "main-message",
+                      type: "error"
+                    }
                   );
                 }
               }
@@ -232,21 +234,21 @@ function handleEdit(profile: Profile) {
 function sendContactEmails(formData: FormData) {
   const nameInput = formData.get("entry.1134764317");
   if (!nameInput || nameInput.toString().trim() === "") {
-    createMessage("Please enter your name", "main-message", "error");
+    createMessage({ messageBody: "Please enter your name", location: "main-message", type: "error", i18n: "please_enter_your_name" });
     return;
   }
   const emailInput = formData.get("entry.1281748752");
   if (!emailInput || emailInput.toString().trim() === "") {
-    createMessage("Please enter your email", "main-message", "error");
+    createMessage({ messageBody: "Please enter your email", location: "main-message", type: "error", i18n: "please_enter_your_email" });
     return;
   }
   if (!emailInput.toString().includes("@")) {
-    createMessage("Please enter a valid email", "main-message", "error");
+    createMessage({ messageBody: "Please enter a valid email", location: "main-message", type: "error", i18n: "please_enter_a_valid_email" });
     return;
   }
   const commentsTextArea = formData.get("entry.1027877017");
   if (!commentsTextArea || commentsTextArea.toString().trim() === "") {
-    createMessage("Please do not leave the comments field empty", "main-message", "error");
+    createMessage({ messageBody: "Please do not leave the comments field empty", location: "main-message", type: "error", i18n: "please_dont_leave_comments_empty" });
     return;
   }
 
@@ -261,18 +263,24 @@ function sendContactEmails(formData: FormData) {
     .then((response) => {
       console.log(response);
       createMessage(
-        "Your comments have been sent to our team",
-        "main-message",
-        "check_circle"
+        {
+          messageBody: "Your comments have been sent to our team",
+          location: "main-message",
+          type: "check_circle",
+          i18n: "comments_have_been_sent"
+        }
       );
       contactForm.reset();
     })
     .catch((error) => {
       console.error("Network Error:", error);
       createMessage(
-        "Error signing up. Please reload the page and try again",
-        "main-message",
-        "error"
+        {
+          messageBody: "Error submitting comments. Please reload the page and try again",
+          location: "main-message",
+          type: "error",
+          i18n: "error_sending_comments"
+        }
       );
     });
 }
@@ -286,7 +294,7 @@ auth.onAuthStateChanged(async (user) => {
     isAdmin = role === "admin";
 
     if (isAdmin) {
-      const addBtn = createButton({buttonText: "Add new member", buttonType: "button", buttonId: "addNew", buttonClass: "accent-button", icon: "add", i18n: "add_new_member"});
+      const addBtn = createButton({ buttonText: "Add new member", buttonType: "button", buttonId: "addNew", buttonClass: "accent-button", icon: "add", i18n: "add_new_member" });
       addBtn.onclick = () => {
         modalRoot.classList.remove("hide");
         modalRoot.style.display = "flex";

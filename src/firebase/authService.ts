@@ -16,12 +16,12 @@ export async function signOutUser(): Promise<void> {
     await signOut(auth);
     const logOut = document.getElementById("logout");
     if (logOut) logOut.classList.add("hide");
-    createMessage("You have been signed out", "main-message", "info");
+    createMessage({messageBody: "You have been signed out", location: "main-message", type: "info"});
   } catch (error) {
     createMessage(
-      `Error during user logout: ${error}`,
-      "sign-in-message",
-      "error",
+     { messageBody: `Error during user logout: ${error}`,
+      location: "main-message",
+      type: "error",}
     );
     throw error;
   }

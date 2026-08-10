@@ -89,22 +89,63 @@ function openGivebutterModal(widgetId: string) {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background: rgba(0, 0, 0, 0.75); display: flex; align-items: center;
         justify-content: center; z-index: 99999; backdrop-filter: blur(4px);
+        padding: 20px; box-sizing: border-box;
     `;
 
     const modalContent = document.createElement('div');
     modalContent.style.cssText = `
         position: relative; background: #ffffff; width: 90%; max-width: 500px;
+        max-height: 90vh; overflow-y: auto;
         padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
     `;
 
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
+    closeBtn.setAttribute('aria-label', 'Close modal');
     closeBtn.style.cssText = `
         position: absolute; top: 12px; right: 16px; background: none;
-        border: none; font-size: 28px; cursor: pointer; color: #6b7280; line-height: 1;
+        border: none; font-size: 28px; cursor: pointer; color: #6b7280; line-height: 1; z-index: 1;
     `;
 
-    const closeModal = () => overlay.remove();
+    const closeModal = () => {
+        window.removeEventListener("keydown", handleKeyDown);
+        document.body.classList.remove("noScroll");
+        if (document.body.contains(overlay)) {
+            overlay.remove();
+        }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+            closeModal();
+            return;
+        }
+
+        if (event.key === "Tab") {
+            const focusableElements = modalContent.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), givebutter-widget'
+            );
+            if (focusableElements.length === 0) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (event.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    event.preventDefault();
+                    lastElement.focus();
+                }
+            } else {
+                if (document.activeElement === lastElement) {
+                    event.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
     closeBtn.onclick = closeModal;
     overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
 
@@ -113,12 +154,16 @@ function openGivebutterModal(widgetId: string) {
     modalContent.appendChild(closeBtn);
     modalContent.appendChild(liveWidget);
     overlay.appendChild(modalContent);
+
+    document.body.classList.add("noScroll");
     document.body.appendChild(overlay);
 
     const gb = (window as any).Givebutter;
     if (gb && typeof gb.init === 'function') {
         gb.init();
     }
+
+    closeBtn.focus();
 }
 
 async function setUpProjectView() {
@@ -136,7 +181,7 @@ async function setUpProjectView() {
 
     const project = await getProjectById(id);
     if (!project) {
-        storeMessage("Project not found", "main-message", "error");
+        storeMessage({messageBody: "Project not found", location: "main-message", type: "error", i18n: "project_not_found"});
         navigateTo("/impact");
         return;
     }
@@ -183,10 +228,10 @@ async function setUpProjectView() {
                             project.updatedAt = Timestamp.now()
                             try {
                                 await saveProject(project);
-                                storeMessage("Goal Bar added", "main-message", "check_circle");
+                                storeMessage({messageBody: "Goal Bar added", location: "main-message", type: "check_circle"});
                                 window.location.reload();
                             } catch (error: any) {
-                                storeMessage(error, "main-message", "error");
+                                storeMessage({messageBody: error, location: "main-message", type: "error"});
                             }
                         }
                     }

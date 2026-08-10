@@ -332,7 +332,7 @@ export class TheEditor {
     private async selectLocalImage() {
         const savedRange = this.quill.getSelection();
         if (!savedRange) {
-            createMessage("Please click inside the editor or a block column first.", "main-message", "error");
+            createMessage({messageBody: "Please click inside the editor or a block column first.", location: "main-message", type: "error"});
             return;
         }
 
@@ -361,7 +361,7 @@ export class TheEditor {
                 if (data.url) {
                     this.quill.insertEmbed(savedRange.index, 'image', data.url);
                     this.quill.setSelection(savedRange.index + 1);
-                    createMessage("Image uploaded successfully!", "main-message", "check_circle");
+                    createMessage({messageBody: "Image uploaded successfully!", location: "main-message", type: "check_circle"});
 
                     const altTextResponse = await promptModal(
                         "Please provide a description for this image",
@@ -381,7 +381,7 @@ export class TheEditor {
                     }
                 }
             } catch (error) {
-                createMessage("Upload failed.", "main-message", "error");
+                createMessage({messageBody: "Upload failed.", location: "main-message", type: "error"});
             }
         };
     }
@@ -444,9 +444,9 @@ export class TheEditor {
         try {
             const cleanContent = await this.prepareContentForSave();
             await updatePageContents(this.currentPage, { content: cleanContent });
-            createMessage("Changes saved!", "main-message", "check_circle");
+            createMessage({messageBody: "Changes saved!", location: "main-message", type: "check_circle"});
         } catch (err) {
-            createMessage("Error saving to database.", "main-message", "error");
+            createMessage({messageBody: "Error saving to database.", location: "main-message", type: "error"});
         }
     }
 

@@ -17,7 +17,7 @@ async function checkAdminPermissions(): Promise<boolean> {
         const user = await getAuthenticatedUser();
 
         if (!user) {
-            storeMessage("Access denied. Admin privileges are required.", "main-message", "error");
+            storeMessage({messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied"});
             navigateTo('/');
             return false;
         }
@@ -25,7 +25,7 @@ async function checkAdminPermissions(): Promise<boolean> {
         const role = await getUserRole(user.uid);
 
         if (role !== 'admin') {
-            storeMessage("Access denied. Admin privileges are required.", "main-message", "error");
+            storeMessage({messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied"});
             navigateTo('/');
             return false;
         }
@@ -33,7 +33,7 @@ async function checkAdminPermissions(): Promise<boolean> {
         return true;
     } catch (authError) {
         console.error("Authorization check failed:", authError);
-        storeMessage("An error occurred verifying your permissions.", "main-message", "error");
+        storeMessage({messageBody: "An error occurred verifying your permissions.", location: "main-message", type: "error"});
         navigateTo('/');
         return false;
     }
@@ -89,7 +89,7 @@ async function renderDonateListTable(container: HTMLElement) {
                         formId: updatedFormId
                     };
                     await setProjectLink(updatedProjectLink);
-                    createMessage("Project updated successfully", "main-message", "check_circle", 5);
+                    createMessage({messageBody: "Project updated successfully", location: "main-message", type: "check_circle", autoCloseSeconds: 5});
                     await renderDonateListTable(container);
                 }
             }
@@ -111,10 +111,10 @@ async function renderDonateListTable(container: HTMLElement) {
             if (confirmed) {
                 try {
                     await deleteProjectFromDonateList(targetId);
-                    createMessage("Project deleted successfully", "main-message", "check_circle", 5);
+                    createMessage({messageBody: "Project deleted successfully", location: "main-message", type: "check_circle", autoCloseSeconds: 5});
                     await renderDonateListTable(container); // Refresh table
                 } catch (error: any) {
-                    createMessage(error, "main-message", "error");
+                    createMessage({messageBody: error, location: "main-message", type: "error"});
                 }
             }
         });
@@ -142,9 +142,9 @@ async function renderDonateListTable(container: HTMLElement) {
 
             try {
                 await updateDonateListOrder(orderUpdates);
-                createMessage("Donate list order updated successfully", "main-message", "check_circle", 3);
+                createMessage({messageBody: "Donate list order updated successfully", location: "main-message", type: "check_circle", autoCloseSeconds: 3});
             } catch (error) {
-                createMessage("Failed to save donate list order", "main-message", "error");
+                createMessage({messageBody: "Failed to save donate list order", location: "main-message", type: "error"});
             }
         }
     });
@@ -171,7 +171,7 @@ function renderQRCodeCanvasControls(
             a.download = filename;
             a.click();
         } catch (err) {
-            createMessage(`Could not download image: ${err}`, "main-message", "error");
+            createMessage({messageBody: `Could not download image: ${err}`, location: "main-message", type: "error"});
         }
     };
 
@@ -368,9 +368,9 @@ async function renderCurrentSection() {
 
             try {
                 await updateProjectsOrder(orderUpdates);
-                createMessage("Project order updated successfully", "main-message", "check_circle", 3);
+                createMessage({messageBody: "Project order updated successfully", location: "main-message", type: "check_circle", autoCloseSeconds: 3});
             } catch (error) {
-                createMessage("Failed to save new order", "main-message", "error");
+                createMessage({messageBody: "Failed to save new order", location: "main-message", type: "error"});
             }
         }
     });
@@ -398,10 +398,10 @@ async function renderDonateSection() {
                 };
                 try {
                     await setProjectLink(newProject);
-                    createMessage("Project Added to Donate Button List", "main-message", "check_circle");
+                    createMessage({messageBody: "Project Added to Donate Button List", location: "main-message", type: "check_circle"});
                     await renderDonateListTable(tableContainer); // Refresh table
                 } catch (error: any) {
-                    createMessage(error, "main-message", "error");
+                    createMessage({messageBody: error, location: "main-message", type: "error"});
                 }
             }
         }

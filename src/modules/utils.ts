@@ -1,4 +1,4 @@
-import { Message, SOCIAL_DATA, type KeyValue, type ProjectInfo } from "../models";
+import { SOCIAL_DATA, type KeyValue, type MessageParams, type ProjectInfo } from "../models";
 import { Timestamp } from "firebase/firestore";
 
 type ButtonParams = {
@@ -42,27 +42,24 @@ export function createLink(linkText: string, url: string, external: boolean) {
 }
 
 export function createMessage(
-  message: string, 
-  location: string, 
-  type: string, 
-  autoCloseSeconds?: number
+  params: MessageParams
 ) {
   clearMessages();
-  const messageWrapper = document.getElementById(location) as HTMLElement;
+  const messageWrapper = document.getElementById(params["location"]) as HTMLElement;
   if (!messageWrapper) return;
 
   const messageDiv = document.createElement("div");
-  if (type === "check_circle") {
+  if (params["type"] === "check_circle") {
     messageDiv.setAttribute("class", "success message");
     messageDiv.setAttribute("aria-live", "polite");
-  } else if (type === "error") {
+  } else if (params["type"] === "error") {
     messageDiv.setAttribute("class", "error message");
     messageDiv.setAttribute("role", "alert");
-    console.error(message);
-  } else if (type === "delete" || type === "warn") {
+    console.error(params["messageBody"]);
+  } else if (params["type"] === "delete" || params["type"] === "warn") {
     messageDiv.setAttribute("class", "warn message");
     messageDiv.setAttribute("aria-live", "polite");
-    console.warn(message);
+    console.warn(params["messageBody"]);
   } else {
     messageDiv.setAttribute("class", "info message");
     messageDiv.setAttribute("aria-live", "polite");
@@ -70,11 +67,11 @@ export function createMessage(
 
   const icon = document.createElement("span");
   icon.setAttribute("class", "material-symbols-outlined");
-  const iconName = document.createTextNode(type);
+  const iconName = document.createTextNode(params["type"]);
   icon.appendChild(iconName);
   messageDiv.appendChild(icon);
 
-  const messageText = document.createTextNode(message);
+  const messageText = document.createTextNode(params["messageBody"]);
   messageDiv.appendChild(messageText);
 
   const closeButton = createButton({ 
@@ -89,12 +86,12 @@ export function createMessage(
 
   messageWrapper.appendChild(messageDiv);
 
-  if (autoCloseSeconds && autoCloseSeconds > 0) {
+  if (params["autoCloseSeconds"] && params["autoCloseSeconds"] > 0) {
     setTimeout(() => {
       if (messageWrapper.contains(messageDiv)) {
         messageWrapper.innerHTML = "";
       }
-    }, autoCloseSeconds * 1000);
+    }, params["autoCloseSeconds"] * 1000);
   }
 }
 
@@ -158,14 +155,9 @@ export function clearMessages() {
   }
 }
 
-export function storeMessage(
-  message: string,
-  messageContainer: string,
-  icon: string,
-) {
+export function storeMessage(params: MessageParams) {
   clearMessages();
-  const messageToStore = new Message(message, messageContainer, icon);
-  sessionStorage.setItem("message", JSON.stringify(messageToStore));
+  sessionStorage.setItem("message", JSON.stringify(params));
 }
 
 export function fixDate(
@@ -238,13 +230,39 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
 
     const closeModal = () => {
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.removeChild(modalRoot);
+      document.body.classList.remove("noScroll");
+      if (document.body.contains(modalRoot)) {
+        document.body.removeChild(modalRoot);
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeModal();
         resolve(false);
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusableElements = modalContent.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
 
@@ -254,7 +272,7 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
       closeModal();
       resolve(true);
     };
-    //"Cancel", "button", , 
+
     const cancelButton = createButton({ buttonText: "Cancel", buttonType: "button", buttonId: "cancel-btn", buttonClass: "accent-button", icon: "close", i18n: "button_cancel" });
     cancelButton.onclick = function () {
       closeModal();
@@ -267,7 +285,10 @@ export async function confirmDeleteModal(messageHeader: string, messageBody: str
     modalRoot.appendChild(modalOverlay);
 
     modalRoot.style.display = 'flex';
+    document.body.classList.add("noScroll");
     document.body.appendChild(modalRoot);
+
+    cancelButton.focus();
   });
 }
 
@@ -310,7 +331,6 @@ export async function promptModal(
       userInput.type = "text";
       userInput.placeholder = config.placeholder || "";
 
-      // Use provided inputValues[index] if available, falling back to config.defaultValue or empty string
       userInput.value = inputValues?.[index] ?? config.defaultValue ?? "";
 
       userInput.id = `userInput_${index}`;
@@ -329,6 +349,7 @@ export async function promptModal(
 
     const closeModal = () => {
       window.removeEventListener("keydown", handleKeyDown);
+      document.body.classList.remove("noScroll");
       if (document.body.contains(modalRoot)) {
         document.body.removeChild(modalRoot);
       }
@@ -338,8 +359,34 @@ export async function promptModal(
       if (event.key === "Escape" && !modalRequired) {
         closeModal();
         resolve(null);
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusableElements = modalContent.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
+    window.addEventListener("keydown", handleKeyDown);
+
     const submitBtn = createButton({buttonText: buttonText, buttonType: "button", buttonId: "submit-btn", buttonClass: "accent-button"});
     submitBtn.onclick = function () {
       for (const input of inputElements) {
@@ -356,7 +403,6 @@ export async function promptModal(
     };
 
     if (!modalRequired) {
-      window.addEventListener("keydown", handleKeyDown);
       const cancelButton = createButton({ buttonText: "Cancel", buttonType: "button", buttonId: "cancel-btn", buttonClass: "accent-button", icon: "close", i18n: "button_cancel" });
       cancelButton.onclick = function () {
         closeModal();
@@ -370,9 +416,13 @@ export async function promptModal(
     modalRoot.appendChild(modalOverlay);
 
     modalRoot.style.display = "flex";
+    document.body.classList.add("noScroll");
     document.body.appendChild(modalRoot);
+
     if (inputElements.length > 0) {
       inputElements[0].focus();
+    } else {
+      submitBtn.focus();
     }
   });
 }
@@ -433,9 +483,9 @@ export async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     console.log('Text successfully copied to clipboard!');
-    createMessage("copied to clipboard!", "main-message", "check_circle")
+    createMessage({messageBody: "Copied to clipboard", location: "main-message", type: "check_circle", i18n: "copied_to_clipboard"})
   } catch (error) {
-    createMessage(`Failed to copy text to clipboard: ${error}`, "main-message", "error");
+    createMessage({messageBody: `Failed to copy text to clipboard: ${error}`, location: "main-message", type: "error"});
   }
 }
 

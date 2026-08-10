@@ -16,31 +16,31 @@ async function submitData(form: HTMLFormElement) {
     if (firstName && firstName.toString() !== '') {
 
     } else {
-        createMessage("Please enter your first name", "main-message", "error");
+        createMessage({ messageBody: "Please enter your first name", location: "main-message", type: "error", i18n: "please_enter_first" });
         return;
     }
     const lastName = formData.get("entry.116201782");
     if (lastName && lastName.toString() !== "") {
 
     } else {
-        createMessage("Please enter your last name", "main-message", "error");
+        createMessage({ messageBody: "Please enter your last name", location: "main-message", type: "error", i18n: "please_enter_last" });
         return;
     }
     const email = formData.get("entry.1067526779");
     if (email && email.toString() !== '') {
         if (!email.toString().includes("@")) {
-            createMessage("Please enter a valid email", "main-message", "error");
+            createMessage({ messageBody: "Please enter a valid email", location: "main-message", type: "error", i18n: "please_enter_a_valid_email" });
             return;
         }
     } else {
-        createMessage("Please enter your email", "main-message", "error");
+        createMessage({ messageBody: "Please enter your email", location: "main-message", type: "error", i18n: "please_enter_your_email" });
         return;
     }
     const phoneNumber = formData.get("entry.1476933979");
     if (phoneNumber) {
         const cleaned: string = phoneNumber.toString().replace(/[^\d]/g, "");
         if (cleaned.length < 10 || cleaned.length > 11) {
-            createMessage("Please enter a valid phone number", "main-message", "error");
+            createMessage({ messageBody: "Please enter a valid phone number", location: "main-message", type: "error", i18n: "please_valid_phone" });
             return;
         }
     }
@@ -56,9 +56,13 @@ async function submitData(form: HTMLFormElement) {
             //Store the message to be displayed after redirected to the home page
             console.log(response);
             storeMessage(
-                "You have successfully signed up for our mailing list",
-                "main-message",
-                "check_circle",
+                {
+                    messageBody: "You have successfully signed up for our mailing list",
+                    location: "main-message",
+                    type: "check_circle",
+                    i18n: "mailing_sign_up_success",
+                    autoCloseSeconds: 5
+                }
             );
             navigateTo("/");
         })
@@ -66,9 +70,12 @@ async function submitData(form: HTMLFormElement) {
             //Create an error message
             console.error("Network Error:", error);
             createMessage(
-                "Error signing up. Please reload the page and try again",
-                "main-message",
-                "error",
+                {
+                    messageBody: "Error signing up. Please reload the page and try again",
+                    location: "main-message",
+                    type: "error",
+                    i18n: ""
+                }
             );
         });
 }

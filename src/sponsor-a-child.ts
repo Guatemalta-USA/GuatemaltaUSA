@@ -20,11 +20,11 @@ let validation: refStatus = { isValid: false, donorName: "", hasClaimed: false }
 if (refCode) {
     validation = await validateReferralCode(refCode);
     if (!validation.isValid) {
-        if (validation.error) createMessage(validation.error, "main-message", "error");
+        if (validation.error) createMessage({messageBody: validation.error, location: "main-message", type: "error"});
     } else if (!validation.childName) {
-        createMessage(`Welcome ${validation.donorName}, Please select a child to sponsor`, "main-message", "info");
+        createMessage({messageBody: `Welcome ${validation.donorName}, Please select a child to sponsor`, location: "main-message", type:"info"});
     } else {
-        createMessage(`Welcome ${validation.donorName}`, "main-message", "info");
+        createMessage({messageBody: `Welcome ${validation.donorName}`, location: "main-message", type: "info"});
     }
 }
 
@@ -101,7 +101,7 @@ async function submitData(formData: FormData): Promise<boolean> {
 
         const name = formData.get("child-name");
         if (!name || name.toString().trim() === "") {
-            createMessage("Please enter the name of the child", "main-message", "error");
+            createMessage({messageBody: "Please enter the name of the child", location: "main-message", type: "error"});
             resolve(false);
         } else {
             newChild["name"] = name.toString().trim();
@@ -109,7 +109,7 @@ async function submitData(formData: FormData): Promise<boolean> {
 
         const year = formData.get("year");
         if (!year) {
-            createMessage("Please enter the year of the sponsorship", "main-message", "error");
+            createMessage({messageBody: "Please enter the year of the sponsorship", location: "main-message", type: "error"});
             resolve(false);
         } else {
             newChild["year"] = parseInt(year as string, 10);
@@ -117,7 +117,7 @@ async function submitData(formData: FormData): Promise<boolean> {
 
         const bio = formData.get("bio");
         if (!bio || bio.toString().trim() === "") {
-            createMessage("Please enter the bio for the child", "main-message", "error");
+            createMessage({messageBody: "Please enter the bio for the child", location: "main-message", type: "error"});
             resolve(false);
         } else {
             newChild["bio"] = bio.toString().trim();
@@ -134,7 +134,7 @@ async function submitData(formData: FormData): Promise<boolean> {
             await addChildSponsorship(newChild);
             resolve(true);
         } catch (error: any) {
-            createMessage(error, "main-message", "error");
+            createMessage({messageBody: error, location: "main-message", type: "error"});
             resolve(false);
         }
     });
@@ -227,13 +227,13 @@ async function updateSponsorshipSection() {
                         if (refCode) {
                             const result = await updateDonor(refCode, child["name"])
                             if (result) {
-                                createMessage("Sponsorship successfully processed!", "main-message", "check_circle");
+                                createMessage({messageBody: "Sponsorship successfully processed!", location: "main-message", type: "check_circle"});
                                 window.location.reload();
                             }
                         }
 
                     } catch (error: any) {
-                        createMessage(error, "main-message", "error");
+                        createMessage({messageBody: error, location: "main-message", type: "error"});
                     }
                 };
                 nextChild.appendChild(selectBtn);

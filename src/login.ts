@@ -6,14 +6,14 @@ import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
 
-createMessage("Opening Google sign-in window", "main-message", "info");
+createMessage({messageBody: "Opening Google sign-in window", location: "main-message", type: "info"});
 try {
       const result = await signInWithGooglePopup();
       //If successful sign in with Google, close the modal and display the message
       const user = result.user;
       if (user) {
         //Close the sign in modal
-        storeMessage(`Welcome ${user.displayName}`, "main-message", "check_circle");
+        storeMessage({messageBody: `Welcome ${user.displayName}`, location: "main-message", type: "check_circle", autoCloseSeconds: 5});
         navigateTo("/");
       }
     } catch (error: any) {
@@ -25,6 +25,6 @@ try {
       } else {
         errorMessage = `Error: ${error.message}`;
       }
-      createMessage(errorMessage, "main-message", "error");
+      createMessage({messageBody: errorMessage, location: "main-message", type: "error"});
       console.error("Google sign-in error details:", error);
     }

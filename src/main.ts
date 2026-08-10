@@ -1,6 +1,6 @@
 import { loadFooter, loadHeader, loadNav } from "./modules/templates.js";
 import { clearMessages, createButton, createMessage } from "./modules/utils.js";
-import { Post, Project } from "./models.js";
+import { Post, Project, type MessageParams } from "./models.js";
 import { TheEditor } from "./modules/editor.js";
 import { getUserRole } from "./firebase/authService.js";
 import { auth } from "./firebase/firebase.js";
@@ -76,8 +76,8 @@ export async function initializeApp(
 
   const storedMessageString = sessionStorage.getItem("message");
   if (storedMessageString) {
-    const storedMessage = JSON.parse(storedMessageString);
-    createMessage(storedMessage['message'], storedMessage['messageContainer'], storedMessage['icon']);
+    const storedMessage: MessageParams = JSON.parse(storedMessageString);
+    createMessage(storedMessage);
     sessionStorage.removeItem("message");
   }
 
@@ -184,10 +184,10 @@ export async function initializeApp(
           }
 
           toggleMode(editor, false);
-          createMessage("Saved successfully!", "main-message", "check_circle");
+          createMessage({messageBody: "Saved successfully!", location: "main-message", type: "check_circle"});
         } catch (err) {
           console.error("Save failed", err);
-          createMessage("Save failed.", "main-message", "error");
+          createMessage({messageBody: "Save failed.", location: "main-message", type: "error"});
         }
       });
     }

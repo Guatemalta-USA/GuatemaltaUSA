@@ -5,6 +5,7 @@ import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils
 import { Project, type LocalizedString, type LocalizedContent, type SupportedLanguage } from './models.js';
 import { navigateTo } from './modules/navigate.js';
 import { Timestamp } from 'firebase/firestore';
+import { getAuthenticatedUser, getUserRole } from './firebase/authService.js';
 
 export class EditProjectPage {
     private editor: TheEditor | null = null;
@@ -19,6 +20,27 @@ export class EditProjectPage {
     }
 
     private async init(): Promise<void> {
+        try {
+            const user = await getAuthenticatedUser();
+
+            if (!user) {
+                storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
+                navigateTo('/blog');
+                return;
+            }
+            const role = await getUserRole(user.uid);
+
+            if (role !== 'admin') {
+                storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
+                navigateTo('/blog');
+                return;
+            }
+        } catch (authError) {
+            console.error("Authorization check failed:", authError);
+            storeMessage({ messageBody: "An error occurred verifying your permissions.", location: "main-message", type: "error" });
+            navigateTo('/blog');
+            return;
+        }
         const urlParams = new URLSearchParams(window.location.search);
         this.currentProjectId = urlParams.get('id') || urlParams.get('projectId');
 
@@ -60,7 +82,7 @@ export class EditProjectPage {
             this.currentProject = await getProjectById(projectId);
 
             if (!this.currentProject) {
-                createMessage("Project not found.", "main-message", "error");
+                createMessage({ messageBody: "Project not found.", location: "main-message", type: "error" });
                 return;
             }
 
@@ -97,7 +119,7 @@ export class EditProjectPage {
 
         } catch (error) {
             console.error("Error loading project by ID:", error);
-            createMessage("Failed to load project details.", "main-message", "error");
+            createMessage({ messageBody: "Failed to load project details.", location: "main-message", type: "error" });
         }
     }
 
@@ -171,12 +193,12 @@ export class EditProjectPage {
             e.preventDefault();
 
             if (!this.currentProject) {
-                createMessage("No active project loaded to save.", "main-message", "error");
+                createMessage({messageBody: "No active project loaded to save.", location: "main-message", type: "error"});
                 return;
             }
 
             if (!this.editor) {
-                createMessage("Editor instance missing.", "main-message", "error");
+                createMessage({messageBody: "Editor instance missing.", location: "main-message", type: "error"});
                 return;
             }
 
@@ -213,10 +235,10 @@ export class EditProjectPage {
                     if (deleteBtn) deleteBtn.style.display = 'inline-block';
                 }
 
-                createMessage("Project saved successfully!", "main-message", "check_circle", 5);
+                createMessage({messageBody: "Project saved successfully!", location: "main-message", type: "check_circle", autoCloseSeconds: 5});
             } catch (error) {
                 console.error("Failed to save project:", error);
-                createMessage("Error saving project changes.", "main-message", "error");
+                createMessage({messageBody: "Error saving project changes.", location: "main-message", type: "error"});
             }
         });
     }
@@ -234,7 +256,7 @@ export class EditProjectPage {
                 return;
             }
 
-            const projectTitle = this.currentProject?.getTitle?.(this.activeLang) 
+            const projectTitle = this.currentProject?.getTitle?.(this.activeLang)
                 || (typeof this.currentProject?.projectTitle === 'object' ? this.currentProject.projectTitle[this.activeLang] : '')
                 || 'Project';
 
@@ -254,11 +276,11 @@ export class EditProjectPage {
 
                     await deleteProject(this.currentProjectId);
 
-                    storeMessage("Project deleted successfully", "main-message", "delete");
+                    storeMessage({messageBody: "Project deleted successfully", location: "main-message", type: "delete"});
                     navigateTo('/impact');
                 } catch (err) {
                     console.error("Delete failed:", err);
-                    createMessage("Failed to delete the project. Please try again.", "main-message", "error");
+                    createMessage({messageBody: "Failed to delete the project. Please try again.", location: "main-message", type: "error"});
                     deleteBtn.innerText = "Delete Project";
                     (deleteBtn as HTMLButtonElement).disabled = false;
                 }
