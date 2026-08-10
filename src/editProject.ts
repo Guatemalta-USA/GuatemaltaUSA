@@ -25,26 +25,26 @@ export class EditProjectPage {
 
             if (!user) {
                 storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
-                navigateTo('/blog');
+                navigateTo("/impact");
                 return;
             }
             const role = await getUserRole(user.uid);
 
             if (role !== 'admin') {
                 storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
-                navigateTo('/blog');
+                navigateTo("/impact");
                 return;
             }
         } catch (authError) {
             console.error("Authorization check failed:", authError);
             storeMessage({ messageBody: "An error occurred verifying your permissions.", location: "main-message", type: "error" });
-            navigateTo('/blog');
+            navigateTo("/impact");
             return;
         }
         const urlParams = new URLSearchParams(window.location.search);
         this.currentProjectId = urlParams.get('id') || urlParams.get('projectId');
 
-        await initializeApp('projects', this.currentProjectId ? 'Edit Project' : 'Create Project', {
+        await initializeApp('Impact', this.currentProjectId ? 'Edit Project' : 'Create Project', {
             type: 'project',
             projectId: this.currentProjectId || undefined
         });

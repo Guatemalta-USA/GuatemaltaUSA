@@ -1,62 +1,120 @@
 import { initializeApp } from './main';
 import { TheEditor } from './modules/editor';
-import { deletePost, getAllProjects, getPostById, savePost } from './firebase/firebaseService';
+import { deletePost, getPostById, savePost, getAllProjects } from './firebase/firebaseService';
 import { Timestamp } from 'firebase/firestore';
 import { navigateTo } from './modules/navigate';
 import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils';
-import { Post, Project } from './models';
+import { Post, Project, type LocalizedContent, type LocalizedString, type SupportedLanguage } from './models';
 import { getAuthenticatedUser, getUserRole } from './firebase/authService';
 import './css/style.css';
 import './css/grid.css';
 import './css/form.css';
 import './css/quill.css';
 
-async function setupEditPostPage() {
-    const loading = document.getElementById("loading");
+export class EditPostPage {
+    private editor: TheEditor | null = null;
+    private currentPostId: string | null = null;
+    private currentPost: Post | null = null;
+    private activeLang: SupportedLanguage = 'en';
+    private localizedTitles: LocalizedString = { en: '', es: '' };
+    private postAuthor: string = "";
+    private localizedContents: LocalizedContent = { en: null, es: null };
 
-    try {
-        const user = await getAuthenticatedUser();
-        
-        if (!user) {
-            storeMessage({messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied"});
-            navigateTo('/blog');
-            return;
-        }
-        const role = await getUserRole(user.uid);
-
-        if (role !== 'admin') {
-            storeMessage({messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied"});
-            navigateTo('/blog');
-            return;
-        }
-    } catch (authError) {
-        console.error("Authorization check failed:", authError);
-        storeMessage({messageBody: "An error occurred verifying your permissions.", location: "main-message", type: "error"});
-        navigateTo('/blog');
-        return;
+    constructor() {
+        this.init();
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const postId = params.get('id');
-    const editorSection = document.getElementById("edit-section") as HTMLElement;
+    private async waitForElement(selector: string, timeout = 3000): Promise<HTMLElement | null> {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const el = document.querySelector(selector) as HTMLElement | null;
+            if (el) return el;
+            await new Promise(res => setTimeout(res, 50));
+        }
+        return null;
+    }
 
-    const pageDisplayTitle = postId ? "Edit Post" : "New Post";
+    private async init(): Promise<void> {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.currentPostId = urlParams.get('id') || urlParams.get('postId');
 
-    await initializeApp('Blog', pageDisplayTitle, {
-        type: 'post',
-        postId: postId || undefined
-    });
-    console.log("page loaded")
-    const editorInstance = (window as any).quillEditor as TheEditor;
+            // 1. Initialize layout & header/footer components
+            await initializeApp("Blog", this.currentPostId ? 'Edit Post' : 'Create Post', {
+                type: "post",
+                postId: this.currentPostId || undefined
+            });
 
-    editorSection.classList.remove("hide");
-    const titleInput = document.getElementById('post-title-input') as HTMLInputElement;
-    const authorInput = document.getElementById("author-input") as HTMLInputElement;
-    const linkToProjectSelect = document.getElementById("link-to-project") as HTMLSelectElement;
-    const saveBtn = document.getElementById('save-btn');
-    const deleteBtn = document.getElementById('delete-post-btn');
+            // 2. Authorization check
+            const user = await getAuthenticatedUser();
+            if (!user) {
+                storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
+                navigateTo("/blog");
+                return;
+            }
 
-    if (linkToProjectSelect) {
+            const role = await getUserRole(user.uid);
+            if (role !== 'admin') {
+                storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
+                navigateTo("/blog");
+                return;
+            }
+
+            // 3. Reveal the main edit section before mounting Quill
+            const editSection = document.getElementById('edit-section');
+            if (editSection) {
+                editSection.classList.remove('hide');
+            }
+
+            // 4. Populate the "Link to Project" dropdown menu options
+            await this.loadProjectOptions();
+
+            // 5. Wait for editor container in DOM
+            const container = await this.waitForElement('#editor-container');
+            if (!container) {
+                console.error('[EditPostPage] Could not find "#editor-container" in the DOM.');
+                return;
+            }
+
+            // 6. Instantiate Quill Editor
+            this.editor = new TheEditor();
+
+            // 7. Setup handlers
+            this.setupTabNavigation();
+            this.setupSaveHandler();
+            this.setupDeleteHandler();
+
+            // 8. Load post or prepare blank post
+            if (this.currentPostId) {
+                await this.loadPostData(this.currentPostId);
+            } else {
+                this.currentPost = new Post(
+                    { en: '', es: '' },
+                    "",
+                    Timestamp.now(),
+                    Timestamp.now(),
+                    { en: null, es: null },
+                    ""
+                );
+                await this.loadLanguageView(this.activeLang);
+            }
+
+        } catch (err) {
+            console.error("[EditPostPage] Initialization failed:", err);
+            createMessage({ messageBody: "Failed to load page editor.", location: "main-message", type: "error" });
+        } finally {
+            // Remove loading screen after complete setup
+            const loading = document.getElementById("loading");
+            if (loading) loading.remove();
+        }
+    }
+
+    private async loadProjectOptions(): Promise<void> {
+        const linkToProjectSelect = document.getElementById('link-to-project') as HTMLSelectElement | null;
+        if (!linkToProjectSelect) return;
+
+        linkToProjectSelect.innerHTML = '';
+
         const none = document.createElement("option");
         none.text = "None";
         none.value = "";
@@ -75,116 +133,232 @@ async function setupEditPostPage() {
         }
     }
 
-    let existingPost: Post | null = null;
-
-    if (postId && editorInstance) {
+    private async loadPostData(postId: string): Promise<void> {
         try {
-            existingPost = await getPostById(postId);
-            if (existingPost) {
-                if (titleInput) titleInput.value = existingPost.postTitle.en;
-                if (authorInput) authorInput.value = existingPost.author;
-                editorInstance.quill.setContents(existingPost.content.en);
-                if (linkToProjectSelect && existingPost.linkedProjectId) {
-                    linkToProjectSelect.value = existingPost.linkedProjectId;
-                }
+            this.currentPost = await getPostById(postId);
 
-                console.log("Post loaded into editor successfully");
-
-                if (deleteBtn) {
-                    deleteBtn.style.display = 'inline-block';
-                    deleteBtn.addEventListener('click', async () => {
-                        const confirmed = await confirmDeleteModal(
-                            `Delete "${existingPost!.postTitle}"?`, 
-                            "Deleting this post will also delete its photos. This action cannot be undone."
-                        );
-
-                        if (confirmed) {
-                            try {
-                                deleteBtn.innerText = "Deleting...";
-                                (deleteBtn as HTMLButtonElement).disabled = true;
-
-                                if (editorInstance) {
-                                    await editorInstance.deleteAllImages();
-                                }
-
-                                await deletePost(postId);
-
-                                storeMessage({messageBody: "Post deleted successfully", location: "main-message", type: "delete"});
-                                navigateTo('/blog');
-                            } catch (err) {
-                                console.error("Delete failed:", err);
-                                createMessage({messageBody: "Failed to delete the post. Please try again.", location: "main-message", type: "error"});
-                                deleteBtn.innerText = "Delete Post";
-                                (deleteBtn as HTMLButtonElement).disabled = false;
-                            }
-                        }
-                    });
-                }
-            } else {
-                console.error("No post found with that ID");
-                storeMessage({messageBody: "The post you tried to edit does not exist", location: "main-message", type: "error"});
-                navigateTo("/blog");
+            if (!this.currentPost) {
+                createMessage({ messageBody: "Post not found.", location: "main-message", type: "error" });
                 return;
             }
-        } catch (err) {
-            console.error("Error loading post for editing:", err);
-        }
-    } else {
-        if (deleteBtn) deleteBtn.style.display = 'none';
-    }
-    if (loading) loading.remove();
 
-    if (saveBtn && titleInput) {
-        saveBtn.addEventListener('click', async () => {
-            if (!editorInstance) {
-                console.error("Editor instance not found.");
+            if (this.editor) {
+                this.editor.currentPage = postId;
+            }
+
+            this.localizedTitles = {
+                en: this.currentPost.postTitle?.en || '',
+                es: this.currentPost.postTitle?.es || ''
+            };
+
+            this.postAuthor = this.currentPost.author || '';
+
+            const authorInput = document.getElementById('author-input') as HTMLInputElement | null;
+            if (authorInput) {
+                authorInput.value = this.postAuthor;
+            }
+
+            const selectProject = document.getElementById('link-to-project') as HTMLSelectElement | null;
+            if (selectProject && this.currentPost.linkedProjectId) {
+                selectProject.value = this.currentPost.linkedProjectId;
+            }
+
+            this.localizedContents = {
+                en: this.currentPost.content?.en || null,
+                es: this.currentPost.content?.es || null
+            };
+
+            const deleteBtn = document.getElementById('delete-btn');
+            if (deleteBtn) {
+                deleteBtn.style.display = 'inline-block';
+            }
+
+            await this.loadLanguageView(this.activeLang);
+        } catch (error) {
+            console.error("Error loading post by ID:", error);
+            createMessage({ messageBody: "Failed to load post details.", location: "main-message", type: "error" });
+        }
+    }
+
+    private async saveCurrentTabState(): Promise<void> {
+        const titleInput = document.getElementById('post-title-input') as HTMLInputElement | null;
+        if (titleInput) {
+            this.localizedTitles[this.activeLang] = titleInput.value.trim();
+        }
+
+        const authorInput = document.getElementById('author-input') as HTMLInputElement | null;
+        if (authorInput) {
+            this.postAuthor = authorInput.value.trim();
+        }
+
+        if (this.editor) {
+            this.localizedContents[this.activeLang] = await this.editor.prepareContentForSave();
+        }
+    }
+
+    private async loadLanguageView(lang: SupportedLanguage): Promise<void> {
+        this.activeLang = lang;
+
+        const titleInput = document.getElementById('post-title-input') as HTMLInputElement | null;
+        if (titleInput) {
+            titleInput.value = this.localizedTitles[lang] || '';
+        }
+
+        if (this.editor) {
+            const content = this.localizedContents[lang];
+            if (content) {
+                if (typeof content === 'string') {
+                    this.editor.setHTML(content);
+                } else {
+                    this.editor.quill.setContents(content);
+                }
+            } else {
+                this.editor.quill.setText('');
+            }
+        }
+    }
+
+    private setupTabNavigation(): void {
+        const btnEn = document.getElementById('tab-lang-en');
+        const btnEs = document.getElementById('tab-lang-es');
+
+        const handleTabSwitch = async (targetLang: SupportedLanguage, targetBtn: HTMLElement, otherBtn: HTMLElement | null) => {
+            if (this.activeLang === targetLang) return;
+            await this.saveCurrentTabState();
+
+            targetBtn.classList.add('active');
+            if (otherBtn) otherBtn.classList.remove('active');
+
+            await this.loadLanguageView(targetLang);
+        };
+
+        if (btnEn) {
+            btnEn.addEventListener('click', (e: Event) => {
+                e.preventDefault();
+                handleTabSwitch('en', btnEn, btnEs);
+            });
+        }
+
+        if (btnEs) {
+            btnEs.addEventListener('click', (e: Event) => {
+                e.preventDefault();
+                handleTabSwitch('es', btnEs, btnEn);
+            });
+        }
+    }
+
+    private setupSaveHandler(): void {
+        const saveBtn = document.getElementById('save-btn');
+        if (!saveBtn) return;
+
+        saveBtn.addEventListener("click", async (e: Event) => {
+            e.preventDefault();
+
+            if (!this.currentPost) {
+                createMessage({ messageBody: "No active post loaded to save.", location: "main-message", type: "error" });
+                return;
+            }
+
+            if (!this.editor) {
+                createMessage({ messageBody: "Editor instance missing.", location: "main-message", type: "error" });
                 return;
             }
 
             try {
-                if (!titleInput.value.trim()) {
-                    createMessage({messageBody: "Please do not leave the Title empty", location: "main-message", type: "error"});
-                    throw new Error("Cannot save post. Title input cannot be empty");
-                }
-                if (!authorInput || !authorInput.value.trim()) {
-                    createMessage({messageBody: "Please do not leave the author empty", location: "main-message", type: "error"});
-                    throw new Error("Cannot save post. Author input cannot be empty");
-                }
+                await this.saveCurrentTabState();
 
-                saveBtn.innerText = "Publishing...";
-                (saveBtn as HTMLButtonElement).disabled = true;
-                
-                const cleanContent = await editorInstance.prepareContentForSave();
-                const originalPublishDate = existingPost ? existingPost.publishDate : Timestamp.now();
+                const selectProject = document.getElementById('link-to-project') as HTMLSelectElement | null;
+                const linkedProjectId = selectProject ? selectProject.value : '';
 
                 const postToSave = new Post(
-                    {
-                        en: titleInput.value,
-                        es: titleInput.value
-                    },
-                    authorInput.value,
-                    originalPublishDate,
+                    this.localizedTitles,
+                    this.postAuthor,
+                    this.currentPost?.publishDate ?? Timestamp.now(),
                     Timestamp.now(),
-                    cleanContent,
-                    linkToProjectSelect ? linkToProjectSelect.value : ""
+                    this.localizedContents,
+                    linkedProjectId
                 );
 
-                if (postId) postToSave.id = postId;
+                if (this.currentPostId) {
+                    postToSave.id = this.currentPostId;
+                }
 
                 const savedId = await savePost(postToSave);
-                storeMessage({messageBody: "Post published successfully!", location: "main-message", type: "check_circle"});
-                navigateTo('/blog/post', { params: { id: savedId } });
 
-            } catch (err: any) {
-                console.error("Save failed:", err);
-                createMessage({messageBody: err.message || err, location: "main-message", type: "error"});
-                saveBtn.innerText = "Publish Post";
-                (saveBtn as HTMLButtonElement).disabled = false;
+                if (!this.currentPostId) {
+                    this.currentPostId = savedId;
+                    postToSave.id = savedId;
+                    this.currentPost = postToSave;
+                    if (this.editor) {
+                        this.editor.currentPage = savedId;
+                    }
+                    window.history.replaceState({}, '', `?id=${savedId}`);
+
+                    const deleteBtn = document.getElementById('delete-btn');
+                    if (deleteBtn) deleteBtn.style.display = 'inline-block';
+                }
+
+                createMessage({ messageBody: "Post saved successfully.", location: "main-message", type: "check_circle" });
+
+            } catch (error) {
+                console.error("Failed to save post:", error);
+                createMessage({ messageBody: "Error saving post changes.", location: "main-message", type: "error" });
             }
         });
     }
+
+    private setupDeleteHandler(): void {
+        const deleteBtn = document.getElementById('delete-btn');
+        if (!deleteBtn) return;
+
+        deleteBtn.style.display = this.currentPostId ? 'inline-block' : 'none';
+
+        deleteBtn.addEventListener("click", async () => {
+            if (!this.currentPostId) {
+                console.warn("Delete blocked: No valid currentPostId found.");
+                return;
+            }
+
+            const postTitle = this.currentPost?.getTitle?.(this.activeLang)
+                || (typeof this.currentPost?.postTitle === 'object' ? this.currentPost.postTitle[this.activeLang] : '')
+                || 'Post';
+
+            const confirmed = await confirmDeleteModal(
+                `Delete "${postTitle}"?`,
+                "Deleting this post will also delete its photos. This action can not be undone"
+            );
+
+            if (confirmed) {
+                try {
+                    deleteBtn.innerText = "Deleting...";
+                    (deleteBtn as HTMLButtonElement).disabled = true;
+
+                    if (this.editor) {
+                        await this.editor.deleteAllImages();
+                    }
+
+                    await deletePost(this.currentPostId);
+                    storeMessage({ messageBody: "Post deleted successfully", location: "main-message", type: "delete" });
+                    navigateTo('/blog');
+                } catch (err) {
+                    console.error("Delete failed:", err);
+                    createMessage({messageBody: "Failed to delete the post. Please try again.", location: "main-message", type: "error"});
+                    deleteBtn.innerText = "Delete Post";
+                    (deleteBtn as HTMLButtonElement).disabled = false;
+                }
+            }
+        });
+    }
+
+    public destroy(): void {
+        if (this.editor) {
+            this.editor.destroy();
+        }
+    }
 }
 
-setupEditPostPage().catch(err => {
-    console.error("Failed to initialize Edit Post page:", err);
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new EditPostPage());
+} else {
+    new EditPostPage();
+}

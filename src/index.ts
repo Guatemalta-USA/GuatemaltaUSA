@@ -154,11 +154,11 @@ async function loadPosts() {
         const postTitle = makeElement("h2", null, null, post.postTitle[currentLang]);
         postLink.appendChild(postTitle);
         postArticle.appendChild(postLink);
-        const postInfo = makeElement("h3", null, null, i18n.t('post_by_date', { author: post["author"], date: formatDate(post.publishDate) }));
+        const postInfo = makeElement("h3", null, null, i18n.t('post_by_date', { author: post["author"], date: formatDate(post.publishDate, false) }));
 
         postInfo.setAttribute("data-i18n-options", JSON.stringify({
           author: post.author,
-          date: formatDate(post.publishDate)
+          date: formatDate(post.publishDate, false)
         }));
         postArticle.appendChild(postInfo);
 

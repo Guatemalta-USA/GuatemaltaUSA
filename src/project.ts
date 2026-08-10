@@ -310,7 +310,7 @@ async function setUpProjectView() {
             const postTitle = makeElement("h2", null, null, post.postTitle[currentLang]);
             postLink.appendChild(postTitle);
             postArticle.appendChild(postLink);
-            const postInfo = makeElement("h3", null, null, `By ${post.author} on ${formatDate(post.publishDate)}`);
+            const postInfo = makeElement("h3", null, null, `By ${post.author} on ${formatDate(post.publishDate, false)}`);
             postArticle.appendChild(postInfo);
             const firstP = post.getFirstParagraph();
             const firstPElm = makeElement("p", null, null, firstP);
@@ -335,7 +335,7 @@ async function setUpProjectView() {
     renderLocalizedProject();
 
     if (lastUpdatedDiv) {
-        lastUpdatedDiv.innerText = i18n.t('last_updated', { timestamp: formatDate(project.updatedAt) });
+        lastUpdatedDiv.innerText = i18n.t('last_updated', { timestamp: formatDate(project.updatedAt, true) });
     }
     updateContent();
 }

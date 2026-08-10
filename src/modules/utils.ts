@@ -74,12 +74,12 @@ export function createMessage(
   const messageText = document.createTextNode(params["messageBody"]);
   messageDiv.appendChild(messageText);
 
-  const closeButton = createButton({ 
-    buttonText: "", 
-    buttonType: "button", 
-    buttonId: "closeButton", 
-    buttonClass: "", 
-    icon: "close" 
+  const closeButton = createButton({
+    buttonText: "",
+    buttonType: "button",
+    buttonId: "closeButton",
+    buttonClass: "",
+    icon: "close"
   });
   closeButton.addEventListener("click", () => (messageWrapper.innerHTML = ""));
   messageDiv.appendChild(closeButton);
@@ -193,18 +193,28 @@ export function fixDate(
   return dateTimezoneFixed.toLocaleDateString("en-US", options);
 }
 
-export function formatDate(rawDate: any) {
-    const lastUpdatedDate = rawDate && typeof (rawDate as any).toDate === 'function'
-        ? (rawDate as any).toDate()
-        : (rawDate instanceof Date ? rawDate : new Date());
+export function formatDate(rawDate: any, includeTime: boolean) {
+  const lastUpdatedDate = rawDate && typeof (rawDate as any).toDate === 'function'
+    ? (rawDate as any).toDate()
+    : (rawDate instanceof Date ? rawDate : new Date());
 
+  if (includeTime) {
     return lastUpdatedDate.toLocaleString([], {
-        year: 'numeric',
-        month: '2-digit',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      year: 'numeric',
+      month: '2-digit',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  } else {
+    return lastUpdatedDate.toLocaleString([], {
+      year: 'numeric',
+      month: '2-digit',
+      day: 'numeric'
+    });
+  }
+
+
 }
 
 export function makeElement(elementType: string, elementId: string | null, elementClass: string | null, elementText: string | null, i18n?: string) {
@@ -401,7 +411,7 @@ export async function promptModal(
 
     window.addEventListener("keydown", handleKeyDown);
 
-    const submitBtn = createButton({buttonText: buttonText, buttonType: "button", buttonId: "submit-btn", buttonClass: "accent-button"});
+    const submitBtn = createButton({ buttonText: buttonText, buttonType: "button", buttonId: "submit-btn", buttonClass: "accent-button" });
     submitBtn.onclick = function () {
       for (const input of inputElements) {
         if (input.required && !input.value.trim()) {
@@ -497,9 +507,9 @@ export async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     console.log('Text successfully copied to clipboard!');
-    createMessage({messageBody: "Copied to clipboard", location: "main-message", type: "check_circle", i18n: "copied_to_clipboard"})
+    createMessage({ messageBody: "Copied to clipboard", location: "main-message", type: "check_circle", i18n: "copied_to_clipboard" })
   } catch (error) {
-    createMessage({messageBody: `Failed to copy text to clipboard: ${error}`, location: "main-message", type: "error"});
+    createMessage({ messageBody: `Failed to copy text to clipboard: ${error}`, location: "main-message", type: "error" });
   }
 }
 
