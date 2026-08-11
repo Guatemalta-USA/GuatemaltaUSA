@@ -320,6 +320,12 @@ nav a.active {
   color: var(--green-accent-text);
 }
 
+.donate-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
 /* Desktop Hover Toggle */
 @media (min-width: 851px) {
   .nav-dropdown-container:hover .nav-dropdown-menu {
