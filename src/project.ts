@@ -284,7 +284,7 @@ async function setUpProjectView() {
             if (id === "a-gift-of-sight-restoring-vision-and-hope-in-guatemala") {
                 const totalRaised = await getCampaignTotalById(id);
                 const surgeries = Math.floor(totalRaised / 85);
-                const targetGoal = 20;
+                const targetGoal = 30;
                 const customGoalBarContainer = makeElement("div", "custom-goal-bar-container", null, null);
                 const customGoalBarInfo = makeElement("div", null, "goal-info", null);
                 const surgeriesSponsored = makeElement("h2", null, null, `Surgeries sponsored: ${surgeries} / ${targetGoal}`);
