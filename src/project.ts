@@ -6,7 +6,7 @@ import { auth } from "./firebase/firebase";
 import { getCampaignTotalById, getPostsWithLinkedProjectId, getProjectById, saveProject } from "./firebase/firebaseService";
 import { initializeApp } from "./main";
 import { navigateTo } from "./modules/navigate";
-import { createButton, createGiveButterWidget, createLink, formatDate, makeElement, promptModal, storeMessage } from "./modules/utils";
+import { createButton, createGiveButterWidget, createGoalBar, createLink, formatDate, makeElement, promptModal, storeMessage } from "./modules/utils";
 import { Timestamp } from "firebase/firestore/lite";
 import './css/style.css';
 import './css/grid.css';
@@ -283,10 +283,15 @@ async function setUpProjectView() {
         if (goalBarContainer) {
             if (id === "a-gift-of-sight-restoring-vision-and-hope-in-guatemala") {
                 const totalRaised = await getCampaignTotalById(id);
-                const customGoalBarContainer = makeElement("div", null, "custom-goal-bar", null);
-                const surgeriesSponsored = makeElement("h2", null, null, `Surgeries sponsored: ${Math.floor(totalRaised / 85)}/20`);
+                const surgeries = Math.floor(totalRaised / 85);
+                const targetGoal = 20;
+                const customGoalBarContainer = makeElement("div", "custom-goal-bar-container", null, null);
+                const customGoalBarInfo = makeElement("div", null, "goal-info", null);
+                const surgeriesSponsored = makeElement("h2", null, null, `Surgeries sponsored: ${surgeries} / ${targetGoal}`);
                 const totalRaisedP = makeElement("p", null, null, `Total raised: $${totalRaised.toLocaleString('en-US')}`);
-                customGoalBarContainer.append(surgeriesSponsored, totalRaisedP);
+                customGoalBarInfo.append(surgeriesSponsored, totalRaisedP);
+                const customGoalBar = createGoalBar(surgeries, targetGoal);
+                customGoalBarContainer.append(customGoalBarInfo, customGoalBar);
                 goalBarContainer.appendChild(customGoalBarContainer);
             } else {
                 const goalBar = createGiveButterWidget(project.goalBar, "goal bar");
@@ -294,8 +299,6 @@ async function setUpProjectView() {
             }
         }
     }
-
-
 
     const linkedPosts = await getPostsWithLinkedProjectId(id);
     if (linkedPosts && linkedPosts.length > 0) {

@@ -22,7 +22,7 @@ let quillViewer: Quill | null = null;
 function getCurrentLang(): 'en' | 'es' {
     const lang = getResolvedLanguage() || i18n.language || document.documentElement.lang || localStorage.getItem('i18nextLng') || 'en';
     const resolved = lang.toLowerCase().startsWith('es') ? 'es' : 'en';
-    console.log('[DEBUG] getCurrentLang resolved:', resolved, '| Raw sources:', {
+    console.log('getCurrentLang resolved:', resolved, '| Raw sources:', {
         getResolvedLanguage: getResolvedLanguage(),
         i18nLanguage: i18n.language,
         docLang: document.documentElement.lang,
@@ -73,15 +73,13 @@ function isEmptyContent(content: any): boolean {
 
 function setViewerContent(content: any) {
     if (!quillViewer) {
-        console.error('[DEBUG] setViewerContent failed: quillViewer is null');
+        console.error('quillViewer is null');
         return;
     }
     if (!content) {
-        console.error('[DEBUG] setViewerContent failed: content is null or undefined');
+        console.error('content is null or undefined');
         return;
     }
-
-    console.log('[DEBUG] Setting viewer content. Type:', typeof content, '| Content:', content);
 
     quillViewer.setContents([] as any);
 
@@ -89,10 +87,9 @@ function setViewerContent(content: any) {
     if (Array.isArray(content)) {
         try {
             quillViewer.setContents({ ops: content } as any);
-            console.log('[DEBUG] Successfully rendered raw Delta ops array via setContents({ ops: ... })');
             return;
         } catch (e) {
-            console.error("[DEBUG] Error passing Delta array to quillViewer.setContents():", e);
+            console.error("Error passing Delta array to quillViewer.setContents():", e);
         }
     }
 
@@ -100,10 +97,9 @@ function setViewerContent(content: any) {
     if (typeof content === 'object') {
         try {
             quillViewer.setContents(content);
-            console.log('[DEBUG] Successfully rendered Delta object via setContents()');
             return;
         } catch (e) {
-            console.error("[DEBUG] Error passing Delta object to quillViewer.setContents():", e);
+            console.error("Error passing Delta object to quillViewer.setContents():", e);
         }
     }
 
@@ -115,10 +111,9 @@ function setViewerContent(content: any) {
                 setViewerContent(parsed);
                 return;
             } catch (e) {
-                console.warn('[DEBUG] JSON.parse failed on JSON-like string, falling back to HTML paste:', e);
+                console.warn('JSON.parse failed on JSON-like string, falling back to HTML paste:', e);
             }
         }
-        console.log('[DEBUG] Rendering content as HTML/text via clipboard.dangerouslyPasteHTML()');
         quillViewer.clipboard.dangerouslyPasteHTML(trimmed);
     }
 }
@@ -126,32 +121,24 @@ function setViewerContent(content: any) {
 function getLocalizedRawContent(post: Post, lang: 'en' | 'es'): any {
     const altLang: 'en' | 'es' = lang === 'es' ? 'en' : 'es';
 
-    console.log('[DEBUG] getLocalizedRawContent inspecting post.content:', post.content);
-
     if (post.content && typeof post.content === 'object') {
         const primary = (post.content as Record<string, any>)[lang];
         const isPrimaryEmpty = isEmptyContent(primary);
-        console.log(`[DEBUG] Primary lang '${lang}' content:`, primary, '| isEmpty:', isPrimaryEmpty);
 
         if (!isPrimaryEmpty) return primary;
 
         const fallback = (post.content as Record<string, any>)[altLang];
         const isFallbackEmpty = isEmptyContent(fallback);
-        console.log(`[DEBUG] Fallback lang '${altLang}' content:`, fallback, '| isEmpty:', isFallbackEmpty);
 
         if (!isFallbackEmpty) return fallback;
     } else if (post.content) {
-        console.log('[DEBUG] post.content is raw primitive/string:', post.content);
         return post.content;
     }
-
-    console.warn('[DEBUG] No non-empty content found for post.');
     return null;
 }
 
 function initQuillViewer() {
     const container = document.getElementById('viewer-container');
-    console.log('[DEBUG] initQuillViewer container found:', !!container);
     if (container && !quillViewer) {
         quillViewer = new Quill(container, {
             theme: 'bubble',
@@ -160,12 +147,10 @@ function initQuillViewer() {
                 toolbar: false
             }
         });
-        console.log('[DEBUG] Quill viewer instance initialized.');
     }
 }
 
 function renderLocalizedPost() {
-    console.log('[DEBUG] renderLocalizedPost called. activePost:', activePost);
     if (!activePost) return;
 
     initQuillViewer();
@@ -173,17 +158,11 @@ function renderLocalizedPost() {
     const currentLang = getCurrentLang();
     const displayTitle = activePost.getTitle(currentLang);
     const displayContent = getLocalizedRawContent(activePost, currentLang);
-
-    console.log('[DEBUG] Resolved title:', displayTitle);
-    console.log('[DEBUG] Resolved content:', displayContent);
-
     document.title = `${displayTitle} - Guatemalta USA`;
 
     const titleElem = document.getElementById('display-title');
     if (titleElem) {
         titleElem.innerText = displayTitle;
-    } else {
-        console.warn("[DEBUG] Element '#display-title' not found in DOM.");
     }
 
     const postInfoElem = document.getElementById("post-info") as HTMLElement;
@@ -192,8 +171,6 @@ function renderLocalizedPost() {
             author: activePost.author || "Admin", 
             date: formatDate(activePost.publishDate, false) 
         });
-    } else {
-        console.warn("[DEBUG] Element '#post-info' not found in DOM.");
     }
 
     if (displayContent) {
@@ -201,14 +178,11 @@ function renderLocalizedPost() {
         setTimeout(() => {
             bindDonateButtons();
         }, 0);
-    } else {
-        console.error('[DEBUG] displayContent is null or empty. Nothing sent to setViewerContent().');
     }
 }
 
 function bindDonateButtons() {
     const donateButtons = document.querySelectorAll('#viewer-container button.action-link[data-id]');
-    console.log(`[DEBUG] Found ${donateButtons.length} donate buttons to bind.`);
 
     donateButtons.forEach((btn) => {
         const widgetId = btn.getAttribute('data-id');
@@ -314,8 +288,6 @@ async function setUpPostView() {
     const lastUpdatedDiv = document.getElementById("lastUpdated") as HTMLElement;
     const id = params.get('id');
 
-    console.log('[DEBUG] setUpPostView post ID from URL:', id);
-
     if (!id) {
         storeMessage({
             messageBody: "Invalid post url. Please try again",
@@ -329,10 +301,8 @@ async function setUpPostView() {
     await initializeApp("Blog", "View Post", null);
 
     const post = await getPostById(id);
-    console.log('[DEBUG] getPostById returned:', post);
 
     if (!post) {
-        console.error('[DEBUG] Post not found in Firestore for ID:', id);
         storeMessage({ messageBody: "Post not found", location: "main-message", type: "error", i18n: "post_not_found" });
         navigateTo("/blog");
         return;
@@ -378,13 +348,11 @@ async function setUpPostView() {
 }
 
 i18n.on('languageChanged', () => {
-    console.log('[DEBUG] i18n languageChanged event received.');
     renderLocalizedPost();
     updateContent();
 });
 
 async function init() {
-    console.log('[DEBUG] Initializing post view page...');
     await setUpPostView();
     updateContent();
 }

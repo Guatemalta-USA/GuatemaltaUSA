@@ -213,8 +213,6 @@ export function formatDate(rawDate: any, includeTime: boolean) {
       day: 'numeric'
     });
   }
-
-
 }
 
 export function makeElement(elementType: string, elementId: string | null, elementClass: string | null, elementText: string | null, i18n?: string) {
@@ -587,4 +585,13 @@ export function donateListModal(
     modalRoot.style.display = "flex";
     document.body.appendChild(modalRoot);
   });
+}
+
+export function createGoalBar(raised: number, goal: number) {
+  const goalBar = makeElement("div", "custom-goal-bar", null, null);
+  const progressFill = makeElement("div", "progress-fill", "progress-fill", null);
+  const percentage = Math.min(Math.round((raised / goal) * 100), 100);
+  progressFill.style.width = `${percentage}%`;
+  goalBar.appendChild(progressFill);
+  return goalBar;
 }
