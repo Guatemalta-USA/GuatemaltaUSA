@@ -115,6 +115,7 @@ body {
 
 a {
   color: var(--link-color);
+  cursor: pointer;
 }
 
 /* Screen reader */
@@ -146,10 +147,6 @@ a {
   min-height: 100vh;
   width: 100%;
   position: relative;
-}
-
-a {
-  cursor: pointer;
 }
 
 .y-scroll {
@@ -526,16 +523,16 @@ footer .footer-legal p {
 
 .profile-bio p {
   margin-top: 0;
-  margin-bottom: 0.5rem !important; /* Space between bio paragraphs */
+  margin-bottom: 0.5rem !important;
   line-height: 1.6;
 }
 
 .profile-bio p:first-child {
-  margin-top: 0 !important; /* Zero top space before first paragraph */
+  margin-top: 0 !important;
 }
 
 .profile-bio p:last-child {
-  margin-bottom: 0 !important; /* Zero trailing space after last paragraph */
+  margin-bottom: 0 !important;
 }
 
 /* =========================================
@@ -843,7 +840,7 @@ textarea {
 }
 
 /* =========================================
-   10. Custom Goal Bar
+   11. CUSTOM GOAL BAR
    ========================================= */
 #custom-goal-bar-container {
   background-color: var(--blue-accent);
@@ -979,7 +976,79 @@ textarea {
 }
 
 /* =========================================
-   15. RESPONSIVE QUERIES & MOBILE NAVIGATION
+   15. LANGUAGE TOGGLE SWITCH
+   ========================================= */
+label.lang-switch {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  position: relative !important;
+  height: auto !important;
+  padding: 0 10px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+input[type="checkbox"].lang-toggle-input {
+  position: absolute !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  pointer-events: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+label.lang-switch .slider {
+  position: relative !important;
+  display: inline-block !important;
+  width: 42px !important;
+  height: 22px !important;
+  background-color: #888888 !important;
+  border-radius: 22px !important;
+  flex-shrink: 0 !important;
+  transition: background-color 0.25s ease !important;
+}
+
+label.lang-switch .slider::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 18px !important;
+  height: 18px !important;
+  background-color: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.25s ease !important;
+}
+
+label.lang-switch input.lang-toggle-input:checked + .slider {
+  background-color: #888888 !important;
+}
+
+label.lang-switch input.lang-toggle-input:checked + .slider::before {
+  transform: translateX(20px) !important;
+}
+
+label.lang-switch .lang-text {
+  font-family: "Roboto", sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--nav-color, #ffffff) !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+}
+
+/* =========================================
+   16. RESPONSIVE QUERIES & MOBILE NAVIGATION
    ========================================= */
 @media (max-width: 850px) {
   header {
@@ -1028,7 +1097,7 @@ textarea {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 0;
+    gap: 15px;
     background-color: var(--blue-accent);
     transition: right 0.3s ease;
     z-index: 1000;
@@ -1051,6 +1120,11 @@ textarea {
     height: auto;
     box-sizing: border-box;
     font-weight: 400;
+  }
+
+  label.lang-switch {
+    margin-top: 10px !important;
+    padding: 10px 0 !important;
   }
 
   .nav-dropdown-container {

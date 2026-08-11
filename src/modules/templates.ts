@@ -86,7 +86,7 @@ export function loadNav(activeNavLink: string) {
     if (path === "donate") {
       const donateLink = createLink(label, "donate-nav-btn", false);
       if (i18nKey) donateLink.setAttribute("data-i18n", i18nKey);
-      
+
       donateLink.addEventListener("click", handleDonateClick);
       donateLink.classList.add("donate-button");
 
@@ -190,35 +190,33 @@ export function loadNav(activeNavLink: string) {
     }
   });
 
-  const languageToggle = makeElement("a", "lang-toggle", "nav-action", null);
-  
-  const langIcon = makeElement("span", null, "material-symbols-outlined", "language");
-  const langToggleText = makeElement("span", "lang-text", null, null) as HTMLSpanElement;
+ // Language Switch Setup
+const langSwitchLabel = makeElement("label", "lang-toggle", "lang-switch", null) as HTMLLabelElement;
+const leftLabel = makeElement("span", null, "lang-text", "EN");
+const langCheckbox = makeElement("input", null, "lang-toggle-input", null) as HTMLInputElement;
+langCheckbox.type = "checkbox";
+const slider = makeElement("span", null, "slider", null);
+const rightLabel = makeElement("span", null, "lang-text", "ES");
 
-  const activeLang = i18n.resolvedLanguage || i18n.language || "en";
-  langToggleText.textContent = activeLang.toUpperCase();
+const activeLang = i18n.resolvedLanguage || i18n.language || "en";
+langCheckbox.checked = activeLang.startsWith("es");
 
-  languageToggle.append(langIcon, langToggleText);
+langCheckbox.addEventListener("change", () => {
+  const nextLang = langCheckbox.checked ? "es" : "en";
+  i18n.changeLanguage(nextLang);
+});
 
-  languageToggle.addEventListener("click", async (e: MouseEvent): Promise<void> => {
-    e.preventDefault();
-    closeMobileNav();
-    const currentLang = i18n.resolvedLanguage || i18n.language || 'en';
-    const targetLang = currentLang.startsWith('en') ? 'es' : 'en';
-    await i18n.changeLanguage(targetLang);
-  });
+if (languageChangeListener) {
+  i18n.off("languageChanged", languageChangeListener);
+}
 
-  if (languageChangeListener) {
-    i18n.off('languageChanged', languageChangeListener);
-  }
+languageChangeListener = (lng: string) => {
+  langCheckbox.checked = lng.startsWith("es");
+};
+i18n.on("languageChanged", languageChangeListener);
 
-  languageChangeListener = (lng: string) => {
-    langToggleText.textContent = lng.toUpperCase();
-  };
-
-  i18n.on('languageChanged', languageChangeListener);
-
-  nav.appendChild(languageToggle);
+langSwitchLabel.append(leftLabel, langCheckbox, slider, rightLabel);
+nav.appendChild(langSwitchLabel);
 
   updateContent();
 }
@@ -306,7 +304,7 @@ export function loadFooter() {
     "p",
     null,
     null,
-    i18n.t("copyright", {year: new Date().getFullYear()})
+    i18n.t("copyright", { year: new Date().getFullYear() })
   );
   const addressP = makeElement(
     "p",
