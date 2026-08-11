@@ -277,26 +277,33 @@ async function setUpProjectView() {
             }
         }
     });
-
+    const goalBarContainer = document.getElementById("goal-bar-container") as HTMLElement;
     if (project.goalBar) {
-        const goalBarContainer = document.getElementById("goal-bar-container") as HTMLElement;
         if (goalBarContainer) {
-            if (id === "a-gift-of-sight-restoring-vision-and-hope-in-guatemala") {
-                const totalRaised = await getCampaignTotalById(id);
-                const surgeries = Math.floor(totalRaised / 85);
-                const targetGoal = 30;
-                const customGoalBarContainer = makeElement("div", "custom-goal-bar-container", null, null);
-                const customGoalBarInfo = makeElement("div", null, "goal-info", null);
-                const surgeriesSponsored = makeElement("h2", null, null, `Surgeries sponsored: ${surgeries} / ${targetGoal}`);
-                const totalRaisedP = makeElement("p", null, null, `Total raised: $${totalRaised.toLocaleString('en-US')}`);
-                customGoalBarInfo.append(surgeriesSponsored, totalRaisedP);
-                const customGoalBar = createGoalBar(surgeries, targetGoal);
-                customGoalBarContainer.append(customGoalBarInfo, customGoalBar);
-                goalBarContainer.appendChild(customGoalBarContainer);
-            } else {
-                const goalBar = createGiveButterWidget(project.goalBar, "goal bar");
-                goalBarContainer.appendChild(goalBar);
-            }
+            const goalBar = createGiveButterWidget(project.goalBar, "goal bar");
+            goalBarContainer.appendChild(goalBar);
+        }
+    } else {
+        if (id === "a-gift-of-sight-restoring-vision-and-hope-in-guatemala") {
+            const totalRaised = await getCampaignTotalById(id);
+            const surgeries = Math.floor(totalRaised / 85);
+            const targetGoal = 30;
+            const customGoalBarContainer = makeElement("div", "custom-goal-bar-container", null, null);
+            const customGoalBarInfo = makeElement("div", null, "goal-info", null);
+            const surgeriesSponsored = makeElement("h2", null, null, `Surgeries sponsored: ${surgeries} / ${targetGoal}`);
+            const totalRaisedP = makeElement("p", null, null, `Total raised: $${totalRaised.toLocaleString('en-US')}`);
+            customGoalBarInfo.append(surgeriesSponsored, totalRaisedP);
+            const customGoalBar = createGoalBar(surgeries, targetGoal);
+            customGoalBarContainer.append(customGoalBarInfo, customGoalBar);
+            goalBarContainer.appendChild(customGoalBarContainer);
+        } else {
+            const totalRaised = await getCampaignTotalById(id);
+            const customGoalBarContainer = makeElement("div", "custom-goal-bar-container", null, null);
+            const customGoalBarInfo = makeElement("div", null, "goal-info", null);
+            const totalRaisedH2 = makeElement("h2", null, null, `Total Raised: $${totalRaised.toLocaleString('en-US')}`);
+            customGoalBarInfo.appendChild(totalRaisedH2);
+            customGoalBarContainer.appendChild(customGoalBarInfo);
+            goalBarContainer.appendChild(customGoalBarContainer);
         }
     }
 
