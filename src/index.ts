@@ -1,6 +1,6 @@
 import { getAllPosts, getProjectsByStatus } from "./firebase/firebaseService.js";
 import { initializeApp } from "./main.js";
-import type { Post, Project } from "./models.js";
+import { Project, type Post } from "./models.js";
 import { displayGallery, getPhotosFromGithub, setupControls } from "./modules/imageGallery.js";
 import { navigateTo } from "./modules/navigate.js";
 import { createLink, formatDate, makeElement } from "./modules/utils.js";
@@ -15,7 +15,6 @@ const loadingUpdates = document.querySelector('.loading-updates') as HTMLElement
 const photosSection = document.getElementById("home-photos") as HTMLElement;
 const currentProjectsSection = document.getElementById("home-current") as HTMLElement;
 const updatesSection = document.getElementById("home-updates") as HTMLElement;
-const currentLang = (document.documentElement.lang as 'en' | 'es') || 'en';
 
 async function loadPhotos() {
   const placeholderGallery = document.getElementById("placeholder-container") as HTMLElement;
@@ -36,12 +35,15 @@ async function loadPhotos() {
 }
 
 let cachedProjects: Project[] = [];
+const rawLang = i18n.language || getResolvedLanguage() || 'en';
+const activeLang: 'en' | 'es' = rawLang.startsWith('es') ? 'es' : 'en';
 
-function getExcerpt(project: Project, lang: 'en' | 'es'): string {
-    if (typeof project.getFirstParagraph === "function") {
-        return project.getFirstParagraph(lang);
-    }
-    return "";
+function getExcerpt(object: Project | Post, lang: 'en' | 'es'): string {
+  if (typeof object.getFirstParagraph === "function") {
+    return object.getFirstParagraph(lang);
+  }
+  return "";
+  
 }
 
 async function loadProjects() {
@@ -63,8 +65,6 @@ async function loadProjects() {
       currentProjectsSection.appendChild(emptyMsg);
     } else {
       const fragment = document.createDocumentFragment();
-      const rawLang = i18n.language || getResolvedLanguage() || 'en';
-      const activeLang: 'en' | 'es' = rawLang.startsWith('es') ? 'es' : 'en';
 
       cachedProjects.forEach((project: Project) => {
         const projectId = project.id ? project.id : "";
@@ -83,11 +83,10 @@ async function loadProjects() {
         const projectTitle = makeElement("h2", null, null, initialTitle);
         projectTitle.setAttribute("data-title-en", titleEn);
         projectTitle.setAttribute("data-title-es", titleEs);
-        
+
         projectLink.appendChild(projectTitle);
         projectArticle.appendChild(projectLink);
 
-        // Excerpt handling with fallback to English
         const rawExcerptEn = getExcerpt(project, 'en');
         const rawExcerptEs = getExcerpt(project, 'es');
 
@@ -151,7 +150,13 @@ async function loadPosts() {
           navigateTo('/blog/post', { params: { id: postId } })
         );
 
-        const postTitle = makeElement("h2", null, null, post.postTitle[currentLang]);
+        const postTitleEn = post.getTitle ? post.getTitle('en') : ((post.postTitle as any)?.en || "Untitled Post");
+        const postTitleEs = post.getTitle ? (post.getTitle('es') || postTitleEn) : ((post.postTitle as any)?.es || postTitleEn);
+        const initialPostTitle = activeLang === 'es' ? (postTitleEs || postTitleEn) : postTitleEn;
+
+        const postTitle = makeElement("h2", null, null, initialPostTitle);
+        postTitle.setAttribute("data-title-en", postTitleEn);
+        postTitle.setAttribute("data-title-es", postTitleEs);
         postLink.appendChild(postTitle);
         postArticle.appendChild(postLink);
         const postInfo = makeElement("h3", null, null, i18n.t('post_by_date', { author: post["author"], date: formatDate(post.publishDate, false) }));
@@ -162,8 +167,14 @@ async function loadPosts() {
         }));
         postArticle.appendChild(postInfo);
 
-        const firstP = post.getFirstParagraph();
-        const firstPElm = makeElement("p", null, null, firstP);
+        const rawPostExceptEn = getExcerpt(post, 'en')
+        const rawPostExceptEs = getExcerpt(post, 'es');
+
+        const postExceptEn = rawPostExceptEn || rawPostExceptEs;
+        const postExceptEs = rawPostExceptEs || rawPostExceptEn;
+        const initialPostExcerpt = activeLang === 'es' ? postExceptEs : postExceptEn;
+
+        const firstPElm = makeElement("p", null, null, initialPostExcerpt);
         postArticle.appendChild(firstPElm);
 
         const readMore = createLink("Read More...", "", false);
