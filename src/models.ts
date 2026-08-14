@@ -1,7 +1,7 @@
 import { Timestamp, serverTimestamp, type FirestoreDataConverter } from "firebase/firestore";
 export type MessageParams = {
   messageBody: string;
-  location: "main-message" | "modal";
+  location: "main-message" | "modal-message";
   type: string;
   autoCloseSeconds?: number;
   i18n?: string;

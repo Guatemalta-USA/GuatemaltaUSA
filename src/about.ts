@@ -92,7 +92,7 @@ async function handleSubmit() {
       createMessage({ messageBody: "Profile updated!", location: "main-message", type: "edit" });
     } else {
       if (!file) {
-        createMessage({ messageBody: "Please select an image for a new profile", location: "main-message", type: "error" });
+        createMessage({ messageBody: "Please select an image for a new profile", location: "modal-message", type: "error" });
         submitBtn.disabled = false;
         submitBtn.innerText = "Save Profile";
         return;
@@ -108,27 +108,27 @@ async function handleSubmit() {
 
     await loadProfiles();
     } else if (!name){
-      createMessage({messageBody: "Please enter the name", location: "main-message", type: "error"});
+      createMessage({messageBody: "Please enter the name", location: "modal-message", type: "error"});
       return;
     } else if (!positionEn) {
-      createMessage({messageBody: "Please enter the English position", location: "main-message", type: "error"});
+      createMessage({messageBody: "Please enter the English position", location: "modal-message", type: "error"});
       return;
     } else if (!positionEs) {
-      createMessage({messageBody: "Please enter the Spanish position", location: "main-message", type: "error"});
+      createMessage({messageBody: "Please enter the Spanish position", location: "modal-message", type: "error"});
       return;
     } else if (!country) {
-      createMessage({messageBody: "Please select a country", location: "main-message", type: "error"});
+      createMessage({messageBody: "Please select a country", location: "modal-message", type: "error"});
       return;
     } else if (!bioEn) {
-      createMessage({messageBody: "Please enter the English bio", location: "main-message", type: "error"});
+      createMessage({messageBody: "Please enter the English bio", location: "modal-message", type: "error"});
       return;
     } else if (!bioEs) {
-      createMessage({messageBody: "Please enter the Spanish bio", location: "main-message", type: "error"});
+      createMessage({messageBody: "Please enter the Spanish bio", location: "modal-message", type: "error"});
       return;
     }
   } catch (error) {
     console.error("Error in handleSubmit:", error);
-    createMessage({ messageBody: "An error occurred while saving the profile.", location: "main-message", type: "error" });
+    createMessage({ messageBody: "An error occurred while saving the profile.", location: "modal-message", type: "error" });
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerText = "Save Profile";
@@ -288,21 +288,21 @@ function handleEdit(profile: Profile) {
 function sendContactEmails(formData: FormData) {
   const nameInput = formData.get("entry.1134764317");
   if (!nameInput || nameInput.toString().trim() === "") {
-    createMessage({ messageBody: "Please enter your name", location: "main-message", type: "error", i18n: "please_enter_your_name" });
+    createMessage({ messageBody: "Please enter your name", location: "modal-message", type: "error", i18n: "please_enter_your_name" });
     return;
   }
   const emailInput = formData.get("entry.1281748752");
   if (!emailInput || emailInput.toString().trim() === "") {
-    createMessage({ messageBody: "Please enter your email", location: "main-message", type: "error", i18n: "please_enter_your_email" });
+    createMessage({ messageBody: "Please enter your email", location: "modal-message", type: "error", i18n: "please_enter_your_email" });
     return;
   }
   if (!emailInput.toString().includes("@")) {
-    createMessage({ messageBody: "Please enter a valid email", location: "main-message", type: "error", i18n: "please_enter_a_valid_email" });
+    createMessage({ messageBody: "Please enter a valid email", location: "modal-message", type: "error", i18n: "please_enter_a_valid_email" });
     return;
   }
   const commentsTextArea = formData.get("entry.1027877017");
   if (!commentsTextArea || commentsTextArea.toString().trim() === "") {
-    createMessage({ messageBody: "Please do not leave the comments field empty", location: "main-message", type: "error", i18n: "please_dont_leave_comments_empty" });
+    createMessage({ messageBody: "Please do not leave the comments field empty", location: "modal-message", type: "error", i18n: "please_dont_leave_comments_empty" });
     return;
   }
 
@@ -357,6 +357,7 @@ auth.onAuthStateChanged(async (user) => {
     }
   }
 
+  await loadProfiles();
 
   addProfileForm.addEventListener("submit", (e) => {
     e.preventDefault();
