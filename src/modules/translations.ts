@@ -62,6 +62,7 @@ export const resources = {
             "access_denied": "Access denied. Admin privileges are required",
             "post_not_found": "Post not found",
             "project_not_found": "Project not found",
+            "our_team_title": "Our {{county}} Team"
         }
     },
     es: {
@@ -127,6 +128,7 @@ export const resources = {
             "access_denied": "Acceso denegado. Se requieren privilegios de administrador",
             "post_not_found": "Publicación no encontrada",
             "project_not_found": "Proyecto no encontrado",
+            "our_team_title": "Nuestro equipo de {{country}}"
         }
     }
 }

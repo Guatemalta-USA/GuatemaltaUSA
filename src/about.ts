@@ -21,7 +21,7 @@ import "./css/style.css";
 import "./css/grid.css";
 import "./css/form.css";
 import "./css/quill.css";
-import { getResolvedLanguage, updateContent } from "./modules/i18n";
+import i18n, { getResolvedLanguage, updateContent } from "./modules/i18n";
 
 const loading = document.getElementById("loading");
 const viewSection = document.getElementById("content-display") as HTMLElement;
@@ -151,7 +151,7 @@ async function loadProfiles() {
         "h2",
         "",
         "",
-        country === "usa" ? "Our USA Team" : `Our ${titleText} Team`
+        i18n.t('our_team_title', {country: titleText })
       );
       profilesContainer.appendChild(countryH2);
 

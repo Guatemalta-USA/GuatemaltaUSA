@@ -4,8 +4,8 @@ import { ALL_APP_PATHS } from './navigate';
 import { getPageContents, updatePageContents } from '../firebase/firebaseService';
 import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
-import { createMessage, makeElement, promptModal } from './utils';
-import { updateContent, getResolvedLanguage } from './i18n';
+import { createMessage, formatDate, makeElement, promptModal } from './utils';
+import i18n, { updateContent, getResolvedLanguage } from './i18n';
 import { registerCustomQuillBlots } from './quillBlots';
 
 // Initialize and register custom Quill formats
@@ -560,7 +560,7 @@ export class TheEditor {
             if (lastUpdatedDiv && data?.lastUpdated) {
                 lastUpdatedDiv.innerHTML = "";
                 const date = data.lastUpdated.toDate();
-                const lastUpdatedP = makeElement("p", null, null, `Last Updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`);
+                const lastUpdatedP = makeElement("p", null, null, i18n.t('last_updated', { timestamp: formatDate(date, true) }));
                 lastUpdatedDiv.appendChild(lastUpdatedP);
             }
         } catch (err) {
