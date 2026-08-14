@@ -21,7 +21,7 @@ import "./css/style.css";
 import "./css/grid.css";
 import "./css/form.css";
 import "./css/quill.css";
-import { updateContent } from "./modules/i18n";
+import { getResolvedLanguage, updateContent } from "./modules/i18n";
 
 const loading = document.getElementById("loading");
 const viewSection = document.getElementById("content-display") as HTMLElement;
@@ -34,8 +34,10 @@ let editingProfileId: string | null = null;
 let isAdmin = false;
 const countries: string[] = ["usa", "guatemala"];
 const contactForm = document.getElementById("contact-form") as HTMLFormElement;
+const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
 
 async function handleSubmit() {
+  const addProfileForm = document.getElementById("add-profile-form") as HTMLFormElement;
   const submitBtn = document.getElementById("save-profile") as HTMLButtonElement;
   const fileInput = document.getElementById("p-image") as HTMLInputElement;
   const file = fileInput.files?.[0];
@@ -61,16 +63,31 @@ async function handleSubmit() {
     }
 
     const selectElement = document.getElementById("country") as HTMLSelectElement;
-    const profileData: Profile = {
-      name: (document.getElementById("p-name") as HTMLInputElement).value,
-      position: (document.getElementById("p-position") as HTMLInputElement).value,
-      email: (document.getElementById("p-email") as HTMLInputElement).value,
-      about: (document.getElementById("p-about") as HTMLTextAreaElement).value,
-      country: selectElement.value,
-      photoURL: photoURL,
-    };
+    const profileFormData = new FormData(addProfileForm);
+    const name = profileFormData.get("p-name");
+    const positionEn = profileFormData.get("p-position-english");
+    const positionEs = profileFormData.get("p-position-spanish");
+    const email = profileFormData.get("p-email");
+    const country = profileFormData.get("country");
+    const bioEn = profileFormData.get("p-about-english");
+    const bioEs = profileFormData.get("p-about-spanish");
+    if (name && positionEn && positionEs && country && bioEn && bioEs) {
+      const profileData: Profile = {
+        name: name.toString().trim(),
+        position: {
+          en: positionEn.toString().trim(),
+          es: positionEs.toString().trim()
+        },
+        email: email ? email.toString().trim() : "",
+        about: {
+          en: bioEn.toString().trim(),
+          es: bioEs.toString().trim()
+        },
+        country: selectElement.value,
+        photoURL: photoURL,
+      };
 
-    if (editingProfileId) {
+      if (editingProfileId) {
       await updateProfile(editingProfileId, profileData);
       createMessage({ messageBody: "Profile updated!", location: "main-message", type: "edit" });
     } else {
@@ -90,6 +107,25 @@ async function handleSubmit() {
     editingProfileId = null;
 
     await loadProfiles();
+    } else if (!name){
+      createMessage({messageBody: "Please enter the name", location: "main-message", type: "error"});
+      return;
+    } else if (!positionEn) {
+      createMessage({messageBody: "Please enter the English position", location: "main-message", type: "error"});
+      return;
+    } else if (!positionEs) {
+      createMessage({messageBody: "Please enter the Spanish position", location: "main-message", type: "error"});
+      return;
+    } else if (!country) {
+      createMessage({messageBody: "Please select a country", location: "main-message", type: "error"});
+      return;
+    } else if (!bioEn) {
+      createMessage({messageBody: "Please enter the English bio", location: "main-message", type: "error"});
+      return;
+    } else if (!bioEs) {
+      createMessage({messageBody: "Please enter the Spanish bio", location: "main-message", type: "error"});
+      return;
+    }
   } catch (error) {
     console.error("Error in handleSubmit:", error);
     createMessage({ messageBody: "An error occurred while saving the profile.", location: "main-message", type: "error" });
@@ -136,25 +172,41 @@ async function loadProfiles() {
 
           const positionEl = makeElement("p", null, "profile-position", null);
           const positionBold = document.createElement("b");
-          positionBold.textContent = currentProfile.position;
+          positionBold.textContent = currentProfile.position[currentLang];
           positionEl.appendChild(positionBold);
           detailsContainer.appendChild(positionEl);
 
-          const aboutEl = makeElement("div", null, "profile-bio", null);
-          const paragraphs = currentProfile.about
+          const aboutElEN = makeElement("div", null, "profile-bio", null);
+          const aboutElEs = makeElement("div", null, "profile-bio", null);
+          const paragraphsEN = currentProfile.about['en']
             .split(/\r?\n/)
             .map((p) => p.trim())
             .filter((p) => p.length > 0);
 
-          paragraphs.forEach((paragraphText) => {
+          paragraphsEN.forEach((paragraphText) => {
             const formattedText = paragraphText.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
 
             const p = document.createElement("p");
             p.innerHTML = formattedText;
-            aboutEl.appendChild(p);
+            aboutElEN.appendChild(p);
           });
+          const paragraphsEs = currentProfile.about['es']
+            .split(/\r?\n/)
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
 
-          detailsContainer.appendChild(aboutEl);
+          paragraphsEs.forEach((paragraphText) => {
+            const formattedText = paragraphText.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+
+            const p = document.createElement("p");
+            p.innerHTML = formattedText;
+            aboutElEs.appendChild(p);
+          });
+          const bioContentEn = aboutElEN || aboutElEs;
+          const bioContentEs = aboutElEs || aboutElEN;
+          const initialContent = currentLang === "en" ? bioContentEn : bioContentEs;
+
+          detailsContainer.appendChild(initialContent);
 
           if (isAdmin) {
             const actionsDiv = makeElement("div", null, "profile-actions", null);
@@ -212,9 +264,11 @@ function handleEdit(profile: Profile) {
   editingProfileId = profile.name || null;
   const nameInput = document.getElementById("p-name") as HTMLInputElement;
   nameInput.value = profile.name;
-  (document.getElementById("p-position") as HTMLInputElement).value = profile.position;
+  (document.getElementById("p-position-english") as HTMLInputElement).value = profile.position['en'];
+  (document.getElementById("p-position-spanish") as HTMLInputElement).value = profile.position['es'];
   (document.getElementById("p-email") as HTMLInputElement).value = profile.email;
-  (document.getElementById("p-about") as HTMLTextAreaElement).value = profile.about;
+  (document.getElementById("p-about-english") as HTMLTextAreaElement).value = profile.about['en'];
+  (document.getElementById("p-about-spanish") as HTMLTextAreaElement).value = profile.about['es'];
   (document.getElementById("country") as HTMLSelectElement).value = profile.country;
 
   nameInput.readOnly = true;
@@ -303,7 +357,6 @@ auth.onAuthStateChanged(async (user) => {
     }
   }
 
-  await loadProfiles();
 
   addProfileForm.addEventListener("submit", (e) => {
     e.preventDefault();

@@ -85,15 +85,17 @@
             <div class="modal-content">
                 <h2>Add Team Member</h2>
                 <form id="add-profile-form">
-                    <input type="text" id="p-name" placeholder="First Name" />
-                    <input type="text" id="p-position" placeholder="Position" />
-                    <input type="email" id="p-email" placeholder="Email" />
+                    <input type="text" id="p-name" name="p-name" placeholder="First Name" />
+                    <input type="text" id="p-position-english" name="p-position-english" placeholder="English Position" />
+                    <input type="text" id="p-position-spanish" name="p-position-spanish" placeholder="Spanish Position" />
+                    <input type="email" id="p-email" name="p-email" placeholder="Email" />
                     <select name="country" id="country">
                         <option disabled selected>Select Country...</option>
                         <option value="usa">USA</option>
                         <option value="guatemala">Guatemala</option>
                     </select>
-                    <textarea id="p-about" placeholder="About bio..."></textarea>
+                    <textarea id="p-about-english" name="p-about-english" placeholder="English About bio..."></textarea>
+                    <textarea id="p-about-spanish" name="p-about-spanish" placeholder="Spanish About bio..."></textarea>
 
                     <label for="p-image">Profile Photo:</label>
                     <input type="file" id="p-image" accept="image/*" />

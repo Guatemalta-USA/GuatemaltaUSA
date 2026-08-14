@@ -63,8 +63,8 @@ export const SOCIAL_DATA: Record<string, SocialPlatform> = {
 export interface Profile {
     name: string;
     photoURL: string;
-    position: string;
-    about: string;
+    position: LocalizedString;
+    about: LocalizedString;
     email: string;
     country: string;
 }
