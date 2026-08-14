@@ -1,3 +1,4 @@
+
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import { ALL_APP_PATHS } from './navigate';
@@ -23,11 +24,21 @@ export class TheEditor {
     private activeImageElement: HTMLImageElement | null = null;
     private trackedImages: Set<string> = new Set();
 
+    // Tab state management
+    private currentTab: 'en' | 'es' = 'en';
+    private contentState: { en: any[]; es: any[] } = {
+        en: [],
+        es: []
+    };
+
     constructor() {
         const container = document.getElementById('editor-container');
         if (!container) {
             throw new Error(`Editor container with ID "#editor-container" was not found in the DOM.`);
         }
+
+        // Setup UI Tabs above editor container
+        this.setupLanguageTabs(container);
 
         this.quill = new Quill(container, {
             theme: 'snow',
@@ -177,6 +188,62 @@ export class TheEditor {
         this.setupToolbarUI();
         this.setupDeleteObserver();
         this.setupImageClickTracking();
+    }
+
+    private setupLanguageTabs(container: HTMLElement) {
+        let tabsContainer = document.getElementById('editor-language-tabs');
+        if (!tabsContainer) {
+            tabsContainer = makeElement("div", "editor-language-tabs", "language-tabs", null)
+            container.parentNode?.insertBefore(tabsContainer, container);
+        }
+
+        tabsContainer.innerHTML = '';
+
+        const createTabBtn = (lang: 'en' | 'es', label: string) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = label;
+            btn.className = `tab-btn ${this.currentTab === lang ? 'active' : ''}`;
+
+            btn.onclick = (e) => {
+                e.preventDefault();
+                this.switchLanguageTab(lang);
+            };
+
+            return btn;
+        };
+
+        tabsContainer.appendChild(createTabBtn('en', 'English'));
+        tabsContainer.appendChild(createTabBtn('es', 'Español'));
+    }
+
+    private switchLanguageTab(lang: 'en' | 'es') {
+        if (this.currentTab === lang) return;
+
+        // Save current tab editor content into memory
+        this.contentState[this.currentTab] = this.quill.getContents().ops;
+
+        // Switch active target
+        this.currentTab = lang;
+
+        // Update tab buttons state
+        const container = document.getElementById('editor-container');
+        if (container) {
+            this.setupLanguageTabs(container);
+        }
+
+        // Temporarily pause image delete tracking when swapping document contents
+        if (this.deleteObserver) this.deleteObserver.disconnect();
+
+        // Set target content into Quill
+        const nextContent = this.contentState[lang] || [];
+        this.quill.setContents(nextContent as any);
+
+        // Resync tracked images and reconnect observer
+        this.trackedImages = new Set(this.getImagesFromEditor());
+        if (this.deleteObserver) {
+            this.deleteObserver.observe(this.quill.root, { childList: true, subtree: true });
+        }
     }
 
     private setupImageClickTracking() {
@@ -329,6 +396,14 @@ export class TheEditor {
         return Array.from(imgs).map(img => img.src).filter(src => src.includes('guatemaltausa.org'));
     }
 
+    private extractImagesFromOps(ops: any[]): string[] {
+        if (!Array.isArray(ops)) return [];
+        return ops
+            .filter(op => op.insert && typeof op.insert === 'object' && op.insert.image)
+            .map(op => op.insert.image as string)
+            .filter(src => typeof src === 'string' && src.includes('guatemaltausa.org'));
+    }
+
     private async selectLocalImage() {
         const savedRange = this.quill.getSelection();
         if (!savedRange) {
@@ -386,9 +461,15 @@ export class TheEditor {
         };
     }
 
-    public async prepareContentForSave(): Promise<any> {
-        const delta = this.quill.getContents();
-        const finalImages = new Set(this.getImagesFromEditor());
+    public async prepareContentForSave(): Promise<{ en: any[]; es: any[] }> {
+        // Sync active language editor contents to memory
+        this.contentState[this.currentTab] = this.quill.getContents().ops;
+
+        // Collect all active images across both language tabs
+        const enImages = this.extractImagesFromOps(this.contentState.en);
+        const esImages = this.extractImagesFromOps(this.contentState.es);
+        const finalImages = new Set([...enImages, ...esImages]);
+
         const trueDeletions = this.deletedImageURLs.filter(url => !finalImages.has(url));
 
         if (trueDeletions.length > 0) {
@@ -403,7 +484,11 @@ export class TheEditor {
             }
             this.deletedImageURLs = [];
         }
-        return delta.ops;
+
+        return {
+            en: this.contentState.en,
+            es: this.contentState.es
+        };
     }
 
     async load(pageName: string): Promise<void> {
@@ -415,10 +500,20 @@ export class TheEditor {
             if (this.deleteObserver) this.deleteObserver.disconnect();
 
             if (data && data.content) {
-                this.quill.setContents(data.content);
+                const rawEn = Array.isArray(data.content.en) ? data.content.en : (data.content.en?.ops || []);
+                const rawEs = Array.isArray(data.content.es) ? data.content.es : (data.content.es?.ops || []);
+
+                this.contentState = {
+                    en: rawEn,
+                    es: rawEs
+                };
             } else {
-                this.quill.setContents([] as any);
+                this.contentState = { en: [], es: [] };
             }
+
+            // Set initial content for currently selected tab
+            const initialOps = this.contentState[this.currentTab] || [];
+            this.quill.setContents(initialOps as any);
 
             // Resync tracked images and reconnect observer
             this.trackedImages = new Set(this.getImagesFromEditor());
@@ -442,8 +537,8 @@ export class TheEditor {
     async save(): Promise<void> {
         if (!this.currentPage) return;
         try {
-            const cleanContent = await this.prepareContentForSave();
-            await updatePageContents(this.currentPage, { content: cleanContent });
+            const localizedContent = await this.prepareContentForSave();
+            await updatePageContents(this.currentPage, { content: localizedContent });
             createMessage({messageBody: "Changes saved!", location: "main-message", type: "check_circle"});
         } catch (err) {
             createMessage({messageBody: "Error saving to database.", location: "main-message", type: "error"});
@@ -451,7 +546,11 @@ export class TheEditor {
     }
 
     public async deleteAllImages(): Promise<void> {
-        const images = this.getImagesFromEditor();
+        const enImages = this.extractImagesFromOps(this.contentState.en);
+        const esImages = this.extractImagesFromOps(this.contentState.es);
+        const currentImages = this.getImagesFromEditor();
+        const images = Array.from(new Set([...enImages, ...esImages, ...currentImages]));
+
         if (images.length === 0) return;
 
         try {
@@ -475,6 +574,11 @@ export class TheEditor {
             this.deleteObserver = null;
         }
         this.activeImageElement = null;
+
+        const tabsContainer = document.getElementById('editor-language-tabs');
+        if (tabsContainer) {
+            tabsContainer.remove();
+        }
     }
 
     public getHTML(): string { return this.quill.root.innerHTML; }
@@ -482,12 +586,14 @@ export class TheEditor {
 }
 
 export function isEmptyDelta(deltaObj: any): boolean {
-    if (!deltaObj || !Array.isArray(deltaObj.ops) || deltaObj.ops.length === 0) {
+    if (!deltaObj) return true;
+    const ops = Array.isArray(deltaObj) ? deltaObj : deltaObj.ops;
+    if (!Array.isArray(ops) || ops.length === 0) {
         return true;
     }
     // Quill represents an empty doc as a single newline insert operation
-    if (deltaObj.ops.length === 1) {
-        const op = deltaObj.ops[0];
+    if (ops.length === 1) {
+        const op = ops[0];
         if (typeof op.insert === 'string' && (op.insert === '\n' || op.insert.trim() === '')) {
             return true;
         }

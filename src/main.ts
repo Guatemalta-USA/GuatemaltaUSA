@@ -7,6 +7,7 @@ import { auth } from "./firebase/firebase.js";
 import { Timestamp } from 'firebase/firestore';
 import { getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
 import { initGivebutter } from "./services/givebutter.service.js";
+import { getResolvedLanguage } from "./modules/i18n.js";
 
 const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
@@ -99,16 +100,21 @@ export async function initializeApp(
     } else if (editorConfig.type === 'post' && editorConfig.postId) {
       const post = await getPostById(editorConfig.postId);
       if (post) {
-        currentPost = await getPostById(editorConfig.postId);
+        currentPost = post;
         if (titleInput) titleInput.value = post.getTitle('en');
         loadedPostPublishDate = post.publishDate as Timestamp;
-        const primaryPostContent = post.content.en || post.content.es;
-        if (primaryPostContent) {
-          if (typeof primaryPostContent === 'string') {
-            editor.setHTML(primaryPostContent);
-          } else {
-            editor.quill.setContents(primaryPostContent);
-          }
+        
+        // Helper to load localized contents into editor memory states
+        const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+        const rawEn = post.content?.en || [];
+        const rawEs = post.content?.es || [];
+
+        // Set initial Quill state directly based on resolved language
+        const activeContent = currentLang === 'es' ? (rawEs || rawEn) : (rawEn || rawEs);
+        if (typeof activeContent === 'string') {
+          editor.setHTML(activeContent);
+        } else {
+          editor.quill.setContents(activeContent as any);
         }
       }
     } else if (editorConfig.type === 'project' && editorConfig.projectId) {
@@ -118,13 +124,16 @@ export async function initializeApp(
         if (projectTitleInput) {
           projectTitleInput.value = currentProject.getTitle('en');
         }
-        const primaryContent = currentProject.content.en || currentProject.content.es;
-        if (primaryContent) {
-          if (typeof primaryContent === 'string') {
-            editor.setHTML(primaryContent);
-          } else {
-            editor.quill.setContents(primaryContent);
-          }
+
+        const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+        const rawEn = currentProject.content?.en || [];
+        const rawEs = currentProject.content?.es || [];
+
+        const activeContent = currentLang === 'es' ? (rawEs || rawEn) : (rawEn || rawEs);
+        if (typeof activeContent === 'string') {
+          editor.setHTML(activeContent);
+        } else if (activeContent) {
+          editor.quill.setContents(activeContent as any);
         }
       }
     }
@@ -149,17 +158,12 @@ export async function initializeApp(
           if (editorConfig.type === 'page') {
             await editor.save();
           } else if (editorConfig.type === 'post') {
-            const content = await editor.prepareContentForSave();
+            const localizedContent = await editor.prepareContentForSave();
             const titleValue = titleInput?.value || "Untitled Post";
             
             const updatedPostTitle = {
               en: titleValue,
-              es: currentPost?.postTitle.es || ""
-            };
-
-            const updatedPostContent = {
-              en: content,
-              es: currentPost?.content?.es || ""
+              es: currentPost?.postTitle?.es || titleValue
             };
 
             const linkToProjectSelect = document.getElementById("link-to-project") as HTMLSelectElement;
@@ -169,30 +173,24 @@ export async function initializeApp(
               authorInput?.value || "",
               loadedPostPublishDate || Timestamp.now(),
               Timestamp.now(),
-              updatedPostContent,
+              localizedContent,
               linkToProjectSelect?.value || ""
             );
 
             if (editorConfig.postId) postToSave.id = editorConfig.postId;
             await savePost(postToSave);
           } else if (editorConfig.type === 'project') {
-            const content = await editor.prepareContentForSave();
+            const localizedContent = await editor.prepareContentForSave();
             const titleValue = projectTitleInput?.value || "Untitled Project";
 
-            // Maintain existing Spanish translation if available on fetched instance
             const updatedTitle = {
               en: titleValue,
-              es: currentProject?.projectTitle?.es || ""
-            };
-
-            const updatedContent = {
-              en: content,
-              es: currentProject?.content?.es || ""
+              es: currentProject?.projectTitle?.es || titleValue
             };
 
             const projectToSave = new Project(
               updatedTitle,
-              updatedContent,
+              localizedContent,
               projectStatusInput?.checked ?? true,
               publishedInput?.checked ?? true,
               goalBarID,
@@ -220,21 +218,23 @@ export async function initializeApp(
         } else if (editorConfig.type === 'post' && editorConfig.postId) {
           const post = await getPostById(editorConfig.postId);
           if (post) {
-            const primaryPostContent = post.content.en || post.content.es;
+            const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+            const primaryPostContent = currentLang === 'es' ? (post.content?.es || post.content?.en) : (post.content?.en || post.content?.es);
             if (typeof primaryPostContent === "string") {
               editor.setHTML(primaryPostContent);
-            } else {
-              editor.quill.setContents(primaryPostContent);
+            } else if (primaryPostContent) {
+              editor.quill.setContents(primaryPostContent as any);
             }
           }
         } else if (editorConfig.type === 'project' && editorConfig.projectId) {
           const project = await getProjectById(editorConfig.projectId);
           if (project) {
-            const primaryContent = project.content.en || project.content.es;
+            const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
+            const primaryContent = currentLang === 'es' ? (project.content?.es || project.content?.en) : (project.content?.en || project.content?.es);
             if (typeof primaryContent === 'string') {
               editor.setHTML(primaryContent);
             } else if (primaryContent) {
-              editor.quill.setContents(primaryContent);
+              editor.quill.setContents(primaryContent as any);
             }
           }
         }
