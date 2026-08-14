@@ -7,7 +7,7 @@ import { auth } from "./firebase/firebase.js";
 import { Timestamp } from 'firebase/firestore';
 import { getPostById, getProjectById, savePost, saveProject } from "./firebase/firebaseService.js";
 import { initGivebutter } from "./services/givebutter.service.js";
-import { getResolvedLanguage } from "./modules/i18n.js";
+import i18n, { getResolvedLanguage } from "./modules/i18n.js";
 
 const viewSection = document.getElementById('content-display');
 const editSection = document.getElementById('edit-section');
@@ -19,6 +19,37 @@ let currentProject: Project | null = null;
 let currentPost: Post | null = null;
 
 initGivebutter();
+
+function isContentValid(content: any): boolean {
+  if (!content) return false;
+  if (typeof content === 'string') {
+    return content.replace(/<[^>]*>/g, '').trim().length > 0;
+  }
+  if (Array.isArray(content)) {
+    return content.length > 0;
+  }
+  if (content.ops && Array.isArray(content.ops)) {
+    if (content.ops.length === 0) return false;
+    return content.ops.some((op: any) => {
+      if (typeof op.insert === 'string') {
+        return op.insert.replace(/\n/g, '').trim().length > 0;
+      }
+      return op.insert !== undefined && op.insert !== null;
+    });
+  }
+  return true;
+}
+
+function resolveLocalizedContent(contentObj: any, currentLang: string): any {
+  if (!contentObj) return null;
+  const rawEn = contentObj.en || contentObj;
+  const rawEs = contentObj.es || null;
+
+  if (currentLang === 'es' && isContentValid(rawEs)) {
+    return rawEs;
+  }
+  return rawEn;
+}
 
 function toggleMode(editor: TheEditor, isEditing: boolean) {
   if (viewSection && adminControls && editSection) {
@@ -104,16 +135,12 @@ export async function initializeApp(
         if (titleInput) titleInput.value = post.getTitle('en');
         loadedPostPublishDate = post.publishDate as Timestamp;
         
-        // Helper to load localized contents into editor memory states
-        const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
-        const rawEn = post.content?.en || [];
-        const rawEs = post.content?.es || [];
+        const currentLang = (getResolvedLanguage() || 'en').slice(0, 2);
+        const activeContent = resolveLocalizedContent(post.content, currentLang);
 
-        // Set initial Quill state directly based on resolved language
-        const activeContent = currentLang === 'es' ? (rawEs || rawEn) : (rawEn || rawEs);
         if (typeof activeContent === 'string') {
           editor.setHTML(activeContent);
-        } else {
+        } else if (activeContent) {
           editor.quill.setContents(activeContent as any);
         }
       }
@@ -125,11 +152,9 @@ export async function initializeApp(
           projectTitleInput.value = currentProject.getTitle('en');
         }
 
-        const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
-        const rawEn = currentProject.content?.en || [];
-        const rawEs = currentProject.content?.es || [];
+        const currentLang = (getResolvedLanguage() || 'en').slice(0, 2);
+        const activeContent = resolveLocalizedContent(currentProject.content, currentLang);
 
-        const activeContent = currentLang === 'es' ? (rawEs || rawEn) : (rawEn || rawEs);
         if (typeof activeContent === 'string') {
           editor.setHTML(activeContent);
         } else if (activeContent) {
@@ -139,6 +164,15 @@ export async function initializeApp(
     }
 
     viewSection.innerHTML = editor.getHTML();
+
+    // Listen for global language changes and re-sync editor content & DOM
+    i18n.on('languageChanged', (lng: string) => {
+      const targetLang = lng.startsWith('es') ? 'es' : 'en';
+      editor.setLanguage(targetLang);
+      if (viewSection && editSection?.classList.contains('hide')) {
+        viewSection.innerHTML = editor.getHTML();
+      }
+    });
 
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -218,8 +252,8 @@ export async function initializeApp(
         } else if (editorConfig.type === 'post' && editorConfig.postId) {
           const post = await getPostById(editorConfig.postId);
           if (post) {
-            const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
-            const primaryPostContent = currentLang === 'es' ? (post.content?.es || post.content?.en) : (post.content?.en || post.content?.es);
+            const currentLang = (getResolvedLanguage() || 'en').slice(0, 2);
+            const primaryPostContent = resolveLocalizedContent(post.content, currentLang);
             if (typeof primaryPostContent === "string") {
               editor.setHTML(primaryPostContent);
             } else if (primaryPostContent) {
@@ -229,8 +263,8 @@ export async function initializeApp(
         } else if (editorConfig.type === 'project' && editorConfig.projectId) {
           const project = await getProjectById(editorConfig.projectId);
           if (project) {
-            const currentLang = (getResolvedLanguage() || 'en').slice(0, 2) as 'en' | 'es';
-            const primaryContent = currentLang === 'es' ? (project.content?.es || project.content?.en) : (project.content?.en || project.content?.es);
+            const currentLang = (getResolvedLanguage() || 'en').slice(0, 2);
+            const primaryContent = resolveLocalizedContent(project.content, currentLang);
             if (typeof primaryContent === 'string') {
               editor.setHTML(primaryContent);
             } else if (primaryContent) {

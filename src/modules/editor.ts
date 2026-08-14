@@ -1,4 +1,3 @@
-
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import { ALL_APP_PATHS } from './navigate';
@@ -6,7 +5,7 @@ import { getPageContents, updatePageContents } from '../firebase/firebaseService
 import imageCompression from 'browser-image-compression';
 import { ImageResize } from 'quill-image-resize-module-ts';
 import { createMessage, makeElement, promptModal } from './utils';
-import { updateContent } from './i18n';
+import { updateContent, getResolvedLanguage } from './i18n';
 import { registerCustomQuillBlots } from './quillBlots';
 
 // Initialize and register custom Quill formats
@@ -14,6 +13,27 @@ registerCustomQuillBlots();
 
 if (!Quill.imports['modules/imageResize']) {
     Quill.register('modules/imageResize', ImageResize);
+}
+
+export function isEmptyDelta(deltaObj: any): boolean {
+    if (!deltaObj) return true;
+    const ops = Array.isArray(deltaObj) ? deltaObj : deltaObj.ops;
+    if (!Array.isArray(ops) || ops.length === 0) {
+        return true;
+    }
+    // Quill represents an empty doc as a single newline insert operation or whitespace
+    if (ops.length === 1) {
+        const op = ops[0];
+        if (typeof op.insert === 'string' && (op.insert === '\n' || op.insert.trim() === '')) {
+            return true;
+        }
+    }
+    return ops.every((op: any) => typeof op.insert === 'string' && op.insert.replace(/\n/g, '').trim() === '');
+}
+
+function getInitialLanguage(): 'en' | 'es' {
+    const lang = (getResolvedLanguage() || 'en').slice(0, 2).toLowerCase();
+    return lang === 'es' ? 'es' : 'en';
 }
 
 export class TheEditor {
@@ -25,7 +45,7 @@ export class TheEditor {
     private trackedImages: Set<string> = new Set();
 
     // Tab state management
-    private currentTab: 'en' | 'es' = 'en';
+    private currentTab: 'en' | 'es' = getInitialLanguage();
     private contentState: { en: any[]; es: any[] } = {
         en: [],
         es: []
@@ -193,7 +213,7 @@ export class TheEditor {
     private setupLanguageTabs(container: HTMLElement) {
         let tabsContainer = document.getElementById('editor-language-tabs');
         if (!tabsContainer) {
-            tabsContainer = makeElement("div", "editor-language-tabs", "language-tabs", null)
+            tabsContainer = makeElement("div", "editor-language-tabs", "language-tabs", null);
             container.parentNode?.insertBefore(tabsContainer, container);
         }
 
@@ -235,14 +255,24 @@ export class TheEditor {
         // Temporarily pause image delete tracking when swapping document contents
         if (this.deleteObserver) this.deleteObserver.disconnect();
 
-        // Set target content into Quill
-        const nextContent = this.contentState[lang] || [];
-        this.quill.setContents(nextContent as any);
+        // Determine target content with fallback to English if Spanish is empty
+        let nextContent = this.contentState[lang];
+        if (lang === 'es' && isEmptyDelta(nextContent)) {
+            nextContent = this.contentState.en;
+        }
+
+        this.quill.setContents((nextContent || []) as any);
 
         // Resync tracked images and reconnect observer
         this.trackedImages = new Set(this.getImagesFromEditor());
         if (this.deleteObserver) {
             this.deleteObserver.observe(this.quill.root, { childList: true, subtree: true });
+        }
+    }
+
+    public setLanguage(lang: 'en' | 'es') {
+        if (this.currentTab !== lang) {
+            this.switchLanguageTab(lang);
         }
     }
 
@@ -511,9 +541,13 @@ export class TheEditor {
                 this.contentState = { en: [], es: [] };
             }
 
-            // Set initial content for currently selected tab
-            const initialOps = this.contentState[this.currentTab] || [];
-            this.quill.setContents(initialOps as any);
+            // Set initial content with fallback to EN if active tab (ES) is empty
+            let initialOps = this.contentState[this.currentTab];
+            if (this.currentTab === 'es' && isEmptyDelta(initialOps)) {
+                initialOps = this.contentState.en;
+            }
+
+            this.quill.setContents((initialOps || []) as any);
 
             // Resync tracked images and reconnect observer
             this.trackedImages = new Set(this.getImagesFromEditor());
@@ -581,24 +615,22 @@ export class TheEditor {
         }
     }
 
-    public getHTML(): string { return this.quill.root.innerHTML; }
-    public setHTML(html: string): void { this.quill.root.innerHTML = html; }
-}
+    public getHTML(): string { 
+        const rawHTML = this.quill.root.innerHTML;
+        const cleaned = rawHTML.replace(/<[^>]*>/g, '').trim();
 
-export function isEmptyDelta(deltaObj: any): boolean {
-    if (!deltaObj) return true;
-    const ops = Array.isArray(deltaObj) ? deltaObj : deltaObj.ops;
-    if (!Array.isArray(ops) || ops.length === 0) {
-        return true;
-    }
-    // Quill represents an empty doc as a single newline insert operation
-    if (ops.length === 1) {
-        const op = ops[0];
-        if (typeof op.insert === 'string' && (op.insert === '\n' || op.insert.trim() === '')) {
-            return true;
+        if (cleaned.length === 0 && this.currentTab === 'es') {
+            const fallbackOps = this.contentState.en;
+            if (fallbackOps && !isEmptyDelta(fallbackOps)) {
+                this.quill.setContents(fallbackOps as any);
+                return this.quill.root.innerHTML;
+            }
         }
+
+        return rawHTML; 
     }
-    return false;
+
+    public setHTML(html: string): void { this.quill.root.innerHTML = html; }
 }
 
 updateContent();

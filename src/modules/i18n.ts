@@ -91,4 +91,5 @@ export function getResolvedLanguage(): string | undefined {
   return i18n.resolvedLanguage;
 }
 
+export { i18n };
 export default i18n;
