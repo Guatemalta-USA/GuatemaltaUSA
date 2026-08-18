@@ -82,11 +82,12 @@ async function renderDonateListTable(container: HTMLElement) {
                 [link["projectName"], link["formId"]]
             );
             if (updateResponse) {
-                const [updatedName, updatedFormId] = updateResponse;
+                const [updatedName, updatedFormId, updatedUrl] = updateResponse;
                 if (updatedName.trim() !== "" && updatedFormId.trim() !== "") {
                     const updatedProjectLink: ProjectInfo = {
                         ...(link.id && { id: link.id }),
                         projectName: updatedName,
+                        projectId: updatedUrl,
                         formId: updatedFormId
                     };
                     await setProjectLink(updatedProjectLink);
@@ -393,16 +394,17 @@ async function renderDonateSection() {
     const addProjectToDonate = createButton({ buttonText: "Add project to donate list", buttonType: "button", buttonId: "add-project", buttonClass: "accent-button", icon: "add" });
     addProjectToDonate.addEventListener("click", async () => {
         const projectInfo = await promptModal(
-            "Add project to donate list\n(enter the ID in the form widget)",
-            ["Project name in list", "form ID"],
+            "Enter the ID from the form widget\nEnter the url path of the project",
+            ["Project name in list", "form ID", "project url path"],
             "add",
             false
         );
         if (projectInfo) {
-            const [projectName, formID] = projectInfo;
+            const [projectName, formID, projectURLPath] = projectInfo;
             if (projectName.trim() !== "" && formID.trim() !== "") {
                 const newProject: ProjectInfo = {
                     projectName: projectName,
+                    projectId: projectURLPath,
                     formId: formID,
                     orderIndex: donateButtonListLength + 1
                 };

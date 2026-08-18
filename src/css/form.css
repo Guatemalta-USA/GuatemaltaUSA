@@ -4,6 +4,7 @@
 .button,
 .accent-button,
 .action-link,
+.green-button,
 .delete-button {
   border: none;
   background-color: var(--blue-accent);
@@ -37,6 +38,21 @@
   background-color: var(--blue-accent);
   color: #fff;
 }
+
+.accent-button:hover,
+.action-link:hover {
+  background-color: #001f4d;
+}
+
+.green-button {
+  background-color: var(--green-accent) !important;
+  color: var(--green-accent-text) !important;
+}
+
+.green-button:hover {
+  background-color: #5e8000 !important;
+}
+
 .button:hover {
   background-color: var(--card-border);
 }
@@ -49,10 +65,7 @@
   background-color: var(--error-hover);
 }
 
-.accent-button:hover,
-.action-link:hover {
-  background-color: #001f4d;
-}
+
 
 .icon-button {
   background: transparent;

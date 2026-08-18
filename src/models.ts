@@ -563,6 +563,7 @@ export interface refStatus {
 export interface ProjectInfo {
     id?: string;
     projectName: string;
+    projectId: string;
     formId: string;
     orderIndex?: number;
 }

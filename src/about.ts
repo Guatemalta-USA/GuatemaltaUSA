@@ -150,7 +150,7 @@ async function loadProfiles() {
       const countryH2 = makeElement(
         "h2",
         "",
-        "",
+        "white-text",
         i18n.t('our_team_title', {country: titleText })
       );
       profilesContainer.appendChild(countryH2);
