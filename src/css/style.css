@@ -925,6 +925,10 @@ textarea {
   flex-direction: column;
 }
 
+.child-info ul {
+  margin-left: 10px;
+}
+
 .sponsored {
   padding: 5px;
   border-radius: 10px;

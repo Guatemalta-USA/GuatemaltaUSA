@@ -16,7 +16,8 @@ import {
     where,
     type FirestoreDataConverter,
     type SnapshotOptions,
-    writeBatch
+    writeBatch,
+    arrayUnion
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -283,11 +284,14 @@ export async function updateDonor(refCode: string, childName: string): Promise<b
             const childData = childDoc.data();
 
             if (referralData.selectedChildName) {
-                throw new Error("Error. You have already selected a child to sponsor. Please contact us with any questions")
+                throw new Error("Error. You have already selected a child to sponsor. Please contact us with any questions.");
             }
 
-            if (childData.sponsor !== null) {
-                throw new Error("Error. This child is already sponsored. Please contact us with any questions");
+            const donorName = referralData.donorName || "Sponsored";
+            const currentSponsors: string[] = childData.sponsor || [];
+
+            if (currentSponsors.includes(donorName)) {
+                throw new Error("Error. You are already listed as a sponsor for this child.");
             }
 
             transaction.update(referralRef, {
@@ -296,10 +300,10 @@ export async function updateDonor(refCode: string, childName: string): Promise<b
             });
 
             transaction.update(childRef, {
-                sponsor: referralData.donorName || "Sponsored"
+                sponsor: arrayUnion(donorName)
             });
-
         });
+
         return true;
     } catch (error: any) {
         console.error("Sponsorship transaction failed:", error.message);

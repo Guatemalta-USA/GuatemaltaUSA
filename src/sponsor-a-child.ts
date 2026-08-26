@@ -191,16 +191,15 @@ async function updateSponsorshipSection() {
             const nameH3 = makeElement("h3", null, null, child["name"]);
             childInfo.append(nameH3);
 
-            if (child["sponsor"]) {
-                const statusText = currentUserRole === "admin"
-                    ? `Sponsored: ${child["sponsor"]}`
-                    : "Sponsored";
+            if (child["sponsor"] && currentUserRole === "admin") {
+                const sponsoredByH4 = makeElement("h4", null, null, "Sponsored By:")
 
-                const sponsored = makeElement("span", null, "sponsored found", statusText);
-                childInfo.appendChild(sponsored);
-            } else {
-                const notSponsored = makeElement("span", null, "sponsored not-found", "Waiting for sponsor");
-                childInfo.appendChild(notSponsored);
+                const sponsorList = child["sponsor"].reduce((acc: HTMLElement, sponsor) => {
+                    const li = makeElement("li", null, null, sponsor);
+                    acc.appendChild(li);
+                    return acc;
+                }, makeElement("ul", null, null, null));
+                childInfo.append(sponsoredByH4, sponsorList);
             }
 
             header.append(photo, childInfo);
@@ -220,12 +219,12 @@ async function updateSponsorshipSection() {
                 };
                 nextChild.appendChild(deleteBtn);
             }
-            if (validation.isValid && !validation.hasClaimed && !child["sponsor"]) {
+            if (validation.isValid && !validation.hasClaimed) {
                 const selectBtn = createButton({buttonText: "Select child", buttonType: "button", buttonId: `select-${child["name"]}`, buttonClass: "accent-button", icon: "check"});
                 selectBtn.onclick = async () => {
                     try {
                         if (refCode) {
-                            const result = await updateDonor(refCode, child["name"])
+                            const result = await updateDonor(refCode, child["name"]);
                             if (result) {
                                 createMessage({messageBody: "Sponsorship successfully processed!", location: "main-message", type: "check_circle"});
                                 window.location.reload();

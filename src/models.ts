@@ -517,7 +517,7 @@ export class ChildSponsorship {
     public year: number;
     public bio: string;
     public photoURL: string;
-    public sponsor: string | null = null;
+    public sponsor: string[] | null = null;
 
     constructor(
         name: string,

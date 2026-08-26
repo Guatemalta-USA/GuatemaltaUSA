@@ -193,7 +193,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       const authToken = await getGoogleAuthToken(env.FIREBASE_CLIENT_EMAIL, env.FIREBASE_PRIVATE_KEY);
 
       if (incomingCampaignId === targetCampaignId) {
-        if (donationAmount === 175 && email) {
+        if (email) {
 
           const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
           const currentYear = new Date().getFullYear();
@@ -221,14 +221,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             const dbErr = await dbResponse.text();
             throw new Error(`Firestore REST insertion failed: ${dbErr}`);
           }
-          // Change to sendSponsorshipEmail
           //await sendSponsorshipEmail(env.BREVO_API_KEY, email, firstName, refCode);
           await sendDataEmail(env.BREVO_API_KEY, JSON.stringify(event.data))
           console.log(`Successfully processed Donor ${fullName} (${refCode})`);
-        } else if (donationAmount === 10) {
-          await sendDataEmail(env.BREVO_API_KEY, JSON.stringify(event.data));
         }
       } else {
+        await sendDataEmail(env.BREVO_API_KEY, JSON.stringify(event.data));
         const commitUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents:commit`;
 
         const incomingChange = donationAmount;

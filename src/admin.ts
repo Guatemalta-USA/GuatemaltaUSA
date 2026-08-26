@@ -83,7 +83,7 @@ async function renderDonateListTable(container: HTMLElement) {
             );
             if (updateResponse) {
                 const [updatedName, updatedFormId, updatedUrl] = updateResponse;
-                if (updatedName.trim() !== "" && updatedFormId.trim() !== "") {
+                if (updatedName.trim() !== "" && updatedFormId.trim() !== "" && updatedUrl.trim() !== "") {
                     const updatedProjectLink: ProjectInfo = {
                         ...(link.id && { id: link.id }),
                         projectName: updatedName,
@@ -318,7 +318,6 @@ function renderPostsOrProjects(itemArray: Post[] | Project[], container: HTMLEle
     table.append(headers, tbody);
     container.appendChild(table);
 
-    // FIXED: Check if the array is non-empty and its elements are Project instances
     const isProjectList = itemArray.length > 0 && itemArray[0] instanceof Project;
 
     if (isProjectList) {
@@ -401,7 +400,7 @@ async function renderDonateSection() {
         );
         if (projectInfo) {
             const [projectName, formID, projectURLPath] = projectInfo;
-            if (projectName.trim() !== "" && formID.trim() !== "") {
+            if (projectName.trim() !== "" && formID.trim() !== "" && projectURLPath.trim() !== "") {
                 const newProject: ProjectInfo = {
                     projectName: projectName,
                     projectId: projectURLPath,
