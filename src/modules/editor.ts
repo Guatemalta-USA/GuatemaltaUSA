@@ -51,7 +51,7 @@ export class TheEditor {
     private activeImageElement: HTMLImageElement | null = null;
     private trackedImages: Set<string> = new Set();
 
-    // Tab state management
+    // Tab state management (single source of truth)
     private currentTab: 'en' | 'es' = getInitialLanguage();
     private contentState: { en: any[]; es: any[] } = {
         en: [],
@@ -212,6 +212,35 @@ export class TheEditor {
         this.setupToolbarUI();
         this.setupDeleteObserver();
         this.setupImageClickTracking();
+    }
+
+    public setContentState(content: { en?: any[]; es?: any[] } | null | undefined): void {
+        const sanitizeOps = (data: any): any[] => {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data.ops)) return data.ops;
+            if (Array.isArray(data.en)) return data.en;
+            return [];
+        };
+
+        this.contentState = {
+            en: sanitizeOps(content?.en),
+            es: sanitizeOps(content?.es)
+        };
+
+        // Load initial tab content cleanly
+        let initialOps = this.contentState[this.currentTab];
+        if (this.currentTab === 'es' && isEmptyDelta(initialOps)) {
+            initialOps = this.contentState.en;
+        }
+
+        if (this.deleteObserver) this.deleteObserver.disconnect();
+        this.quill.setContents((initialOps || []) as any);
+        this.trackedImages = new Set(this.getImagesFromEditor());
+
+        if (this.deleteObserver) {
+            this.deleteObserver.observe(this.quill.root, { childList: true, subtree: true });
+        }
     }
 
     public getCurrentLanguage(): 'en' | 'es' {

@@ -18,7 +18,6 @@ export class EditPostPage {
     private activeLang: SupportedLanguage = 'en';
     private localizedTitles: LocalizedString = { en: '', es: '' };
     private postAuthor: string = "";
-    private localizedContents: LocalizedContent = { en: null, es: null };
 
     constructor() {
         this.init();
@@ -39,13 +38,11 @@ export class EditPostPage {
             const urlParams = new URLSearchParams(window.location.search);
             this.currentPostId = urlParams.get('id') || urlParams.get('postId');
 
-            // 1. Initialize layout & header/footer components
             await initializeApp("Blog", this.currentPostId ? 'Edit Post' : 'Create Post', {
                 type: "post",
                 postId: this.currentPostId || undefined
             });
 
-            // 2. Authorization check
             const user = await getAuthenticatedUser();
             if (!user) {
                 storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
@@ -60,31 +57,25 @@ export class EditPostPage {
                 return;
             }
 
-            // 3. Reveal the main edit section before mounting Quill
             const editSection = document.getElementById('edit-section');
             if (editSection) {
                 editSection.classList.remove('hide');
             }
 
-            // 4. Populate the "Link to Project" dropdown menu options
             await this.loadProjectOptions();
 
-            // 5. Wait for editor container in DOM
             const container = await this.waitForElement('#editor-container');
             if (!container) {
                 console.error('[EditPostPage] Could not find "#editor-container" in the DOM.');
                 return;
             }
 
-            // 6. Instantiate Quill Editor
             this.editor = new TheEditor();
 
-            // 7. Setup handlers
             this.setupTabNavigation();
             this.setupSaveHandler();
             this.setupDeleteHandler();
 
-            // 8. Load post or prepare blank post
             if (this.currentPostId) {
                 await this.loadPostData(this.currentPostId);
             } else {
@@ -93,17 +84,16 @@ export class EditPostPage {
                     "",
                     Timestamp.now(),
                     Timestamp.now(),
-                    { en: null, es: null },
+                    { en: [], es: [] },
                     ""
                 );
-                await this.loadLanguageView(this.activeLang);
+                this.syncLanguageUI('en');
             }
 
         } catch (err) {
             console.error("[EditPostPage] Initialization failed:", err);
             createMessage({ messageBody: "Failed to load page editor.", location: "main-message", type: "error" });
         } finally {
-            // Remove loading screen after complete setup
             const loading = document.getElementById("loading");
             if (loading) loading.remove();
         }
@@ -124,7 +114,7 @@ export class EditPostPage {
             const projects: Project[] = await getAllProjects();
             projects.forEach((project) => {
                 const option = document.createElement("option");
-                option.text = project.projectTitle.en;
+                option.text = typeof project.projectTitle === 'object' ? project.projectTitle.en : project.projectTitle;
                 if (project.id) option.value = project.id;
                 linkToProjectSelect.add(option);
             });
@@ -140,10 +130,6 @@ export class EditPostPage {
             if (!this.currentPost) {
                 createMessage({ messageBody: "Post not found.", location: "main-message", type: "error" });
                 return;
-            }
-
-            if (this.editor) {
-                this.editor.currentPage = postId;
             }
 
             this.localizedTitles = {
@@ -163,24 +149,38 @@ export class EditPostPage {
                 selectProject.value = this.currentPost.linkedProjectId;
             }
 
-            this.localizedContents = {
-                en: this.currentPost.content?.en || null,
-                es: this.currentPost.content?.es || null
-            };
+            // Normalize legacy strings into Quill Delta format before giving to editor
+            if (this.editor && this.currentPost.content) {
+                this.editor.currentPage = postId;
+
+                const normalizedContent: LocalizedContent = {
+                    en: this.normalizeToDelta(this.currentPost.content.en),
+                    es: this.normalizeToDelta(this.currentPost.content.es)
+                };
+
+                this.editor.setContentState(normalizedContent);
+            }
 
             const deleteBtn = document.getElementById('delete-btn');
             if (deleteBtn) {
                 deleteBtn.style.display = 'inline-block';
             }
 
-            await this.loadLanguageView(this.activeLang);
+            this.syncLanguageUI('en');
         } catch (error) {
             console.error("Error loading post by ID:", error);
             createMessage({ messageBody: "Failed to load post details.", location: "main-message", type: "error" });
         }
     }
 
-    private async saveCurrentTabState(): Promise<void> {
+    private normalizeToDelta(rawContent: string | any[] | undefined | null): any[] {
+        if (!rawContent) return [];
+        if (Array.isArray(rawContent)) return rawContent;
+        if (typeof rawContent === 'string') return [{ insert: rawContent }];
+        return [];
+    }
+
+    private syncMetaData(): void {
         const titleInput = document.getElementById('post-title-input') as HTMLInputElement | null;
         if (titleInput) {
             this.localizedTitles[this.activeLang] = titleInput.value.trim();
@@ -190,13 +190,9 @@ export class EditPostPage {
         if (authorInput) {
             this.postAuthor = authorInput.value.trim();
         }
-
-        if (this.editor) {
-            this.localizedContents[this.activeLang] = await this.editor.prepareContentForSave();
-        }
     }
 
-    private async loadLanguageView(lang: SupportedLanguage): Promise<void> {
+    private syncLanguageUI(lang: SupportedLanguage): void {
         this.activeLang = lang;
 
         const titleInput = document.getElementById('post-title-input') as HTMLInputElement | null;
@@ -205,16 +201,8 @@ export class EditPostPage {
         }
 
         if (this.editor) {
-            const content = this.localizedContents[lang];
-            if (content) {
-                if (typeof content === 'string') {
-                    this.editor.setHTML(content);
-                } else {
-                    this.editor.quill.setContents(content);
-                }
-            } else {
-                this.editor.quill.setText('');
-            }
+            const targetTab = (lang.slice(0, 2).toLowerCase() === 'es') ? 'es' : 'en';
+            this.editor.switchLanguageTab(targetTab);
         }
     }
 
@@ -222,14 +210,15 @@ export class EditPostPage {
         const btnEn = document.getElementById('tab-lang-en');
         const btnEs = document.getElementById('tab-lang-es');
 
-        const handleTabSwitch = async (targetLang: SupportedLanguage, targetBtn: HTMLElement, otherBtn: HTMLElement | null) => {
+        const handleTabSwitch = (targetLang: SupportedLanguage, targetBtn: HTMLElement, otherBtn: HTMLElement | null) => {
             if (this.activeLang === targetLang) return;
-            await this.saveCurrentTabState();
+
+            this.syncMetaData();
 
             targetBtn.classList.add('active');
             if (otherBtn) otherBtn.classList.remove('active');
 
-            await this.loadLanguageView(targetLang);
+            this.syncLanguageUI(targetLang);
         };
 
         if (btnEn) {
@@ -265,17 +254,19 @@ export class EditPostPage {
             }
 
             try {
-                await this.saveCurrentTabState();
+                this.syncMetaData();
 
                 const selectProject = document.getElementById('link-to-project') as HTMLSelectElement | null;
                 const linkedProjectId = selectProject ? selectProject.value : '';
+
+                const localizedContents: LocalizedContent = await this.editor.prepareContentForSave();
 
                 const postToSave = new Post(
                     this.localizedTitles,
                     this.postAuthor,
                     this.currentPost?.publishDate ?? Timestamp.now(),
                     Timestamp.now(),
-                    this.localizedContents,
+                    localizedContents,
                     linkedProjectId
                 );
 
@@ -319,9 +310,7 @@ export class EditPostPage {
                 return;
             }
 
-            const postTitle = this.currentPost?.getTitle?.(this.activeLang)
-                || (typeof this.currentPost?.postTitle === 'object' ? this.currentPost.postTitle[this.activeLang] : '')
-                || 'Post';
+            const postTitle = this.localizedTitles[this.activeLang] || 'Post';
 
             const confirmed = await confirmDeleteModal(
                 `Delete "${postTitle}"?`,
@@ -342,7 +331,7 @@ export class EditPostPage {
                     navigateTo('/blog');
                 } catch (err) {
                     console.error("Delete failed:", err);
-                    createMessage({messageBody: "Failed to delete the post. Please try again.", location: "main-message", type: "error"});
+                    createMessage({ messageBody: "Failed to delete the post. Please try again.", location: "main-message", type: "error" });
                     deleteBtn.innerText = "Delete Post";
                     (deleteBtn as HTMLButtonElement).disabled = false;
                 }

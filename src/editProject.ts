@@ -3,7 +3,7 @@ import { TheEditor } from './modules/editor.js';
 import { deleteProject, getProjectById, saveProject } from './firebase/firebaseService.js';
 import { Timestamp } from 'firebase/firestore';
 import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils.js';
-import { Project, type LocalizedString, type SupportedLanguage, type LocalizedContent, } from './models.js';
+import { Project, type LocalizedString, type SupportedLanguage, type LocalizedContent } from './models.js';
 import { navigateTo } from './modules/navigate.js';
 import { getAuthenticatedUser, getUserRole } from './firebase/authService.js';
 
@@ -13,7 +13,6 @@ export class EditProjectPage {
     private currentProject: Project | null = null;
     private activeLang: SupportedLanguage = 'en';
     private localizedTitles: LocalizedString = { en: '', es: '' };
-    private localizedContents: LocalizedContent = { en: null, es: null };
 
     constructor() {
         this.init();
@@ -75,7 +74,7 @@ export class EditProjectPage {
             } else {
                 this.currentProject = new Project(
                     { en: '', es: '' },
-                    { en: null, es: null },
+                    { en: [], es: [] },
                     true,
                     false,
                     null,
@@ -83,7 +82,7 @@ export class EditProjectPage {
                     "",
                     Timestamp.now()
                 );
-                this.loadLanguageView(this.activeLang);
+                this.syncLanguageUI('en');
             }
 
         } catch (error) {
@@ -98,34 +97,36 @@ export class EditProjectPage {
 
             if (!this.currentProject) {
                 createMessage({ messageBody: "Project not found", location: "main-message", type: "error" });
-                return
-            }
-
-            if (this.editor) {
-                this.editor.currentPage = projectId;
+                return;
             }
 
             this.localizedTitles = {
                 en: this.currentProject.projectTitle?.en || '',
                 es: this.currentProject.projectTitle?.es || ''
+            };
+
+            if (this.editor && this.currentProject.content) {
+                this.editor.currentPage = projectId;
+
+                // Normalize legacy string content into Quill Delta structures
+                const normalizedContent: LocalizedContent = {
+                    en: this.normalizeToDelta(this.currentProject.content.en),
+                    es: this.normalizeToDelta(this.currentProject.content.es)
+                };
+
+                this.editor.setContentState(normalizedContent);
             }
 
             const statusToggle = document.getElementById('project-status-toggle') as HTMLInputElement | null;
-            if (statusToggle) {
-                statusToggle.checked = Boolean(this.currentProject.isCurrent);
-            }
+            if (statusToggle) statusToggle.checked = Boolean(this.currentProject.isCurrent);
 
             const publishedToggle = document.getElementById('published-toggle') as HTMLInputElement | null;
-            if (publishedToggle) {
-                publishedToggle.checked = Boolean(this.currentProject.published);
-            }
+            if (publishedToggle) publishedToggle.checked = Boolean(this.currentProject.published);
 
             const deleteBtn = document.getElementById('delete-btn');
-            if (deleteBtn) {
-                deleteBtn.style.display = 'inline-block';
-            }
+            if (deleteBtn) deleteBtn.style.display = 'inline-block';
 
-            this.loadLanguageView(this.activeLang);
+            this.syncLanguageUI('en');
 
         } catch (error) {
             console.error("Error loading project by ID:", error);
@@ -133,37 +134,42 @@ export class EditProjectPage {
         }
     }
 
-    private async saveCurrentTabState(): Promise<void> {
+    private normalizeToDelta(rawContent: string | any[] | undefined | null): any[] {
+        if (!rawContent) {
+            return [];
+        }
+
+        // If it's already an array (Quill Delta operations)
+        if (Array.isArray(rawContent)) {
+            return rawContent;
+        }
+
+        // If legacy string content, convert to a single insert operation
+        if (typeof rawContent === 'string') {
+            return [{ insert: rawContent }];
+        }
+
+        return [];
+    }
+
+    private syncTitleInput(): void {
         const titleInput = document.getElementById('project-title-input') as HTMLInputElement | null;
         if (titleInput) {
             this.localizedTitles[this.activeLang] = titleInput.value.trim();
         }
-
-        if (this.editor) {
-            this.localizedContents[this.activeLang] = await this.editor.prepareContentForSave();
-        }
     }
 
-
-    private async loadLanguageView(lang: SupportedLanguage): Promise<void> {
+    private syncLanguageUI(lang: SupportedLanguage): void {
         this.activeLang = lang;
 
-        const titleInput = document.getElementById('post-title-input') as HTMLInputElement | null;
+        const titleInput = document.getElementById('project-title-input') as HTMLInputElement | null;
         if (titleInput) {
             titleInput.value = this.localizedTitles[lang] || '';
         }
 
         if (this.editor) {
-            const content = this.localizedContents[lang];
-            if (content) {
-                if (typeof content === 'string') {
-                    this.editor.setHTML(content);
-                } else {
-                    this.editor.quill.setContents(content);
-                }
-            } else {
-                this.editor.quill.setText('');
-            }
+            const targetTab = (lang.slice(0, 2).toLowerCase() === 'es') ? 'es' : 'en';
+            this.editor.switchLanguageTab(targetTab);
         }
     }
 
@@ -171,14 +177,16 @@ export class EditProjectPage {
         const btnEn = document.getElementById('tab-lang-en');
         const btnEs = document.getElementById('tab-lang-es');
 
-        const handleTabSwitch = async (targetLang: SupportedLanguage, targetBtn: HTMLElement, otherBtn: HTMLElement | null) => {
+        const handleTabSwitch = (targetLang: SupportedLanguage, targetBtn: HTMLElement, otherBtn: HTMLElement | null) => {
             if (this.activeLang === targetLang) return;
-            await this.saveCurrentTabState();
+
+            // Persist title for outgoing language
+            this.syncTitleInput();
 
             targetBtn.classList.add('active');
             if (otherBtn) otherBtn.classList.remove('active');
 
-            await this.loadLanguageView(targetLang);
+            this.syncLanguageUI(targetLang);
         };
 
         if (btnEn) {
@@ -197,39 +205,34 @@ export class EditProjectPage {
     }
 
     private setUpCheckboxes(): void {
-        const projectStatusCheckbox = document.getElementById("project-status-toggle") as HTMLElement;
-        const projectPublishedCheckbox = document.getElementById("published-toggle") as HTMLElement;
+        const projectStatusCheckbox = document.getElementById("project-status-toggle") as HTMLElement | null;
+        const projectPublishedCheckbox = document.getElementById("published-toggle") as HTMLElement | null;
 
-        projectStatusCheckbox.addEventListener("change", (e) => {
-            const target = e.target as HTMLInputElement;
-            const currentLabel = document.getElementById("current-status-label") as HTMLElement;
-            if (this.currentProject) {
-                if (target.checked) {
-                    this.currentProject.isCurrent = true;
-                    currentLabel.textContent = "Current Project";
-                } else {
-                    this.currentProject.isCurrent = false;
-                    currentLabel.textContent = "Past Project";
+        if (projectStatusCheckbox) {
+            projectStatusCheckbox.addEventListener("change", (e) => {
+                const target = e.target as HTMLInputElement;
+                const currentLabel = document.getElementById("current-status-label") as HTMLElement | null;
+                if (this.currentProject) {
+                    this.currentProject.isCurrent = target.checked;
+                    if (currentLabel) {
+                        currentLabel.textContent = target.checked ? "Current Project" : "Past Project";
+                    }
                 }
-            }
+            });
+        }
 
-        });
-
-        projectPublishedCheckbox.addEventListener("change", (e) => {
-            const target = e.target as HTMLInputElement;
-            const publishedLabel = document.getElementById("published-label") as HTMLElement;
-            if (this.currentProject) {
-                if (target.checked) {
-                    this.currentProject.published = true;
-                    publishedLabel.textContent = "Published";
-                    
-                } else {
-                    this.currentProject.published = false;
-                    publishedLabel.textContent = "Unpublished";
+        if (projectPublishedCheckbox) {
+            projectPublishedCheckbox.addEventListener("change", (e) => {
+                const target = e.target as HTMLInputElement;
+                const publishedLabel = document.getElementById("published-label") as HTMLElement | null;
+                if (this.currentProject) {
+                    this.currentProject.published = target.checked;
+                    if (publishedLabel) {
+                        publishedLabel.textContent = target.checked ? "Published" : "Unpublished";
+                    }
                 }
-            }
-
-        })
+            });
+        }
     }
 
     private setupSaveHandler(): void {
@@ -245,11 +248,17 @@ export class EditProjectPage {
             }
 
             try {
-                await this.saveCurrentTabState();
+                // Ensure current inputs/titles are updated in local state
+                this.syncTitleInput();
+
+                // Extract sanitized full localized contents (EN and ES) directly from editor instance
+                const localizedContents: LocalizedContent = this.editor
+                    ? await this.editor.prepareContentForSave()
+                    : { en: [], es: [] };
 
                 const projectToSave = new Project(
                     this.localizedTitles,
-                    this.localizedContents,
+                    localizedContents,
                     this.currentProject.isCurrent,
                     this.currentProject.published,
                     this.currentProject.goalBar,
@@ -259,7 +268,7 @@ export class EditProjectPage {
                 );
 
                 if (this.currentProjectId) {
-                    projectToSave.id = this.currentProjectId
+                    projectToSave.id = this.currentProjectId;
                 }
 
                 const savedId = await saveProject(projectToSave);
@@ -284,7 +293,6 @@ export class EditProjectPage {
                 createMessage({ messageBody: "Error saving project changes.", location: "main-message", type: "error" });
             }
         });
-
     }
 
     private setupDeleteHandler(): void {
@@ -294,13 +302,12 @@ export class EditProjectPage {
         deleteBtn.style.display = this.currentProjectId ? 'inline-block' : 'none';
 
         deleteBtn.addEventListener("click", async () => {
-
             if (!this.currentProjectId) {
                 console.warn("Delete blocked: No valid currentProjectId found.");
                 return;
             }
 
-            const projectTitle = this.currentProject?.getTitle(this.activeLang) || 'Project';
+            const projectTitle = this.localizedTitles[this.activeLang] || 'Project';
 
             const confirmed = await confirmDeleteModal(
                 `Delete "${projectTitle}"?`,
