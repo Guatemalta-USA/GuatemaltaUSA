@@ -165,6 +165,29 @@ export async function initializeApp(
 
     viewSection.innerHTML = editor.getHTML();
 
+    // Unified Language Tab Listener above inputs
+    const tabContainer = document.getElementById('language-tabs');
+    if (tabContainer) {
+      const tabButtons = tabContainer.querySelectorAll<HTMLButtonElement>('.tab-btn');
+      tabButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+          const selectedLang = button.getAttribute('data-lang') as 'en' | 'es';
+          if (!selectedLang) return;
+
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+
+          if (currentPost && titleInput) {
+            titleInput.value = currentPost.getTitle(selectedLang);
+          } else if (currentProject && projectTitleInput) {
+            projectTitleInput.value = currentProject.getTitle(selectedLang);
+          }
+
+          await editor.setLanguage(selectedLang);
+        });
+      });
+    }
+
     // Listen for global language changes and re-sync editor content & DOM
     i18n.on('languageChanged', (lng: string) => {
       const targetLang = lng.startsWith('es') ? 'es' : 'en';
@@ -194,10 +217,11 @@ export async function initializeApp(
           } else if (editorConfig.type === 'post') {
             const localizedContent = await editor.prepareContentForSave();
             const titleValue = titleInput?.value || "Untitled Post";
-            
+            const currentTabLang = tabContainer?.querySelector('.tab-btn.active')?.getAttribute('data-lang') || 'en';
+
             const updatedPostTitle = {
-              en: titleValue,
-              es: currentPost?.postTitle?.es || titleValue
+              en: currentTabLang === 'en' ? titleValue : (currentPost?.postTitle?.en || titleValue),
+              es: currentTabLang === 'es' ? titleValue : (currentPost?.postTitle?.es || titleValue)
             };
 
             const linkToProjectSelect = document.getElementById("link-to-project") as HTMLSelectElement;
@@ -216,10 +240,11 @@ export async function initializeApp(
           } else if (editorConfig.type === 'project') {
             const localizedContent = await editor.prepareContentForSave();
             const titleValue = projectTitleInput?.value || "Untitled Project";
+            const currentTabLang = tabContainer?.querySelector('.tab-btn.active')?.getAttribute('data-lang') || 'en';
 
             const updatedTitle = {
-              en: titleValue,
-              es: currentProject?.projectTitle?.es || titleValue
+              en: currentTabLang === 'en' ? titleValue : (currentProject?.projectTitle?.en || titleValue),
+              es: currentTabLang === 'es' ? titleValue : (currentProject?.projectTitle?.es || titleValue)
             };
 
             const projectToSave = new Project(

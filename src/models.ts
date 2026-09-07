@@ -350,13 +350,13 @@ export class Project {
         isCurrent: boolean = true,
         published: boolean = true,
         goalBar: string | null = null,
-        orderIndex: number,
+        orderIndex: number = 0,
         id?: string,
         updatedAt?: Timestamp | Date
     ) {
         this.id = id;
-        this.projectTitle = projectTitle;
-        this.content = content;
+        this.projectTitle = projectTitle || { en: '', es: '' };
+        this.content = content || { en: '', es: '' };
         this.isCurrent = isCurrent;
         this.published = published;
         this.goalBar = goalBar;
@@ -432,16 +432,31 @@ export class Project {
 
     private sanitizeData(data: any): any {
         if (data === null || data === undefined) {
-            return data;
+            return [];
         }
 
+        // 1. If it's already an array, recursively sanitize items
         if (Array.isArray(data)) {
             return data.map((item) => this.sanitizeData(item));
         }
 
-        if (typeof data === 'object') {
+        // 2. If it's a Quill Delta or object containing ops, extract ops array directly
+        if (typeof data === 'object' && data !== null) {
+            if (Array.isArray(data.ops)) {
+                return this.sanitizeData(data.ops);
+            }
             if (typeof data.toJSON === 'function') {
-                return JSON.parse(JSON.stringify(data.toJSON()));
+                const json = data.toJSON();
+                if (json && Array.isArray(json.ops)) {
+                    return this.sanitizeData(json.ops);
+                }
+            }
+            // 3. Unwrap accidentally nested 'en' or 'es' keys inside the lang value
+            if (Array.isArray(data.en)) {
+                return this.sanitizeData(data.en);
+            }
+            if (Array.isArray(data.es)) {
+                return this.sanitizeData(data.es);
             }
 
             const cleanObj: Record<string, any> = {};
@@ -473,12 +488,10 @@ export class Project {
     }
 
     static fromFirestore(id: string, data: Record<string, any>): Project {
-        // Parse Title safely from legacy string or localized map
         const title: LocalizedString = typeof data.projectTitle === 'object' && data.projectTitle !== null
             ? { en: data.projectTitle.en || '', es: data.projectTitle.es || '' }
             : { en: typeof data.projectTitle === 'string' ? data.projectTitle : '', es: '' };
 
-        // Parse Content safely checking both data.content and legacy data.description
         const rawContentData = data.content ?? data.description ?? data.projectDescription;
         let content: LocalizedContent | LocalizedString;
 

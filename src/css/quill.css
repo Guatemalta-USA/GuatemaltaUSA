@@ -66,6 +66,11 @@
   flex-direction: column;
 }
 
+#editor-container .ql-container {
+    min-height: 300px;
+    font-size: 1rem;
+}
+
 .ql-container.ql-snow {
   border: 1px solid var(--quill-border) !important;
   background-color: var(--main-background-color);

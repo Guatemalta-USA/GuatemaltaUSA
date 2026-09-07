@@ -1,10 +1,10 @@
 import { initializeApp } from './main.js';
 import { TheEditor } from './modules/editor.js';
 import { deleteProject, getProjectById, saveProject } from './firebase/firebaseService.js';
-import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils.js';
-import { Project, type LocalizedString, type LocalizedContent, type SupportedLanguage } from './models.js';
-import { navigateTo } from './modules/navigate.js';
 import { Timestamp } from 'firebase/firestore';
+import { confirmDeleteModal, createMessage, storeMessage } from './modules/utils.js';
+import { Project, type LocalizedString, type SupportedLanguage, type LocalizedContent, } from './models.js';
+import { navigateTo } from './modules/navigate.js';
 import { getAuthenticatedUser, getUserRole } from './firebase/authService.js';
 
 export class EditProjectPage {
@@ -19,61 +19,76 @@ export class EditProjectPage {
         this.init();
     }
 
+    private async waitForElement(selector: string, timeout = 3000): Promise<HTMLElement | null> {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const el = document.querySelector(selector) as HTMLElement | null;
+            if (el) return el;
+            await new Promise(res => setTimeout(res, 50));
+        }
+        return null;
+    }
+
     private async init(): Promise<void> {
         try {
-            const user = await getAuthenticatedUser();
+            const urlParams = new URLSearchParams(window.location.search);
+            this.currentProjectId = urlParams.get('id') || urlParams.get('projectId');
 
+            await initializeApp("Impact", this.currentProjectId ? 'Edit Project' : 'Create Project', {
+                type: "project",
+                projectId: this.currentProjectId || undefined
+            });
+
+            const user = await getAuthenticatedUser();
             if (!user) {
                 storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
-                navigateTo("/impact");
+                navigateTo("/blog");
                 return;
             }
-            const role = await getUserRole(user.uid);
 
+            const role = await getUserRole(user.uid);
             if (role !== 'admin') {
                 storeMessage({ messageBody: "Access denied. Admin privileges are required", location: "main-message", type: "error", i18n: "access_denied" });
                 navigateTo("/impact");
                 return;
             }
-        } catch (authError) {
-            console.error("Authorization check failed:", authError);
-            storeMessage({ messageBody: "An error occurred verifying your permissions.", location: "main-message", type: "error" });
-            navigateTo("/impact");
-            return;
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        this.currentProjectId = urlParams.get('id') || urlParams.get('projectId');
 
-        await initializeApp('Impact', this.currentProjectId ? 'Edit Project' : 'Create Project', {
-            type: 'project',
-            projectId: this.currentProjectId || undefined
-        });
+            const editSection = document.getElementById('edit-section');
+            if (editSection) {
+                editSection.classList.remove('hide');
+            }
 
-        const container = document.getElementById('editor-container');
-        if (container) {
+            const container = await this.waitForElement('#editor-container');
+            if (!container) {
+                console.error('[EditProjectPage] Could not find "#editor-container" in the DOM.');
+                return;
+            }
+
             this.editor = new TheEditor();
-        } else {
-            console.error('Editor container "#editor-container" not found.');
-        }
+            this.setupTabNavigation();
+            this.setupSaveHandler();
+            this.setupDeleteHandler();
+            this.setUpCheckboxes();
 
-        this.setupTabNavigation();
-        this.setupSaveHandler();
-        this.setupDeleteHandler();
+            if (this.currentProjectId) {
+                await this.loadProjectData(this.currentProjectId);
+            } else {
+                this.currentProject = new Project(
+                    { en: '', es: '' },
+                    { en: null, es: null },
+                    true,
+                    false,
+                    null,
+                    0,
+                    "",
+                    Timestamp.now()
+                );
+                this.loadLanguageView(this.activeLang);
+            }
 
-        if (this.currentProjectId) {
-            await this.loadProjectData(this.currentProjectId);
-        } else {
-            this.currentProject = new Project(
-                { en: '', es: '' },
-                { en: null, es: null },
-                true,
-                false,
-                null,
-                0,
-                "",
-                Timestamp.now()
-            );
-            this.loadLanguageView(this.activeLang);
+        } catch (error) {
+            console.error("[EditProjectPage] Initialization failed:", error);
+            createMessage({ messageBody: "Failed to load page editor.", location: "main-message", type: "error" });
         }
     }
 
@@ -82,8 +97,8 @@ export class EditProjectPage {
             this.currentProject = await getProjectById(projectId);
 
             if (!this.currentProject) {
-                createMessage({ messageBody: "Project not found.", location: "main-message", type: "error" });
-                return;
+                createMessage({ messageBody: "Project not found", location: "main-message", type: "error" });
+                return
             }
 
             if (this.editor) {
@@ -93,12 +108,7 @@ export class EditProjectPage {
             this.localizedTitles = {
                 en: this.currentProject.projectTitle?.en || '',
                 es: this.currentProject.projectTitle?.es || ''
-            };
-
-            this.localizedContents = {
-                en: this.currentProject.content?.en || null,
-                es: this.currentProject.content?.es || null
-            };
+            }
 
             const statusToggle = document.getElementById('project-status-toggle') as HTMLInputElement | null;
             if (statusToggle) {
@@ -110,7 +120,7 @@ export class EditProjectPage {
                 publishedToggle.checked = Boolean(this.currentProject.published);
             }
 
-            const deleteBtn = document.getElementById('delete-post-btn');
+            const deleteBtn = document.getElementById('delete-btn');
             if (deleteBtn) {
                 deleteBtn.style.display = 'inline-block';
             }
@@ -134,10 +144,11 @@ export class EditProjectPage {
         }
     }
 
+
     private async loadLanguageView(lang: SupportedLanguage): Promise<void> {
         this.activeLang = lang;
 
-        const titleInput = document.getElementById('project-title-input') as HTMLInputElement | null;
+        const titleInput = document.getElementById('post-title-input') as HTMLInputElement | null;
         if (titleInput) {
             titleInput.value = this.localizedTitles[lang] || '';
         }
@@ -185,62 +196,95 @@ export class EditProjectPage {
         }
     }
 
+    private setUpCheckboxes(): void {
+        const projectStatusCheckbox = document.getElementById("project-status-toggle") as HTMLElement;
+        const projectPublishedCheckbox = document.getElementById("published-toggle") as HTMLElement;
+
+        projectStatusCheckbox.addEventListener("change", (e) => {
+            const target = e.target as HTMLInputElement;
+            const currentLabel = document.getElementById("current-status-label") as HTMLElement;
+            if (this.currentProject) {
+                if (target.checked) {
+                    this.currentProject.isCurrent = true;
+                    currentLabel.textContent = "Current Project";
+                } else {
+                    this.currentProject.isCurrent = false;
+                    currentLabel.textContent = "Past Project";
+                }
+            }
+
+        });
+
+        projectPublishedCheckbox.addEventListener("change", (e) => {
+            const target = e.target as HTMLInputElement;
+            const publishedLabel = document.getElementById("published-label") as HTMLElement;
+            if (this.currentProject) {
+                if (target.checked) {
+                    this.currentProject.published = true;
+                    publishedLabel.textContent = "Published";
+                    
+                } else {
+                    this.currentProject.published = false;
+                    publishedLabel.textContent = "Unpublished";
+                }
+            }
+
+        })
+    }
+
     private setupSaveHandler(): void {
         const saveBtn = document.getElementById('save-btn');
         if (!saveBtn) return;
 
-        saveBtn.addEventListener('click', async (e: Event) => {
+        saveBtn.addEventListener("click", async (e: Event) => {
             e.preventDefault();
 
             if (!this.currentProject) {
-                createMessage({messageBody: "No active project loaded to save.", location: "main-message", type: "error"});
+                createMessage({ messageBody: "No active project loaded to save", location: "main-message", type: "error" });
                 return;
             }
-
-            if (!this.editor) {
-                createMessage({messageBody: "Editor instance missing.", location: "main-message", type: "error"});
-                return;
-            }
-
-            const statusToggle = document.getElementById('project-status-toggle') as HTMLInputElement | null;
-            const publishedToggle = document.getElementById('published-toggle') as HTMLInputElement | null;
 
             try {
                 await this.saveCurrentTabState();
 
-                const isCurrent = statusToggle ? statusToggle.checked : this.currentProject.isCurrent;
-                const isPublished = publishedToggle ? publishedToggle.checked : this.currentProject.published;
-
                 const projectToSave = new Project(
                     this.localizedTitles,
                     this.localizedContents,
-                    isCurrent,
-                    isPublished,
-                    this.currentProject.goalBar ?? null,
-                    this.currentProject.orderIndex ?? 0,
-                    this.currentProjectId || undefined
+                    this.currentProject.isCurrent,
+                    this.currentProject.published,
+                    this.currentProject.goalBar,
+                    this.currentProject.orderIndex,
+                    "",
+                    Timestamp.now()
                 );
+
+                if (this.currentProjectId) {
+                    projectToSave.id = this.currentProjectId
+                }
 
                 const savedId = await saveProject(projectToSave);
 
                 if (!this.currentProjectId) {
                     this.currentProjectId = savedId;
-                    this.currentProject.id = savedId;
+                    projectToSave.id = savedId;
+                    this.currentProject = projectToSave;
                     if (this.editor) {
                         this.editor.currentPage = savedId;
                     }
                     window.history.replaceState({}, '', `?id=${savedId}`);
 
-                    const deleteBtn = document.getElementById('delete-post-btn');
+                    const deleteBtn = document.getElementById('delete-btn');
                     if (deleteBtn) deleteBtn.style.display = 'inline-block';
                 }
 
-                createMessage({messageBody: "Project saved successfully!", location: "main-message", type: "check_circle", autoCloseSeconds: 5});
+                createMessage({ messageBody: "Project saved successfully", location: "main-message", type: "check_circle" });
+
             } catch (error) {
                 console.error("Failed to save project:", error);
-                createMessage({messageBody: "Error saving project changes.", location: "main-message", type: "error"});
+                createMessage({ messageBody: "Error saving project changes.", location: "main-message", type: "error" });
             }
         });
+
     }
 
     private setupDeleteHandler(): void {
@@ -256,9 +300,7 @@ export class EditProjectPage {
                 return;
             }
 
-            const projectTitle = this.currentProject?.getTitle?.(this.activeLang)
-                || (typeof this.currentProject?.projectTitle === 'object' ? this.currentProject.projectTitle[this.activeLang] : '')
-                || 'Project';
+            const projectTitle = this.currentProject?.getTitle(this.activeLang) || 'Project';
 
             const confirmed = await confirmDeleteModal(
                 `Delete "${projectTitle}"?`,
@@ -276,11 +318,11 @@ export class EditProjectPage {
 
                     await deleteProject(this.currentProjectId);
 
-                    storeMessage({messageBody: "Project deleted successfully", location: "main-message", type: "delete"});
+                    storeMessage({ messageBody: "Project deleted successfully", location: "main-message", type: "delete" });
                     navigateTo('/impact');
                 } catch (err) {
                     console.error("Delete failed:", err);
-                    createMessage({messageBody: "Failed to delete the project. Please try again.", location: "main-message", type: "error"});
+                    createMessage({ messageBody: "Failed to delete the project. Please try again.", location: "main-message", type: "error" });
                     deleteBtn.innerText = "Delete Project";
                     (deleteBtn as HTMLButtonElement).disabled = false;
                 }

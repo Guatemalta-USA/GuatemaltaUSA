@@ -192,3 +192,14 @@ table li {
 .edit-btn { background: var(--info-background); color: white; }
 .delete-btn { background: var(--error-background); color: white; }
 .edit-btn:hover, .delete-btn:hover { filter: brightness(1.15); }
+
+
+/* =========================================
+   Toggle Switches
+   ========================================= */
+   #toggles {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin: 10px 0;
+   }

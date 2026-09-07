@@ -29,7 +29,6 @@ export function isEmptyDelta(deltaObj: any): boolean {
     if (!Array.isArray(ops) || ops.length === 0) {
         return true;
     }
-    // Quill represents an empty doc as a single newline insert operation or whitespace
     if (ops.length === 1) {
         const op = ops[0];
         if (typeof op.insert === 'string' && (op.insert === '\n' || op.insert.trim() === '')) {
@@ -64,9 +63,6 @@ export class TheEditor {
         if (!container) {
             throw new Error(`Editor container with ID "#editor-container" was not found in the DOM.`);
         }
-
-        // Setup UI Tabs above editor container
-        this.setupLanguageTabs(container);
 
         this.quill = new Quill(container, {
             theme: 'snow',
@@ -218,34 +214,11 @@ export class TheEditor {
         this.setupImageClickTracking();
     }
 
-    private setupLanguageTabs(container: HTMLElement) {
-        let tabsContainer = document.getElementById('editor-language-tabs');
-        if (!tabsContainer) {
-            tabsContainer = makeElement("div", "editor-language-tabs", "language-tabs", null);
-            container.parentNode?.insertBefore(tabsContainer, container);
-        }
-
-        tabsContainer.innerHTML = '';
-
-        const createTabBtn = (lang: 'en' | 'es', label: string) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = label;
-            btn.className = `tab-btn ${this.currentTab === lang ? 'active' : ''}`;
-
-            btn.onclick = (e) => {
-                e.preventDefault();
-                this.switchLanguageTab(lang);
-            };
-
-            return btn;
-        };
-
-        tabsContainer.appendChild(createTabBtn('en', 'English'));
-        tabsContainer.appendChild(createTabBtn('es', 'Español'));
+    public getCurrentLanguage(): 'en' | 'es' {
+        return this.currentTab;
     }
 
-    private switchLanguageTab(lang: 'en' | 'es') {
+    public switchLanguageTab(lang: 'en' | 'es') {
         if (this.currentTab === lang) return;
 
         // Save current tab editor content into memory
@@ -253,12 +226,6 @@ export class TheEditor {
 
         // Switch active target
         this.currentTab = lang;
-
-        // Update tab buttons state
-        const container = document.getElementById('editor-container');
-        if (container) {
-            this.setupLanguageTabs(container);
-        }
 
         // Temporarily pause image delete tracking when swapping document contents
         if (this.deleteObserver) this.deleteObserver.disconnect();
@@ -504,19 +471,17 @@ export class TheEditor {
         const currentOps = this.quill.getContents().ops;
         this.contentState[this.currentTab] = Array.isArray(currentOps) ? currentOps : [];
 
-        // Helper to force extraction of pure array ops
         const sanitizeOps = (data: any): any[] => {
             if (!data) return [];
             if (Array.isArray(data)) return data;
             if (Array.isArray(data.ops)) return data.ops;
-            if (Array.isArray(data.en)) return data.en; // Unwrap accidentally nested 'en'
+            if (Array.isArray(data.en)) return data.en;
             return [];
         };
 
         const cleanEn = sanitizeOps(this.contentState.en);
         const cleanEs = sanitizeOps(this.contentState.es);
 
-        // Collect all active images across both language tabs
         const enImages = this.extractImagesFromOps(cleanEn);
         const esImages = this.extractImagesFromOps(cleanEs);
         const finalImages = new Set([...enImages, ...esImages]);
@@ -547,7 +512,6 @@ export class TheEditor {
         try {
             const data = await getPageContents(pageName);
 
-            // Temporarily pause delete tracking during initial contents load
             if (this.deleteObserver) this.deleteObserver.disconnect();
 
             if (data && data.content) {
@@ -559,7 +523,6 @@ export class TheEditor {
                 this.contentState = { en: [], es: [] };
             }
 
-            // Set initial content with fallback to EN if active tab (ES) is empty
             let initialOps = this.contentState[this.currentTab];
             if (this.currentTab === 'es' && isEmptyDelta(initialOps)) {
                 initialOps = this.contentState.en;
@@ -567,7 +530,6 @@ export class TheEditor {
 
             this.quill.setContents((initialOps || []) as any);
 
-            // Resync tracked images and reconnect observer
             this.trackedImages = new Set(this.getImagesFromEditor());
             this.deletedImageURLs = [];
             if (this.deleteObserver) {
@@ -626,11 +588,6 @@ export class TheEditor {
             this.deleteObserver = null;
         }
         this.activeImageElement = null;
-
-        const tabsContainer = document.getElementById('editor-language-tabs');
-        if (tabsContainer) {
-            tabsContainer.remove();
-        }
     }
 
     public getHTML(): string {

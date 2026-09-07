@@ -981,7 +981,8 @@ textarea {
 /* =========================================
    15. LANGUAGE TOGGLE SWITCH
    ========================================= */
-label.lang-switch {
+label.lang-switch,
+.switch {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -995,7 +996,8 @@ label.lang-switch {
   border: none !important;
 }
 
-input[type="checkbox"].lang-toggle-input {
+input[type="checkbox"].lang-toggle-input,
+input[type="checkbox"].toggle-input {
   position: absolute !important;
   opacity: 0 !important;
   width: 0 !important;
@@ -1008,7 +1010,8 @@ input[type="checkbox"].lang-toggle-input {
   -webkit-appearance: none !important;
 }
 
-label.lang-switch .slider {
+label.lang-switch .slider,
+.slider {
   position: relative !important;
   display: inline-block !important;
   width: 42px !important;
@@ -1019,7 +1022,8 @@ label.lang-switch .slider {
   transition: background-color 0.25s ease !important;
 }
 
-label.lang-switch .slider::before {
+label.lang-switch .slider::before,
+.slider::before {
   content: "" !important;
   display: block !important;
   position: absolute !important;
@@ -1037,11 +1041,17 @@ label.lang-switch input.lang-toggle-input:checked + .slider {
   background-color: #888888 !important;
 }
 
-label.lang-switch input.lang-toggle-input:checked + .slider::before {
+input.toggle-input:checked + .slider {
+  background-color: var(--green-accent) !important;
+}
+
+label.lang-switch input.lang-toggle-input:checked + .slider::before,
+input.toggle-input:checked + .slider::before {
   transform: translateX(20px) !important;
 }
 
-label.lang-switch .lang-text {
+label.lang-switch .lang-text,
+label.switch {
   font-family: "Roboto", sans-serif !important;
   font-size: 0.95rem !important;
   font-weight: 700 !important;
