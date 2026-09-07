@@ -1,10 +1,10 @@
 import { Timestamp, serverTimestamp, type FirestoreDataConverter } from "firebase/firestore";
 export type MessageParams = {
-  messageBody: string;
-  location: "main-message" | "modal-message";
-  type: string;
-  autoCloseSeconds?: number;
-  i18n?: string;
+    messageBody: string;
+    location: "main-message" | "modal-message";
+    type: string;
+    autoCloseSeconds?: number;
+    i18n?: string;
 }
 
 export class PageContents {
@@ -70,7 +70,7 @@ export class PageContents {
                 es: ''
             }
         } else {
-            content = {en: '', es: ''}
+            content = { en: '', es: '' }
         }
         return new PageContents(
             data.pageName,
@@ -204,8 +204,8 @@ export class Post {
 
         let rawContent: any = '';
         if (typeof this.content === 'object' && this.content !== null) {
-            rawContent = (this.content as Record<string, any>)[lang] 
-                ?? (this.content as Record<string, any>)['en'] 
+            rawContent = (this.content as Record<string, any>)[lang]
+                ?? (this.content as Record<string, any>)['en']
                 ?? (this.content as Record<string, any>)['es']
                 ?? this.content;
         } else {
@@ -221,16 +221,31 @@ export class Post {
 
     private sanitizeData(data: any): any {
         if (data === null || data === undefined) {
-            return data;
+            return [];
         }
 
+        // 1. If it's already an array, recursively sanitize items
         if (Array.isArray(data)) {
             return data.map((item) => this.sanitizeData(item));
         }
 
-        if (typeof data === 'object') {
+        // 2. If it's a Quill Delta or object containing ops, extract ops array directly
+        if (typeof data === 'object' && data !== null) {
+            if (Array.isArray(data.ops)) {
+                return this.sanitizeData(data.ops);
+            }
             if (typeof data.toJSON === 'function') {
-                return JSON.parse(JSON.stringify(data.toJSON()));
+                const json = data.toJSON();
+                if (json && Array.isArray(json.ops)) {
+                    return this.sanitizeData(json.ops);
+                }
+            }
+            // 3. Unwrap accidentally nested 'en' or 'es' keys inside the lang value
+            if (Array.isArray(data.en)) {
+                return this.sanitizeData(data.en);
+            }
+            if (Array.isArray(data.es)) {
+                return this.sanitizeData(data.es);
             }
 
             const cleanObj: Record<string, any> = {};
@@ -243,10 +258,31 @@ export class Post {
         return data;
     }
 
+    toFirestore() {
+        // Force content.en and content.es to be unwrapped clean arrays
+        const rawEn = (this.content as Record<string, any>)?.en ?? '';
+        const rawEs = (this.content as Record<string, any>)?.es ?? '';
+
+        return {
+            postTitle: {
+                en: this.postTitle?.en || '',
+                es: this.postTitle?.es || '',
+            },
+            author: this.author,
+            publishDate: this.publishDate,
+            lastUpdated: serverTimestamp(),
+            content: {
+                en: this.sanitizeData(rawEn),
+                es: this.sanitizeData(rawEs)
+            },
+            linkedProjectId: this.linkedProjectId
+        };
+    }
+
     static fromFirestore(id: string, data: any): Post {
         const title: LocalizedString = typeof data.postTitle === 'object' && data.postTitle !== null
-        ? {en: data.postTitle.en || '', es: data.postTitle.es || ''}
-        : {en: typeof data.postTitle === "string" ? data.postTitle : '', es: ''};
+            ? { en: data.postTitle.en || '', es: data.postTitle.es || '' }
+            : { en: typeof data.postTitle === "string" ? data.postTitle : '', es: '' };
 
         const rawContentData = data.content ?? data.description ?? data.postDescription;
         let content: LocalizedContent | LocalizedString;
@@ -262,7 +298,7 @@ export class Post {
                 es: ''
             };
         } else {
-            content = {en: '', es: ''};
+            content = { en: '', es: '' };
         }
 
         const post = new Post(
@@ -275,23 +311,6 @@ export class Post {
         );
         post.id = id;
         return post;
-    }
-
-    toFirestore() {
-        return {
-            postTitle: {
-                en: this.postTitle?.en || '',
-                es: this.postTitle?.es || '',
-            },
-            author: this.author,
-            publishDate: this.publishDate,
-            lastUpdated: serverTimestamp(),
-            content: {
-                en: this.sanitizeData((this.content as Record<string, any>)?.en ?? ''),
-                es: this.sanitizeData((this.content as Record<string, any>)?.es ?? '')
-            },
-            linkedProjectId: this.linkedProjectId
-        };
     }
 }
 
@@ -396,8 +415,8 @@ export class Project {
 
         let rawContent: any = '';
         if (typeof this.content === 'object' && this.content !== null) {
-            rawContent = (this.content as Record<string, any>)[lang] 
-                ?? (this.content as Record<string, any>)['en'] 
+            rawContent = (this.content as Record<string, any>)[lang]
+                ?? (this.content as Record<string, any>)['en']
                 ?? (this.content as Record<string, any>)['es']
                 ?? this.content;
         } else {

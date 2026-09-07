@@ -184,7 +184,7 @@ async function loadPosts() {
           navigateTo('/blog/post', { params: { id: postId } })
         );
         postArticle.appendChild(readMore);
-        if (!post.getTitle().includes("test")) fragment.appendChild(postArticle);
+        fragment.appendChild(postArticle);
       });
 
       updatesSection.appendChild(fragment);

@@ -110,7 +110,7 @@ async function loadPosts() {
                 readMore.classList.add("post-link");
                 readMore.addEventListener("click", () => navigateTo('/blog/post', { params: { id: postId } }));
                 postArticle.appendChild(readMore);
-                if (!post.getTitle().includes("test")) acc.appendChild(postArticle);
+                acc.appendChild(postArticle);
                 return acc;
             }, document.createElement("div"));
 

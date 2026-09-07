@@ -500,38 +500,47 @@ export class TheEditor {
     }
 
     public async prepareContentForSave(): Promise<{ en: any[]; es: any[] }> {
-    // Sync active language editor contents to memory
-    this.contentState[this.currentTab] = this.quill.getContents().ops;
+        // Sync current active editor content
+        const currentOps = this.quill.getContents().ops;
+        this.contentState[this.currentTab] = Array.isArray(currentOps) ? currentOps : [];
 
-    // Ensure state always contains plain arrays
-    const enOps = Array.isArray(this.contentState.en) ? this.contentState.en : extractOps(this.contentState.en);
-    const esOps = Array.isArray(this.contentState.es) ? this.contentState.es : extractOps(this.contentState.es);
+        // Helper to force extraction of pure array ops
+        const sanitizeOps = (data: any): any[] => {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data.ops)) return data.ops;
+            if (Array.isArray(data.en)) return data.en; // Unwrap accidentally nested 'en'
+            return [];
+        };
 
-    // Collect all active images across both language tabs
-    const enImages = this.extractImagesFromOps(enOps);
-    const esImages = this.extractImagesFromOps(esOps);
-    const finalImages = new Set([...enImages, ...esImages]);
+        const cleanEn = sanitizeOps(this.contentState.en);
+        const cleanEs = sanitizeOps(this.contentState.es);
 
-    const trueDeletions = this.deletedImageURLs.filter(url => !finalImages.has(url));
+        // Collect all active images across both language tabs
+        const enImages = this.extractImagesFromOps(cleanEn);
+        const esImages = this.extractImagesFromOps(cleanEs);
+        const finalImages = new Set([...enImages, ...esImages]);
 
-    if (trueDeletions.length > 0) {
-        try {
-            const deletePromises = trueDeletions.map(url => {
-                const filename = url.split('/').pop();
-                return fetch(`https://photo-upload.guatemaltausa.workers.dev?filename=${filename}`, { method: 'DELETE' });
-            });
-            await Promise.all(deletePromises);
-        } catch (err) {
-            console.error("R2 cleanup failed:", err);
+        const trueDeletions = this.deletedImageURLs.filter(url => !finalImages.has(url));
+
+        if (trueDeletions.length > 0) {
+            try {
+                const deletePromises = trueDeletions.map(url => {
+                    const filename = url.split('/').pop();
+                    return fetch(`https://photo-upload.guatemaltausa.workers.dev?filename=${filename}`, { method: 'DELETE' });
+                });
+                await Promise.all(deletePromises);
+            } catch (err) {
+                console.error("R2 cleanup failed:", err);
+            }
+            this.deletedImageURLs = [];
         }
-        this.deletedImageURLs = [];
-    }
 
-    return {
-        en: enOps,
-        es: esOps
-    };
-}
+        return {
+            en: cleanEn,
+            es: cleanEs
+        };
+    }
 
     async load(pageName: string): Promise<void> {
         this.currentPage = pageName;
