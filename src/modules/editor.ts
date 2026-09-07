@@ -8,6 +8,14 @@ import { createMessage, formatDate, makeElement, promptModal } from './utils';
 import i18n, { updateContent, getResolvedLanguage } from './i18n';
 import { registerCustomQuillBlots } from './quillBlots';
 
+function extractOps(langData: any): any[] {
+    if (!langData) return [];
+    if (Array.isArray(langData)) return langData;
+    if (Array.isArray(langData.ops)) return langData.ops;
+    if (Array.isArray(langData.en)) return langData.en;
+    return [];
+}
+
 // Initialize and register custom Quill formats
 registerCustomQuillBlots();
 
@@ -437,7 +445,7 @@ export class TheEditor {
     private async selectLocalImage() {
         const savedRange = this.quill.getSelection();
         if (!savedRange) {
-            createMessage({messageBody: "Please click inside the editor or a block column first.", location: "main-message", type: "error"});
+            createMessage({ messageBody: "Please click inside the editor or a block column first.", location: "main-message", type: "error" });
             return;
         }
 
@@ -466,7 +474,7 @@ export class TheEditor {
                 if (data.url) {
                     this.quill.insertEmbed(savedRange.index, 'image', data.url);
                     this.quill.setSelection(savedRange.index + 1);
-                    createMessage({messageBody: "Image uploaded successfully!", location: "main-message", type: "check_circle"});
+                    createMessage({ messageBody: "Image uploaded successfully!", location: "main-message", type: "check_circle" });
 
                     const altTextResponse = await promptModal(
                         "Please provide a description for this image",
@@ -486,56 +494,57 @@ export class TheEditor {
                     }
                 }
             } catch (error) {
-                createMessage({messageBody: "Upload failed.", location: "main-message", type: "error"});
+                createMessage({ messageBody: "Upload failed.", location: "main-message", type: "error" });
             }
         };
     }
 
     public async prepareContentForSave(): Promise<{ en: any[]; es: any[] }> {
-        // Sync active language editor contents to memory
-        this.contentState[this.currentTab] = this.quill.getContents().ops;
+    // Sync active language editor contents to memory
+    this.contentState[this.currentTab] = this.quill.getContents().ops;
 
-        // Collect all active images across both language tabs
-        const enImages = this.extractImagesFromOps(this.contentState.en);
-        const esImages = this.extractImagesFromOps(this.contentState.es);
-        const finalImages = new Set([...enImages, ...esImages]);
+    // Ensure state always contains plain arrays
+    const enOps = Array.isArray(this.contentState.en) ? this.contentState.en : extractOps(this.contentState.en);
+    const esOps = Array.isArray(this.contentState.es) ? this.contentState.es : extractOps(this.contentState.es);
 
-        const trueDeletions = this.deletedImageURLs.filter(url => !finalImages.has(url));
+    // Collect all active images across both language tabs
+    const enImages = this.extractImagesFromOps(enOps);
+    const esImages = this.extractImagesFromOps(esOps);
+    const finalImages = new Set([...enImages, ...esImages]);
 
-        if (trueDeletions.length > 0) {
-            try {
-                const deletePromises = trueDeletions.map(url => {
-                    const filename = url.split('/').pop();
-                    return fetch(`https://photo-upload.guatemaltausa.workers.dev?filename=${filename}`, { method: 'DELETE' });
-                });
-                await Promise.all(deletePromises);
-            } catch (err) {
-                console.error("R2 cleanup failed:", err);
-            }
-            this.deletedImageURLs = [];
+    const trueDeletions = this.deletedImageURLs.filter(url => !finalImages.has(url));
+
+    if (trueDeletions.length > 0) {
+        try {
+            const deletePromises = trueDeletions.map(url => {
+                const filename = url.split('/').pop();
+                return fetch(`https://photo-upload.guatemaltausa.workers.dev?filename=${filename}`, { method: 'DELETE' });
+            });
+            await Promise.all(deletePromises);
+        } catch (err) {
+            console.error("R2 cleanup failed:", err);
         }
-
-        return {
-            en: this.contentState.en,
-            es: this.contentState.es
-        };
+        this.deletedImageURLs = [];
     }
+
+    return {
+        en: enOps,
+        es: esOps
+    };
+}
 
     async load(pageName: string): Promise<void> {
         this.currentPage = pageName;
         try {
             const data = await getPageContents(pageName);
-            
+
             // Temporarily pause delete tracking during initial contents load
             if (this.deleteObserver) this.deleteObserver.disconnect();
 
             if (data && data.content) {
-                const rawEn = Array.isArray(data.content.en) ? data.content.en : (data.content.en?.ops || []);
-                const rawEs = Array.isArray(data.content.es) ? data.content.es : (data.content.es?.ops || []);
-
                 this.contentState = {
-                    en: rawEn,
-                    es: rawEs
+                    en: extractOps(data.content.en),
+                    es: extractOps(data.content.es)
                 };
             } else {
                 this.contentState = { en: [], es: [] };
@@ -573,9 +582,9 @@ export class TheEditor {
         try {
             const localizedContent = await this.prepareContentForSave();
             await updatePageContents(this.currentPage, { content: localizedContent });
-            createMessage({messageBody: "Changes saved!", location: "main-message", type: "check_circle"});
+            createMessage({ messageBody: "Changes saved!", location: "main-message", type: "check_circle" });
         } catch (err) {
-            createMessage({messageBody: "Error saving to database.", location: "main-message", type: "error"});
+            createMessage({ messageBody: "Error saving to database.", location: "main-message", type: "error" });
         }
     }
 
@@ -615,7 +624,7 @@ export class TheEditor {
         }
     }
 
-    public getHTML(): string { 
+    public getHTML(): string {
         const rawHTML = this.quill.root.innerHTML;
         const cleaned = rawHTML.replace(/<[^>]*>/g, '').trim();
 
@@ -627,7 +636,7 @@ export class TheEditor {
             }
         }
 
-        return rawHTML; 
+        return rawHTML;
     }
 
     public setHTML(html: string): void { this.quill.root.innerHTML = html; }

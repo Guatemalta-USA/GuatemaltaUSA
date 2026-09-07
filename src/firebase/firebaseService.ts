@@ -82,12 +82,19 @@ export async function getPageContents(pageName: string): Promise<PageContents | 
 
 export async function updatePageContents(pageName: string, updates: Partial<PageContents>): Promise<void> {
     const docRef = doc(db, "pages", pageName);
-
-    await setDoc(docRef, {
+    const payload: Record<string, any> = {
         ...updates,
         pageName: pageName,
         lastUpdated: serverTimestamp()
-    }, { merge: true });
+    };
+
+    if (updates.content) {
+        delete payload.content;
+        payload['content.en'] = updates.content.en || [];
+        payload['content.es'] = updates.content.es || [];
+    }
+
+    await setDoc(docRef, payload, { merge: true });
 }
 
 // PROFILES
