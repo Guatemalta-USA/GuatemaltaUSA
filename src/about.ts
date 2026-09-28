@@ -285,7 +285,8 @@ function handleEdit(profile: Profile) {
   modalRoot.style.display = "flex";
 }
 
-function sendContactEmails(formData: FormData) {
+function sendContactEmails(form: HTMLFormElement) {
+  const formData = new FormData(form);
   const nameInput = formData.get("entry.1134764317");
   if (!nameInput || nameInput.toString().trim() === "") {
     createMessage({ messageBody: "Please enter your name", location: "modal-message", type: "error", i18n: "please_enter_your_name" });
@@ -324,7 +325,7 @@ function sendContactEmails(formData: FormData) {
           i18n: "comments_have_been_sent"
         }
       );
-      contactForm.reset();
+      form.reset();
     })
     .catch((error) => {
       console.error("Network Error:", error);
@@ -385,8 +386,7 @@ cancelButton?.addEventListener("click", () => {
 
 contactForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  const formData = new FormData(contactForm);
-  sendContactEmails(formData);
+  sendContactEmails(contactForm);
 });
 
 contactForm.classList.remove("hide");
